@@ -1,0 +1,9 @@
+# ingore file
+
+config
+
+node_modules
+package-lock.json
+
+.idea
+build
