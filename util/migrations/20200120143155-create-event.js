@@ -9,10 +9,26 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       title: {
+        allowNull: true,
         type: Sequelize.STRING
       },
       description: {
+        allowNull: true,
         type: Sequelize.STRING
+      },
+      image: {
+        allowNull: true,
+        type: Sequelize.STRING,
+      },
+      streamer: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+        onUpdate: "cascade",
+        onDelete: "cascade",
       },
       start: {
         type: Sequelize.DATE

@@ -18,6 +18,7 @@ export default class Discord extends Vue {
       })
       .then(response => {
         localStorage.token = response.data.jwt;
+        this.$store.commit("User", response.data.user);
         this.$store.state.newUser = true;
         this.$router.replace("/");
       });

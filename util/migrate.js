@@ -7,7 +7,7 @@ const sequelize = new Sequelize(config);
 const umzug = new Umzug({
     migrations: {
         params: [sequelize.getQueryInterface(), Sequelize],
-        path: "util/migrations",
+        path: "./migrations",
     },
     storage: "sequelize",
     storageOptions: {

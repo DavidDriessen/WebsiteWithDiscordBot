@@ -14,7 +14,7 @@ export class UserController {
     @Get('')
     @Middleware(JwtManager.middleware)
     private async getUser(req: ISecureRequest, res: Response) {
-        const user = await User.findByPk(req.payload.id);
+        const user = await User.findByPk(req.payload.user.id);
         res.status(200).json(user);
     }
 }

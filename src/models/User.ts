@@ -11,6 +11,9 @@ export class User extends Model<User> {
     @Column
     public discordId!: string;
 
+    @Column
+    public role!: string;
+
     // @ts-ignore
     @BelongsToMany(() => Event, () => Attendee)
     public events!: Event[];
