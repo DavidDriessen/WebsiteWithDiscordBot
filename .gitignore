@@ -1,6 +1,6 @@
 # ingore file
 
-src/config
+src/config/*.json
 
 node_modules
 package-lock.json
