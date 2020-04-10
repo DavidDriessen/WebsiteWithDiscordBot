@@ -1,7 +1,7 @@
-import axios from 'axios';
-import { cacheAdapterEnhancer } from 'axios-extensions';
+import axios, {AxiosInstance} from 'axios';
+import {cacheAdapterEnhancer} from 'axios-extensions';
 
-let http;
+let http: AxiosInstance;
 if (axios.defaults.adapter) {
   http = axios.create({
     baseURL: '/',

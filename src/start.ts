@@ -4,10 +4,10 @@
  * created by Sean Maxwell Apr 14, 2019
  */
 
-import * as dbConfig from '../config/database.json';
-import * as discordConfig from '../config/discord.json';
+import * as dbConfig from './config/database.json';
+import * as discordConfig from './config/discord.json';
 import {Sequelize} from 'sequelize-typescript';
-import WebServer from '../src/WebServer';
+import WebServer from './WebServer';
 import {Client} from '@typeit/discord';
 import {registerController} from 'cron-decorators/lib';
 

@@ -1,5 +1,5 @@
 const env = process.env.NODE_ENV || "development";
-const config = require("../config/database")[env];
+const config = require("../src/config/database")[env];
 
 const Sequelize = require("sequelize");
 const Umzug = require("umzug");
@@ -24,5 +24,4 @@ umzug.up().then(function(migrations) {
 }).catch((err) => {
     console.log("error migrating DB: ");
     throw err;
-    process.exit();
 });

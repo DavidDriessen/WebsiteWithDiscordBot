@@ -17,7 +17,8 @@
     "typeRoots": [
       "node_modules/@types"
     ],
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "rootDir": "./src"
   },
   "include": [
     "./src/**/*.ts"

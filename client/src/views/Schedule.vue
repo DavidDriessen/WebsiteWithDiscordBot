@@ -22,13 +22,14 @@
 </template>
 
 <script lang="ts">
-import axios from "../plugins/axios";
-import { Component, Vue } from "vue-property-decorator";
-import EventCard from "@/components/EventCard.vue";
-import { Event, EventSeries, Series } from "@/types";
-import moment from "moment";
+  import {Component, Vue} from 'vue-property-decorator';
+  import {Event, EventSeries, Series} from '@/types';
+  import EventCard from '@/components/EventCard.vue';
+  import {AxiosResponse} from 'axios';
+  import axios from '../plugins/axios';
+  import moment from 'moment';
 
-@Component({
+  @Component({
   components: { EventCard }
 })
 export default class Schedule extends Vue {
@@ -100,9 +101,11 @@ export default class Schedule extends Vue {
     return axios
       .get("/api/series/get", {
         params: { ids: Object.keys(this.seriesCache) },
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
         useCache: true
       })
-      .then(response => {
+      .then((response: AxiosResponse) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const series: Series[] = response.data;
         for (let i = 0; i < series.length; i++) {

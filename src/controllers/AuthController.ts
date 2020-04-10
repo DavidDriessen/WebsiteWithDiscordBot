@@ -10,7 +10,7 @@ import {Controller, Get, Post} from '@overnightjs/core';
 import {JwtManager} from '@overnightjs/jwt';
 import {Request, Response} from 'express';
 import User from '../models/User';
-import * as discordConfig from '../../config/discord.json';
+import * as discordConfig from '../config/discord.json';
 import * as url from 'url';
 
 // tslint:disable-next-line:max-line-length
@@ -19,7 +19,7 @@ const conf = process.env.NODE_ENV === 'production' ? discordConfig.production : 
 @Controller('api/auth')
 export class AuthController {
     @Get('discord')
-    private redirectToDiscord(req: Request, res: Response) {
+    private redirectToDiscord(_req: Request, res: Response) {
     res.redirect(url.format({
         protocol: 'https',
         hostname: 'discordapp.com',

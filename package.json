@@ -6,8 +6,9 @@
   "scripts": {
     "test": "none",
     "start-dev": "nodemon --config \"./util/nodemon.json\"/",
-    "build": "rimraf ./build && tsc && npm run build --prefix client -- --dest ../build/src/public",
-    "start": "node build/src/start.js"
+    "build-server": "rimraf ./build && tsc",
+    "build": "rimraf ./build && tsc && npm run build --prefix client -- --dest ../build/public",
+    "start": "node build/start.js"
   },
   "author": "DavidDual",
   "license": "MIT",

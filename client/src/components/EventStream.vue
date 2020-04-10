@@ -44,12 +44,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import axios, { CancelTokenSource } from "axios";
-import { Event, Series, EventSeries, User } from "@/types";
-import moment from "moment";
+  import {Component, Prop, Vue} from 'vue-property-decorator';
+  import axios from 'axios';
+  import {Event} from '@/types';
 
-@Component
+  @Component
 export default class EventStream extends Vue {
   @Prop() event!: Event;
   @Prop() small?: boolean;
@@ -63,13 +62,21 @@ export default class EventStream extends Vue {
     this.event.roomcode = code;
   }
 
+  get form() {
+    return (this.$refs.form as unknown) as {
+      reset(): void;
+      resetValidation(): void;
+      validate(): boolean;
+    };
+  }
+
   close() {
     this.dialog = false;
-    this.$refs.form.resetValidation();
+    this.form.resetValidation();
   }
 
   save() {
-    this.$refs.form.validate();
+    this.form.validate();
     axios
       .post(
         "/api/schedule/streaming",
