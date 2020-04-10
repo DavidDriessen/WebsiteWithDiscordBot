@@ -1,4 +1,4 @@
-import {ForeignKey, Model, Table} from 'sequelize-typescript';
+import {Column, ForeignKey, Model, Table} from 'sequelize-typescript';
 import User from './User';
 import Event from './Event';
 
@@ -12,6 +12,9 @@ export class Attendee extends Model<Event> {
     // @ts-ignore
     @ForeignKey(() => Event)
     public event!: Event;
+
+    @Column
+    public decision!: number;
 }
 
 export default Attendee;

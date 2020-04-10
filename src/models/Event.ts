@@ -1,7 +1,13 @@
-import {BelongsToMany, Column, ForeignKey, Model, Table,} from 'sequelize-typescript';
+import {
+    BelongsToMany,
+    Column,
+    Model,
+    Table,
+    HasMany,
+    BelongsTo, ForeignKey, HasOne,
+} from 'sequelize-typescript';
 import User from './User';
 import Attendee from './Attendee';
-import Series from './Series';
 import SeriesEvent from './SeriesEvent';
 
 @Table
@@ -15,12 +21,15 @@ export class Event extends Model<Event> {
     @Column
     public image!: string;
 
-    @ForeignKey(() => User)
+    @BelongsTo(() => User, 'streamerId')
     public streamer!: User;
 
+    @HasOne(() => Attendee, 'event')
+    public attending!: Attendee;
+
     // @ts-ignore
-    @BelongsToMany(() => Series, () => SeriesEvent)
-    public series!: Array<Series & {SeriesEvent: SeriesEvent}>;
+    @HasMany(() => SeriesEvent)
+    public series!: SeriesEvent[];
 
     // @ts-ignore
     @BelongsToMany(() => User, () => Attendee)
@@ -31,6 +40,9 @@ export class Event extends Model<Event> {
 
     @Column
     public end!: Date;
+
+    @Column
+    public roomcode?: string;
 
 }
 

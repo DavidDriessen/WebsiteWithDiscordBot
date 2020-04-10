@@ -2,12 +2,6 @@
 module.exports = {
     up: (queryInterface, Sequelize) => {
         return queryInterface.createTable("Attendees", {
-            id: {
-                allowNull: false,
-                autoIncrement: true,
-                primaryKey: true,
-                type: Sequelize.INTEGER,
-            },
             user: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
@@ -15,6 +9,7 @@ module.exports = {
                     model: "Users",
                     key: "id",
                 },
+                primaryKey: true,
                 onUpdate: "cascade",
                 onDelete: "cascade",
             },
@@ -25,8 +20,13 @@ module.exports = {
                     model: "Events",
                     key: "id",
                 },
+                primaryKey: true,
                 onUpdate: "cascade",
                 onDelete: "cascade",
+            },
+            decision: {
+                allowNull: false,
+                type: Sequelize.INTEGER,
             },
             createdAt: {
                 allowNull: false,

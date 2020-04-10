@@ -52,8 +52,8 @@ export class AuthController {
                     const user = await User.findOrCreate({
                         where: {discordId: discordUser.id}, defaults: {
                             name: discordUser.username,
-                            // avatar: 'https://cdn.discordapp.com/avatars/' + discordUser.id +
-                            //     '/' + discordUser.avatar + '.jpg',
+                            avatar: 'https://cdn.discordapp.com/avatars/' + discordUser.id +
+                                '/' + discordUser.avatar + '.jpg',
                         },
                     });
                     const jwtStr = JwtManager.jwt({
@@ -70,6 +70,8 @@ export class AuthController {
                     });
                 } catch (e) {
                     res.status(500).send('Database error');
+                    // tslint:disable-next-line:no-console
+                    console.error(e);
                 }
             });
         }).catch((e) => {

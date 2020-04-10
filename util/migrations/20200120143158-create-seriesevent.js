@@ -1,13 +1,7 @@
 "use strict";
 module.exports = {
     up: (queryInterface, Sequelize) => {
-        return queryInterface.createTable("Series", {
-            id: {
-                allowNull: false,
-                autoIncrement: true,
-                primaryKey: true,
-                type: Sequelize.INTEGER,
-            },
+        return queryInterface.createTable("SeriesEvents", {
             event: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
@@ -15,24 +9,24 @@ module.exports = {
                     model: "Events",
                     key: "id",
                 },
+                primaryKey: true,
                 onUpdate: "cascade",
                 onDelete: "cascade",
             },
-            series: {
+            seriesId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                references: {
-                    model: "Series",
-                    key: "id",
-                },
-                onUpdate: "cascade",
-                onDelete: "cascade",
+                primaryKey: true,
             },
             episode: {
                 allowNull: true,
                 type: Sequelize.INTEGER,
             },
             episodes: {
+                allowNull: true,
+                type: Sequelize.INTEGER,
+            },
+            order: {
                 allowNull: true,
                 type: Sequelize.INTEGER,
             },
@@ -47,6 +41,6 @@ module.exports = {
         });
     },
     down: (queryInterface, Sequelize) => {
-        return queryInterface.dropTable("Series");
+        return queryInterface.dropTable("SeriesEvents");
     },
 };

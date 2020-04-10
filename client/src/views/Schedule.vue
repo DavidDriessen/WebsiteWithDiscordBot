@@ -1,73 +1,125 @@
 <template>
   <v-container fluid class="schedule">
+    <v-overlay :value="loading" absolute>
+      <v-progress-circular indeterminate size="128">
+        <h1>Loading</h1>
+      </v-progress-circular>
+    </v-overlay>
     <v-row
       v-for="(chunkEvent, chunkIndex) of chunkedEvents"
       :key="chunkIndex"
       justify="space-around"
     >
-      <v-card
+      <event-card
         v-for="(event, index) of chunkEvent"
         :key="index"
-        width="300"
-        style="margin-bottom: 20px"
-      >
-        <!--suppress HtmlUnknownTarget -->
-        <v-img
-          :src="event.img"
-          alt="event"
-          class="white--text align-end"
-          max-width="300"
-          max-height="300"
-        >
-          <v-card-title>{{ event.title }}</v-card-title>
-        </v-img>
-        <v-card-text>
-          {{ event.description }}
-        </v-card-text>
-        <v-card-actions v-if="$store.getters.isLoggedIn">
-          <EventModal v-if="$store.getters.isAdmin" :event-to-edit="event" />
-          <v-btn v-if="$store.getters.isAdmin" color="gray" icon>
-            <v-icon>fas fa-clone</v-icon>
-          </v-btn>
-          <v-spacer />
-          <v-btn color="green" icon>
-            <v-icon>fas fa-check-circle</v-icon>
-          </v-btn>
-          <v-btn color="red" text>
-            <v-icon>fas fa-times-circle</v-icon>
-          </v-btn>
-        </v-card-actions>
-      </v-card>
+        :cols="chunkEvent / 12"
+        :event.sync="event"
+        :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
+      />
     </v-row>
   </v-container>
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator';
-  import EventModal from '@/components/EventModal.vue';
-
-  interface Event {
-  title: string;
-  description: string;
-  img: string;
-}
+import axios from "../plugins/axios";
+import { Component, Vue } from "vue-property-decorator";
+import EventCard from "@/components/EventCard.vue";
+import { Event, EventSeries, Series } from "@/types";
+import moment from "moment";
 
 @Component({
-  components: { EventModal }
+  components: { EventCard }
 })
-export default class Home extends Vue {
-  events: Event[] = [
-    { title: "Title", description: "Description", img: "/img/plunderer.jpg" },
-    { title: "Title", description: "Description", img: "/img/plunderer.jpg" },
-    { title: "Title", description: "Description", img: "/img/plunderer.jpg" },
-    { title: "Title", description: "Description", img: "/img/plunderer.jpg" },
-    { title: "Title", description: "Description", img: "/img/plunderer.jpg" },
-    { title: "Title", description: "Description", img: "" }
-  ];
+export default class Schedule extends Vue {
+  events: Event[] = [];
+  seriesCache: {
+    [k: number]: Series;
+  } = [];
+  loading = false;
+  chunkSize = 3;
+  width = 350;
+
+  mounted() {
+    this.getSchedule();
+    this.onResize();
+    window.addEventListener("resize", this.onResize);
+  }
+
+  beforeDestroy() {
+    // Unregister the event listener before destroying this Vue instance
+    window.removeEventListener("resize", this.onResize);
+  }
+
+  onResize() {
+    this.width = document.documentElement.clientWidth;
+    this.chunkSize = Math.floor(this.width / 420);
+    if (this.chunkSize == 1) this.chunkSize = Math.floor(this.width / 160);
+  }
+
+  getSchedule() {
+    this.loading = true;
+    axios
+      .get(
+        "/api/schedule",
+        localStorage.token
+          ? {
+              headers: {
+                Authorization: `Bearer ${localStorage.token}`
+              }
+            }
+          : {}
+      )
+      .then(async response => {
+        const events: Event[] = response.data;
+        for (const event of events) {
+          if (event) {
+            event.start = moment(event.start);
+            event.end = moment(event.end);
+            const series: EventSeries[] | undefined = event.series;
+            if (series) {
+              for (let i = 0; i < series.length; i++) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                series[i].details = this.getSeries(series[i].seriesId);
+              }
+            }
+          }
+        }
+        await this.fetchSeries();
+        this.events = events;
+        this.loading = false;
+      });
+  }
+
+  getSeries(id: number) {
+    if (!this.seriesCache[id]) this.seriesCache[id] = {} as Series;
+    return this.seriesCache[id];
+  }
+
+  fetchSeries() {
+    return axios
+      .get("/api/series/get", {
+        params: { ids: Object.keys(this.seriesCache) },
+        useCache: true
+      })
+      .then(response => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const series: Series[] = response.data;
+        for (let i = 0; i < series.length; i++) {
+          this.seriesCache[series[i].id].id = series[i].id;
+          this.seriesCache[series[i].id].title = series[i].title;
+          this.seriesCache[series[i].id].description = series[i].description;
+          this.seriesCache[series[i].id].coverImage = series[i].coverImage;
+          this.seriesCache[series[i].id].episodes = series[i].episodes;
+          this.seriesCache[series[i].id].siteUrl = series[i].siteUrl;
+        }
+        return series;
+      });
+  }
 
   get chunkedEvents() {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require("chunk")(this.events, 3);
+    return require("chunk")(this.events, this.chunkSize);
   }
 }
 </script>

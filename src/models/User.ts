@@ -1,4 +1,4 @@
-import {BelongsToMany, Column, Model, Table} from 'sequelize-typescript';
+import {BelongsToMany, Column, HasMany, Model, Table} from 'sequelize-typescript';
 import Attendee from './Attendee';
 import Event from './Event';
 
@@ -9,12 +9,17 @@ export class User extends Model<User> {
     public name!: string;
 
     @Column
+    public avatar!: string;
+
+    @Column
     public discordId!: string;
 
     @Column
     public role!: string;
 
-    // @ts-ignore
+    @HasMany(() => Event, 'streamerId')
+    public streams!: Event[];
+
     @BelongsToMany(() => Event, () => Attendee)
     public events!: Event[];
 }

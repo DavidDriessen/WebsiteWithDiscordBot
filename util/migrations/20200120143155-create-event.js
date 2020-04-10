@@ -20,7 +20,7 @@ module.exports = {
         allowNull: true,
         type: Sequelize.STRING,
       },
-      streamer: {
+      streamerId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
@@ -35,6 +35,10 @@ module.exports = {
       },
       end: {
         type: Sequelize.DATE
+      },
+      roomcode: {
+        allowNull: true,
+        type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,
