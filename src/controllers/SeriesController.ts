@@ -20,16 +20,14 @@ export class SeriesController {
                     episodes
                     coverImage { extraLarge large medium }`;
 
-    @Get('get')
-    public getSeries(req: Request, res: Response) {
-        if (!req.query.ids) { return res.status(200).json([]); }
+    public getSeriesById(ids: number[]) {
         return axios
             .post(
                 'https://anilist-graphql.p.rapidapi.com/',
                 {
                     // tslint:disable-next-line:max-line-length
                     query: 'query ($ids: [Int]!) { Page { media(id_in: $ids, type: ANIME){ ' + this.media + ' }}}',
-                    variables: { ids: req.query.ids },
+                    variables: { ids },
                 },
                 {
                     headers: {
@@ -42,7 +40,16 @@ export class SeriesController {
                 },
             )
             .then((response) => {
-                res.status(200).json(response.data.data.Page.media);
+                return response.data.data.Page.media;
+            });
+    }
+
+    @Get('get')
+    public getSeries(req: Request, res: Response) {
+        if (!req.query.ids) { return res.status(200).json([]); }
+        return this.getSeriesById(req.query.ids as unknown as number[])
+            .then((media) => {
+                res.status(200).json(media);
             }).catch((error) => {
                 if (error.response) {
                     // tslint:disable-next-line:no-console

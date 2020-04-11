@@ -1,48 +1,57 @@
-import {Client, Discord} from '@typeit/discord';
-import {Message} from 'discord.js';
-import {help, OnCommand, stringType} from '../helpers/CommandHelpers';
+import {Client, Command, CommandMessage, Discord, Guard} from '@typeit/discord';
 import {ReminderWorker} from '../workers/ReminderWorker';
 import moment = require('moment');
 
-@Discord
+// tslint:disable-next-line:no-shadowed-variable
+function test(message: CommandMessage, client: Client) {
+    return true;
+}
+
+@Discord({prefix: '!'})
 export class ExampleDiscord {
 
-    // noinspection SpellCheckingInspection
-    @OnCommand('remindme')
-    // tslint:disable-next-line:no-shadowed-variable
-    public remindMe(message: Message, client: Client) {
+    @Command('remindMe')
+    @Guard(test)
+    public remindMe(message: CommandMessage) {
         ReminderWorker.setReminder(message.author, moment().add(1, 'm'))
             .then((r) => {
-                message.reply('I\'ll remind you ' + r.time.fromNow())
-                    .then((m) => m.delete({timeout: 10000}));
+                message.reply('I\'ll remind you ' + r.time.fromNow());
             });
     }
 
-    @OnCommand('ping')
-    // tslint:disable-next-line:no-shadowed-variable
-    public ping(message: Message, client: Client) {
+    @Command('ping')
+    public ping(message: CommandMessage) {
         message.channel.send('Pong!').then(async (r) => {
-            await r.delete({timeout: 1000});
+            await r.delete(1000);
         });
     }
 
-    @help('say :msg:')
-    @OnCommand('say')
-    // tslint:disable-next-line:no-shadowed-variable
-    public say(@stringType() msg: string, message: Message, client: Client) {
-        message.channel.send(msg).then(async (r) => {
-            await r.delete({timeout: 1000});
-        });
+    @Command('say', {description: 'say :msg:'})
+    public say(message: CommandMessage) {
+        if (message.params.length >= 1) {
+            message.channel.send(message.params[0]).then(async (r) => {
+                await r.delete(1000);
+            });
+        } else {
+            message.channel.send('Not enough arguments.');
+        }
     }
 
-    @OnCommand('clear')
-    public clear(message: Message) {
-        message.channel.messages.fetch().then((msgs) => msgs.forEach((msg) => {
-            if (!msg.deleted) {
-                // tslint:disable-next-line:no-console
-                msg.delete().catch((e) => console.error(e));
-            }
-        }));
-        return true;
+    @Command('help')
+    public help(message: CommandMessage) {
+        const commands = Client.getCommands();
+        message.channel.send(commands.map((command) => {
+            return command.prefix + command.commandName + ': ' + command.description;
+        }).join('\n'));
     }
+
+    // @Command('clear')
+    // public clear(message: CommandMessage) {
+    //     message.channel.fetchMessages().then((msgs) => msgs.forEach((msg) => {
+    //         if (!msg.deleted) {
+    //             // tslint:disable-next-line:no-console
+    //             msg.delete().catch((e) => console.error(e));
+    //         }
+    //     }));
+    // }
 }

@@ -40,6 +40,10 @@ module.exports = {
         allowNull: true,
         type: Sequelize.STRING
       },
+      messageID: {
+        allowNull: true,
+        type: Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -50,7 +54,7 @@ module.exports = {
       }
     });
   },
-  down: (queryInterface, Sequelize) => {
+  down: (queryInterface) => {
     return queryInterface.dropTable('Events');
   }
 };

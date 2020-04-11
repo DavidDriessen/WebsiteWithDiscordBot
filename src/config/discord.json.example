@@ -5,7 +5,8 @@
     "scope": "identify",
     "token"  : "",
     "prefix" : "!",
-    "callbackHost": "http://localhost:8080"
+    "callbackHost": "http://localhost:8080",
+    "channelId": ""
   },
   "production": {
     "clientId": "",
@@ -13,6 +14,7 @@
     "scope": "identify",
     "token"  : "",
     "prefix" : "!",
-    "callbackHost": "http://localhost:8080"
+    "callbackHost": "http://localhost:8080",
+    "channelId": ""
   }
 }

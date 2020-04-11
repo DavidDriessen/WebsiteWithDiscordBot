@@ -3,7 +3,7 @@
  *
  * created by Sean Maxwell Apr 14, 2019
  */
-
+import 'reflect-metadata';
 import * as dbConfig from './config/database.json';
 import * as discordConfig from './config/discord.json';
 import {Sequelize} from 'sequelize-typescript';

@@ -9,7 +9,7 @@ FROM node:12.14 AS server
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-COPY src/ ./
+COPY src ./src
 COPY tsconfig.json ./
 COPY tslint.json ./
 RUN npm run build-server
@@ -62,7 +62,7 @@ FROM node:12.14
 
 RUN mkdir -p /app
 WORKDIR /app
-COPY package*.json ./
+COPY --from=server /app/package*.json ./
 
 #RUN npm install
 # If you are building your code for production
@@ -76,8 +76,10 @@ COPY --from=server /app/build ./
 RUN mkdir ./public
 COPY --from=web-interface /app/client/dist ./public
 
+RUN rm ./config/*
+
 EXPOSE 3000
 ENV NODE_ENV production
 
-ENTRYPOINT ["npm"]
-CMD ["run", "start"]
+ENTRYPOINT ["node"]
+CMD ["./start.js"]

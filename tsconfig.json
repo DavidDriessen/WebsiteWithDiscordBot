@@ -24,6 +24,7 @@
     "./src/**/*.ts"
   ],
   "exclude": [
-    "./src/public/"
+    "./src/public/",
+    "./client/"
   ]
 }

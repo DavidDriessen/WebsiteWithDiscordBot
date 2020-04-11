@@ -85,19 +85,21 @@ export class ScheduleController {
             start: req.body.start,
             end: req.body.end,
         };
-        const event = await Event.create(data);
+        let event;
         if (req.body.series) {
-            // tslint:disable-next-line:prefer-for-of
-            for (let i = 0; i < req.body.series.length; i++) {
-                event.$create('series', {
-                    seriesId: req.body.series[i].details.id,
-                    episode: req.body.series[i].episode,
-                    episodes: req.body.series[i].episodes,
-                    order: i,
-                });
-            }
+            // @ts-ignore
+            data.series = req.body.series.map((series, index) => {
+                return {
+                    seriesId: series.details.id,
+                    episode: series.episode,
+                    episodes: series.episodes,
+                    order: index,
+                };
+            });
+            event = await Event.create(data, {include: ['series']});
+        } else {
+            event = await Event.create(data);
         }
-        event.save();
         return res.status(200).json(event);
     }
 
