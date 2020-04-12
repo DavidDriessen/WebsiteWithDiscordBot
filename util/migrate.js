@@ -1,5 +1,9 @@
 const env = process.env.NODE_ENV || "development";
-const config = require("../src/config/database")[env];
+try {
+    const config = require("../src/config/database")[env];
+} catch (e) {
+    const config = require("../config/database")[env];
+}
 
 const Sequelize = require("sequelize");
 const Umzug = require("umzug");
