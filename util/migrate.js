@@ -1,9 +1,5 @@
 const env = process.env.NODE_ENV || "development";
-try {
-    const config = require("../src/config/database")[env];
-} catch (e) {
-    const config = require("../config/database")[env];
-}
+const config = require("../" + (process.argv > 2 ? process.argv[2] : "") + "config/database")[env];
 
 const Sequelize = require("sequelize");
 const Umzug = require("umzug");
@@ -11,7 +7,7 @@ const sequelize = new Sequelize(config);
 const umzug = new Umzug({
     migrations: {
         params: [sequelize.getQueryInterface(), Sequelize],
-        path: "./migrations",
+        path: __dirname + "/migrations",
     },
     storage: "sequelize",
     storageOptions: {
