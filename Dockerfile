@@ -12,10 +12,10 @@ RUN npm install
 COPY src ./src
 COPY tsconfig.json ./
 COPY tslint.json ./
-RUN mv ./config/database.json.example ./config/database.json
-RUN mv ./config/discord.json.example ./config/discord.json
+RUN mv ./src/config/database.json.example ./src/config/database.json
+RUN mv ./src/config/discord.json.example ./src/config/discord.json
 RUN npm run build-server
-RUN rm ./config/*
+RUN rm ./build/config/*
 
 FROM node:12.14
 RUN mkdir -p /app
