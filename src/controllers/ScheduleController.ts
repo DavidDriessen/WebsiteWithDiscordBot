@@ -8,6 +8,8 @@ import {Response} from 'express';
 import * as moment from 'moment';
 import {Op} from 'sequelize';
 import SeriesEvent from '../models/SeriesEvent';
+import User from '../models/User';
+import {EventWorker} from '../workers/EventWorker';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
@@ -74,6 +76,22 @@ export class ScheduleController {
         res.status(200).json({message: 'ok'});
     }
 
+    @Post('streaming')
+    @Middleware(JwtManager.middleware)
+    private async setRoomCode(req: ISecureRequest, res: Response) {
+        const event = await Event.findOne({
+            where: {id: req.body.event, streamerId: req.payload.user.id},
+        });
+        if (event) {
+            event.roomcode = req.body.code;
+            event.save();
+            EventWorker.sendNotification(event);
+            res.status(200).json({message: 'ok'});
+        } else {
+            res.status(403).json({message: 'Not the streamer'});
+        }
+    }
+
     @Put('')
     @Middleware(JwtManager.middleware)
     @isAdmin
@@ -85,7 +103,6 @@ export class ScheduleController {
             start: req.body.start,
             end: req.body.end,
         };
-        let event;
         if (req.body.series) {
             // @ts-ignore
             data.series = req.body.series.map((series, index) => {
@@ -96,11 +113,18 @@ export class ScheduleController {
                     order: index,
                 };
             });
-            event = await Event.create(data, {include: ['series']});
-        } else {
-            event = await Event.create(data);
         }
-        return res.status(200).json(event);
+        const event = await Event.create(data, {
+            include: [
+                'series',
+                'streamer',
+                'attendees',
+                {
+                    association: 'attending', attributes: ['decision'], required: false,
+                    where: {user: req.payload.user.id},
+                }],
+        });
+        return res.status(200).json(ScheduleController.renderResponse(event));
     }
 
     @Post('')
@@ -111,27 +135,19 @@ export class ScheduleController {
         if (!req.body.title || !req.body.start || !req.body.end) {
             return res.status(401).send('');
         }
-        const include: Includeable[] = [
-            {association: 'series', attributes: ['seriesId', 'episode', 'episodes']},
-            {association: 'streamer', attributes: ['id', 'name', 'avatar']},
-            {association: 'attendees', attributes: ['id', 'name', 'avatar']},
+        const include: Includeable[] = ['series', 'streamer', 'attendees',
             {
                 association: 'attending', attributes: ['decision'], required: false,
                 where: {user: req.payload.user.id},
             }];
-        const event = await Event.findByPk(req.body.id, {
-            include,
-            attributes: ['id', 'title', 'description', 'image', 'start', 'end', 'roomcode'],
-        });
+        const event = await Event.findByPk(req.body.id, {include});
         if (!event) {
             return res.status(200).json({message: 'Event not found'});
         }
         event.title = req.body.title;
         event.start = req.body.start;
         event.end = req.body.end;
-        if (req.body.description) {
-            event.description = req.body.description;
-        }
+        event.description = req.body.description;
         if (req.body.series) {
             // @ts-ignore
             const ids = req.body.series.map((series) => series.details.id);
@@ -142,7 +158,7 @@ export class ScheduleController {
             }
             // tslint:disable-next-line:prefer-for-of
             for (let i = 0; i < req.body.series.length; i++) {
-                SeriesEvent.findOrBuild({
+                await SeriesEvent.findOrBuild({
                     where: {
                         event: event.id,
                         seriesId: req.body.series[i].details.id,
@@ -156,6 +172,37 @@ export class ScheduleController {
             }
         }
         event.save();
-        return res.status(200).json(event);
+        return res.status(200).json(ScheduleController.renderResponse(event));
+    }
+
+    private static renderResponse(event: Event) {
+        // @ts-ignore
+        const response: Event = {
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            image: event.image,
+            start: event.start,
+            end: event.end,
+            roomcode: event.roomcode,
+        };
+        if (event.series) {
+            response.series = event.series.map((series) => {
+                return {
+                    seriesId: series.seriesId,
+                    episode: series.episode,
+                    episodes: series.episodes,
+                } as SeriesEvent;
+            });
+        }
+        if (event.attendees) {
+            response.attendees = event.attendees.map((attendee) => {
+                return {name: attendee.name, avatar: attendee.avatar} as User;
+            });
+        }
+        if (event.streamer) {
+            response.streamer = {name: event.streamer.name, avatar: event.streamer.avatar} as User;
+        }
+        return response;
     }
 }

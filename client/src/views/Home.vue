@@ -9,7 +9,7 @@
           style="margin: auto"
         />
         <v-card-title primary-title class="justify-center">
-          Welcome to the website
+          Welcome to the VROtakus website.
         </v-card-title>
       </v-card>
     </v-flex>

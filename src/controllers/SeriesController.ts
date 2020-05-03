@@ -5,13 +5,13 @@
  */
 
 import {Request, Response} from 'express';
-import {Controller, Get, Post} from '@overnightjs/core';
+import {Controller, Get} from '@overnightjs/core';
 import axios from 'axios';
 
 @Controller('api/series')
 export class SeriesController {
 
-    private media = `id
+    private static readonly media = `id
                     title { english romaji  userPreferred }
                     description
                     siteUrl
@@ -20,13 +20,13 @@ export class SeriesController {
                     episodes
                     coverImage { extraLarge large medium }`;
 
-    public getSeriesById(ids: number[]) {
+    public static getSeriesById(ids: number[]) {
         return axios
             .post(
                 'https://anilist-graphql.p.rapidapi.com/',
                 {
                     // tslint:disable-next-line:max-line-length
-                    query: 'query ($ids: [Int]!) { Page { media(id_in: $ids, type: ANIME){ ' + this.media + ' }}}',
+                    query: 'query ($ids: [Int]!) { Page { media(id_in: $ids, type: ANIME){ ' + SeriesController.media + ' }}}',
                     variables: { ids },
                 },
                 {
@@ -47,7 +47,7 @@ export class SeriesController {
     @Get('get')
     public getSeries(req: Request, res: Response) {
         if (!req.query.ids) { return res.status(200).json([]); }
-        return this.getSeriesById(req.query.ids as unknown as number[])
+        return SeriesController.getSeriesById(req.query.ids as unknown as number[])
             .then((media) => {
                 res.status(200).json(media);
             }).catch((error) => {
@@ -69,7 +69,7 @@ export class SeriesController {
             const response = await axios.post('https://anilist-graphql.p.rapidapi.com/',
                 {
                     query: 'query ($search: String) { Page{ media(search: $search, type: ANIME){ ' +
-                        this.media
+                        SeriesController.media
                         + ' }}}',
                     variables: {search: req.params.name},
                 },

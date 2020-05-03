@@ -2,16 +2,16 @@ import {Client, Command, CommandMessage, Discord, Guard} from '@typeit/discord';
 import {ReminderWorker} from '../workers/ReminderWorker';
 import moment = require('moment');
 
-// tslint:disable-next-line:no-shadowed-variable
-function test(message: CommandMessage, client: Client) {
-    return true;
+function checkRemindMeRole(message: CommandMessage) {
+    const remindMeRole = message.guild.roles.find('name', 'RemindMe');
+    return message.member.roles.has(remindMeRole.id);
 }
 
 @Discord({prefix: '!'})
-export class ExampleDiscord {
+export class MainDiscord {
 
     @Command('remindMe')
-    @Guard(test)
+    @Guard(checkRemindMeRole)
     public remindMe(message: CommandMessage) {
         ReminderWorker.setReminder(message.author, moment().add(1, 'm'))
             .then((r) => {
@@ -45,13 +45,8 @@ export class ExampleDiscord {
         }).join('\n'));
     }
 
-    // @Command('clear')
-    // public clear(message: CommandMessage) {
-    //     message.channel.fetchMessages().then((msgs) => msgs.forEach((msg) => {
-    //         if (!msg.deleted) {
-    //             // tslint:disable-next-line:no-console
-    //             msg.delete().catch((e) => console.error(e));
-    //         }
-    //     }));
-    // }
+    @Command('clear')
+    public clear(message: CommandMessage) {
+        message.channel.fetchMessages().then((msgs) => msgs.deleteAll());
+    }
 }

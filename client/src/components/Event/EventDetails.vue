@@ -2,9 +2,7 @@
 <template>
   <v-dialog v-model="dialog" max-width="600px">
     <template v-slot:activator="{ on }">
-      <v-btn color="gray" icon v-on="on" :x-small="small">
-        <v-icon>fas fa-info-circle</v-icon>
-      </v-btn>
+      <slot name="activator" :onClick="on.click" />
     </template>
     <v-card>
       <v-card-title>
@@ -33,15 +31,11 @@
           </v-container>
         </v-tab-item>
       </v-tabs-items>
-      <v-card-actions v-if="$store.getters.isLoggedIn">
-        <v-spacer />
-        <v-btn color="green" icon>
-          <v-icon>fas fa-check-circle</v-icon>
-        </v-btn>
-        <v-btn color="red" text>
-          <v-icon>fas fa-times-circle</v-icon>
-        </v-btn>
-      </v-card-actions>
+      <EventActions
+        v-if="$store.getters.isLoggedIn"
+        :event="event"
+        :small="small"
+      />
     </v-card>
   </v-dialog>
 </template>
@@ -49,8 +43,9 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import axios, { CancelTokenSource } from "axios";
+import EventActions from "@/components/Event/EventActions.vue";
 
-@Component
+@Component({ components: { EventActions } })
 export default class EventDetails extends Vue {
   @Prop() event!: Event;
   @Prop() small?: boolean;

@@ -13,9 +13,6 @@ import User from '../models/User';
 import * as discordConfig from '../config/discord.json';
 import * as url from 'url';
 
-// tslint:disable-next-line:max-line-length
-const conf = process.env.NODE_ENV === 'production' ? discordConfig.production : discordConfig.development;
-
 @Controller('api/auth')
 export class AuthController {
     @Get('discord')
@@ -25,10 +22,10 @@ export class AuthController {
         hostname: 'discordapp.com',
         pathname: 'api/oauth2/authorize',
         query: {
-            client_id: conf.clientId,
-            redirect_uri: conf.callbackHost + '/login/discord',
+            client_id: discordConfig.clientId,
+            redirect_uri: discordConfig.callbackHost + '/login/discord',
             response_type: 'code',
-            scope: conf.scope,
+            scope: discordConfig.scope,
         },
     }));
     }
@@ -38,11 +35,11 @@ export class AuthController {
         const redirect = req.body.redirect;
         const oauth = new DiscordOauth2();
         oauth.tokenRequest({
-            clientId: conf.clientId,
-            clientSecret: conf.clientSecret,
+            clientId: discordConfig.clientId,
+            clientSecret: discordConfig.clientSecret,
 
             code: accessCode,
-            scope: conf.scope,
+            scope: discordConfig.scope,
             grantType: 'authorization_code',
 
             redirectUri: redirect,

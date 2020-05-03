@@ -22,14 +22,14 @@
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator';
-  import {Event, EventSeries, Series} from '@/types';
-  import EventCard from '@/components/EventCard.vue';
-  import {AxiosResponse} from 'axios';
-  import axios from '../plugins/axios';
-  import moment from 'moment';
+import { Component, Vue } from "vue-property-decorator";
+import { Event, EventSeries, Series } from "@/types";
+import EventCard from "@/components/Event/EventCard.vue";
+import { AxiosResponse } from "axios";
+import axios from "../plugins/axios";
+import moment from "moment";
 
-  @Component({
+@Component({
   components: { EventCard }
 })
 export default class Schedule extends Vue {
@@ -127,4 +127,8 @@ export default class Schedule extends Vue {
 }
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.schedule {
+  margin-top: 30px;
+}
+</style>

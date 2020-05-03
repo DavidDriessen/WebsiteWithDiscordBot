@@ -39,7 +39,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import NewEvent from "@/components/EventModal.vue";
+import NewEvent from "@/components/Event/EventModal.vue";
 
 export default Vue.extend({
   name: "App",
