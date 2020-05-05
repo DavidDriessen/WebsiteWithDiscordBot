@@ -74,11 +74,14 @@ export class Event extends Model<Event> {
 
     @BeforeCreate
     public static async postMessage(event: Event) {
-        const message: Message = await this.getChannel().send(await this.renderMessage(event));
-        event.messageID = message.id;
-        await message.react(AttendanceDiscord.options[1]);
-        await message.react(AttendanceDiscord.options[0]);
-        await message.react(AttendanceDiscord.options[2]);
+        if (moment(event.start).isAfter(moment()) &&
+            moment().add(1, 'week').isAfter(moment(event.start))) {
+            const message: Message = await this.getChannel().send(await this.renderMessage(event));
+            event.messageID = message.id;
+            await message.react(AttendanceDiscord.options[1]);
+            await message.react(AttendanceDiscord.options[0]);
+            await message.react(AttendanceDiscord.options[2]);
+        }
     }
 
     @AfterUpdate
@@ -94,8 +97,7 @@ export class Event extends Model<Event> {
                 console.error('Can\'t find message: ' + event.messageID);
             }
         } else {
-            // tslint:disable-next-line:no-console
-            console.error('Message id missing: ' + event.id);
+            await Event.postMessage(event);
         }
     }
 }

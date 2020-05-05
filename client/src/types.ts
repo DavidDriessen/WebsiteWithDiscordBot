@@ -18,9 +18,10 @@ export interface EventSeries {
 }
 
 export interface User {
-  id: number;
+  id?: number;
   name: string;
   avatar: string;
+  email: string;
 }
 
 export interface Event {

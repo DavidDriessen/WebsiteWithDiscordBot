@@ -1,6 +1,7 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
+import store from '@/store';
 
 Vue.use(VueRouter);
 
@@ -23,6 +24,15 @@ const routes = [
   {
     path: "/profile",
     name: "Profile",
+    beforeEnter(to: any, from: any, next: any) {
+      if (store.getters.isLoggedIn) next();
+      else next(from);
+    },
+    component: () => import("../views/Profile.vue")
+  },
+  {
+    path: "/polls",
+    name: "polls",
     component: () => import("../views/UnderConstruction.vue")
   }
 ];

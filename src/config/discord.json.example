@@ -1,7 +1,7 @@
 {
     "clientId": "",
     "clientSecret": "",
-    "scope": "identify",
+    "scope": "identify email",
     "token"  : "",
     "prefix" : "!",
     "callbackHost": "http://localhost:8080",

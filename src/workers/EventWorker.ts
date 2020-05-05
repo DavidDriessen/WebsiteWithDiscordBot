@@ -52,6 +52,20 @@ export class EventWorker {
         }
     }
 
+    @Cron('updateEventChannel', '0 0 0 * * *')
+    public async updateEventChannel() {
+        const events = await Event.findAll({
+            where: {
+                start: {[Op.gt]: moment(), [Op.lte]: moment().add(1, 'week')},
+                messageID: {[Op.and]: [{[Op.ne]: null}, {[Op.ne]: ''}]},
+            },
+            include: ['series', 'streamer', 'attendees'],
+        });
+        for (const event of events) {
+            Event.postMessage(event).then();
+        }
+    }
+
     public static sendNotification(event: Event) {
         EventWorker.getChannel()
             .send('Reminder: ' + event.title +
@@ -59,6 +73,22 @@ export class EventWorker {
                 (moment(event.start) > moment() ? 'Soon' : moment(event.start).fromNow()) + '**.' +
                 EventWorker.getAttendees(event.attendees, 1) +
                 EventWorker.getAttendees(event.attendees, 2) +
-                (event.roomcode ? '\nRoom code: ' + event.roomcode : '')).then();
+                (event.roomcode ? '\nRoom code: ' + event.roomcode : ''))
+            .then(() => {
+                if (event.roomcode && event.messageID) {
+                    this.getChannel().fetchMessages()
+                        .then((msgs) => {
+                            if (event.messageID) {
+                                const msg = msgs.get(event.messageID);
+                                if (msg) {
+                                    msg.delete().then(() => {
+                                        event.messageID = '';
+                                        event.save({fields: ['messageID']});
+                                    });
+                                }
+                            }
+                        });
+                }
+            });
     }
 }

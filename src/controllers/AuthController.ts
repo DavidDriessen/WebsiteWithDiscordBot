@@ -46,13 +46,7 @@ export class AuthController {
         }).then((token) => {
             oauth.getUser(token.access_token).then(async (discordUser) => {
                 try {
-                    const user = await User.findOrCreate({
-                        where: {discordId: discordUser.id}, defaults: {
-                            name: discordUser.username,
-                            avatar: 'https://cdn.discordapp.com/avatars/' + discordUser.id +
-                                '/' + discordUser.avatar + '.jpg',
-                        },
-                    });
+                    const user = await User.get(discordUser);
                     const jwtStr = JwtManager.jwt({
                         user: user[0],
                         discord: {

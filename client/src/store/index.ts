@@ -1,6 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import axios from "axios";
+import router from '@/router';
 
 Vue.use(Vuex);
 
@@ -9,11 +10,16 @@ interface User {
   role: string;
 }
 
-export default new Vuex.Store({
+interface States {
+  user: User | null;
+  newUser: boolean;
+}
+
+const store =  new Vuex.Store({
   state: {
-    user: null as User | null,
+    user: null,
     newUser: false
-  },
+  } as States,
   mutations: {
     User(state, user) {
       state.user = user;
@@ -37,19 +43,22 @@ export default new Vuex.Store({
               error => {
                 if (error.response && error.response.status == 401) {
                   commit("User", null);
-                  localStorage.clear();
+                  localStorage.removeItem('token');
                 }
                 return Promise.reject(error);
               }
             );
           })
           .catch(() => {
-            localStorage.clear();
+            localStorage.removeItem('token');
           });
       }
     },
     setAttending({ state }, payload) {
-      if (!payload.event.attending || payload.state !== payload.event.attending.decision) {
+      if (
+        !payload.event.attending ||
+        payload.state !== payload.event.attending.decision
+      ) {
         if (payload.event.attending)
           payload.event.attending.decision = payload.state;
         else payload.event.attending = { decision: payload.state };
@@ -67,6 +76,11 @@ export default new Vuex.Store({
           }
         );
       }
+    },
+    Logout({ commit }){
+      commit("User", null);
+      localStorage.removeItem('token');
+      router.push('/');
     }
   },
   getters: {
@@ -79,3 +93,5 @@ export default new Vuex.Store({
   },
   modules: {}
 });
+
+export default store

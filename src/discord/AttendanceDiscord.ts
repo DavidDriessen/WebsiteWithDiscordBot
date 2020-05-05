@@ -20,13 +20,7 @@ export class AttendanceDiscord {
         }
         const users = messageReaction.users.filter((user) => !user.bot);
         const dbUsers = await Promise.all(users.map((discordUser) => {
-            return User.findOrCreate({
-                where: {discordId: discordUser.id}, defaults: {
-                    name: discordUser.username,
-                    avatar: 'https://cdn.discordapp.com/avatars/' + discordUser.id +
-                        '/' + discordUser.avatar + '.jpg',
-                },
-            }).then((u) => {
+            return User.get(discordUser).then((u) => {
                 messageReaction.remove(discordUser).then();
                 return u[0];
             });

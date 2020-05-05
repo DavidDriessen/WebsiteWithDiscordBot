@@ -19,6 +19,9 @@
       <NewEvent v-if="$store.getters.isAdmin" />
       <v-spacer></v-spacer>
 
+      <v-btn to="/polls" text>
+        <span class="mr-2">Polls</span>
+      </v-btn>
       <v-btn to="/schedule" text>
         <span class="mr-2">Schedule</span>
       </v-btn>
@@ -27,6 +30,9 @@
         Login
       </v-btn>
       <v-btn v-if="$store.getters.isLoggedIn" to="/profile" text>
+        <!--        <v-avatar>-->
+        <!--          <v-img :src="$store.state.user.avatar" />-->
+        <!--        </v-avatar>-->
         Profile
       </v-btn>
     </v-app-bar>

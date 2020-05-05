@@ -8,8 +8,8 @@
       <v-card-title>
         <span class="headline">{{ event.title }}</span>
       </v-card-title>
-      <v-card-text> </v-card-text>
-      <v-tabs v-model="selected">
+      <v-card-text>{{ event.description }}</v-card-text>
+      <v-tabs v-model="selected" center-active grow>
         <v-tab v-for="eventSeries in event.series" :key="eventSeries.seriesId">
           {{ eventSeries.details.title.english }}
         </v-tab>
@@ -54,4 +54,8 @@ export default class EventDetails extends Vue {
 }
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.v-slide-group__prev {
+  display: none!important;
+}
+</style>
