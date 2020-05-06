@@ -30,6 +30,7 @@ export class Event extends Model<Event> {
 
     @BelongsTo(() => User, 'streamerId')
     public streamer!: User;
+    public streaming?: boolean;
 
     @HasOne(() => Attendee, 'event')
     public attending!: Attendee;
@@ -115,19 +116,21 @@ export class Event extends Model<Event> {
 
     @BeforeUpdate
     public static async updateMessage(event: Event) {
-        if (event.messageID) {
-            const message = await this.getChannel().fetchMessages()
-                // @ts-ignore
-                .then((msgs) => msgs.get(event.messageID));
-            if (message) {
-                await message.delete();
+        if (!event.roomcode) {
+            if (event.messageID) {
+                const message = await this.getChannel().fetchMessages()
+                    // @ts-ignore
+                    .then((msgs) => msgs.get(event.messageID));
+                if (message) {
+                    await message.delete();
+                } else {
+                    // tslint:disable-next-line:no-console
+                    console.error('Can\'t find message: ' + event.messageID);
+                }
+                await Event.postMessage(event);
             } else {
-                // tslint:disable-next-line:no-console
-                console.error('Can\'t find message: ' + event.messageID);
+                await Event.postMessage(event);
             }
-            await Event.postMessage(event);
-        } else {
-            await Event.postMessage(event);
         }
     }
 }

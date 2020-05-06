@@ -147,7 +147,7 @@
                     <v-col cols="11">
                       <v-row>
                         <v-chip>
-                          <v-avatar>
+                          <v-avatar left>
                             <img
                               :src="series.details.coverImage.medium"
                               :alt="series.details.title.english"

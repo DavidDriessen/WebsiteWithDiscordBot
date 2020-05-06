@@ -37,7 +37,10 @@ export class ScheduleController {
             {association: 'streamer', attributes: ['id', 'name', 'avatar']},
         ];
         if (req.payload) {
-            include.push({association: 'attendees', attributes: ['id', 'name', 'avatar']});
+            include.push({
+                association: 'attendees', attributes: ['name', 'avatar'],
+                through: { attributes: ['decision'] },
+            });
             include.push({
                 association: 'attending', attributes: ['decision'], required: false,
                 where: {user: req.payload.user.id},
@@ -53,9 +56,12 @@ export class ScheduleController {
             res.status(200).json(events.map((event) => {
                 // @ts-ignore
                 event = event.toJSON();
-                if (event.streamer.id !== req.payload.user.id) {
+                if (event.streamer.id === req.payload.user.id) {
+                    event.streaming = true;
+                } else {
                     delete event.attendees;
                 }
+                delete event.streamer.id;
                 return event;
             }));
         } else {

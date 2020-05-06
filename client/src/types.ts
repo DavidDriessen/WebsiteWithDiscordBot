@@ -35,5 +35,6 @@ export interface Event {
   attendees?: User[];
   attending?: { decision: number };
   streamer?: User;
+  streaming?: boolean;
   roomcode?: string;
 }

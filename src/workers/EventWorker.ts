@@ -66,13 +66,14 @@ export class EventWorker {
         }
     }
 
-    public static sendNotification(event: Event) {
+    public static async sendNotification(event: Event) {
+        const attendees = await event.$get('attendees');
         EventWorker.getChannel()
             .send('Reminder: ' + event.title +
                 ' will be starting **' +
                 (moment(event.start) > moment() ? 'Soon' : moment(event.start).fromNow()) + '**.' +
-                EventWorker.getAttendees(event.attendees, 1) +
-                EventWorker.getAttendees(event.attendees, 2) +
+                EventWorker.getAttendees(attendees, 1) +
+                EventWorker.getAttendees(attendees, 2) +
                 (event.roomcode ? '\nRoom code: ' + event.roomcode : ''))
             .then(() => {
                 if (event.roomcode && event.messageID) {

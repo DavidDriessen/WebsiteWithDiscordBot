@@ -1,12 +1,17 @@
 <!--suppress ALL -->
 <template>
   <v-card-actions class="justify-center">
-    <v-dialog v-model="dialog" :persistent="streaming" max-width="600px">
+    <v-dialog v-model="dialog" :persistent="event.streaming" max-width="600px">
       <template v-slot:activator="{ on }">
-        <v-btn v-if="streaming" color="success" v-on="on" :x-small="small">
+        <v-btn
+          v-if="event.streaming"
+          color="success"
+          v-on="on"
+          :x-small="small"
+        >
           Stream
         </v-btn>
-        <div @click.stop v-if="!streaming">
+        <div @click.stop v-if="!event.streaming">
           <v-btn v-if="roomcode" color="success" :x-small="small" v-on="on">
             Join
           </v-btn>
@@ -37,13 +42,25 @@
                       (v && v.length === 13) ||
                       'Roomcode must be 13 characters long.'
                   ]"
-                  :disabled="!streaming"
+                  :disabled="!event.streaming"
                 />
               </v-col>
             </v-row>
+            <v-row>
+              <v-chip
+                v-for="attendee in event.attendees"
+                :key="attendee.name"
+                :color="decisionColor(attendee)"
+              >
+                <v-avatar left>
+                  <v-img :src="attendee.avatar" />
+                </v-avatar>
+                {{ attendee.name }}
+              </v-chip>
+            </v-row>
           </v-form>
         </v-card-text>
-        <v-card-actions v-if="streaming">
+        <v-card-actions v-if="event.streaming">
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="close()">Close</v-btn>
           <v-btn color="blue darken-1" text @click="save()">Save</v-btn>
@@ -67,6 +84,7 @@ export default class EventActions extends Vue {
   get roomcode() {
     return this.event.roomcode;
   }
+
   set roomcode(code) {
     this.event.roomcode = code;
   }
@@ -77,17 +95,22 @@ export default class EventActions extends Vue {
     }
     return -1;
   }
+
   set attending(state) {
     if (!isNaN(state)) {
       this.$store.dispatch("setAttending", { event: this.event, state });
     }
   }
 
-  get streaming() {
-    if (this.event.streamer && this.$store.state.user) {
-      return this.event.streamer.id == this.$store.state.user.id;
+  decisionColor(attendee: { Attendee: { decision: any } }) {
+    switch (attendee.Attendee.decision) {
+      case 1:
+        return "success";
+      case 2:
+        return "warning";
+      default:
+        return "red";
     }
-    return false;
   }
 
   get form() {
