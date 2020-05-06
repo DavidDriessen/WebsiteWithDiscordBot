@@ -4,17 +4,18 @@ import {
     Model,
     Table,
     HasMany,
-    BelongsTo, HasOne, BeforeCreate, AfterUpdate,
+    BelongsTo, HasOne, BeforeCreate, BeforeUpdate,
 } from 'sequelize-typescript';
 import User from './User';
 import Attendee from './Attendee';
 import SeriesEvent from './SeriesEvent';
 import {client} from '../start';
-import { TextChannel, Message, RichEmbed } from 'discord.js';
+import {TextChannel, Message, RichEmbed, Attachment} from 'discord.js';
 import * as discordConfig from '../config/discord.json';
 import {SeriesController} from '../controllers';
 import {AttendanceDiscord} from '../discord/AttendanceDiscord';
 import * as moment from 'moment';
+import * as Jimp from 'jimp';
 
 @Table
 export class Event extends Model<Event> {
@@ -57,16 +58,44 @@ export class Event extends Model<Event> {
         return client.channels.get(discordConfig.channel.event) as TextChannel;
     }
 
+    public static renderImage(urls: string[]) {
+        return Promise.all(urls.map((url) => Jimp.read(url)))
+            .then((images) => {
+                const h = Math.min(...images.map((j) => j.getHeight()));
+                // tslint:disable-next-line:no-shadowed-variable
+                for (const image of images) {
+                    image.scale(h / image.getHeight());
+                }
+                const widths = images.map((j) => j.getWidth());
+                const image = new Jimp(widths.reduce((a, b) => a + b), h);
+                for (let i = 0; i < images.length; i++) {
+                    image.composite(images[i], widths.slice(0, i).reduce((a, b) => a + b, 0), 0);
+                }
+                return image;
+            });
+    }
+
     private static async renderMessage(event: Event) {
-        const series = await SeriesController
-            // tslint:disable-next-line:no-shadowed-variable
-            .getSeriesById(event.series.map((series) => series.seriesId)) || [];
+        const order = event.series.sort((a, b) => {
+            return a.order - b.order;
+        }).map((s) => s.seriesId);
+        const series = (await SeriesController
+            .getSeriesById(event.series.map((seriesEvent) => seriesEvent.seriesId)) || [])
+            .sort((a: { id: number; }, b: { id: number; }) => {
+                return order.indexOf(a.id) - order.indexOf(b.id);
+            });
+        const image = await Event
+            .renderImage(series
+                .map((media: { coverImage: { extraLarge: string; }; }) =>
+                    media.coverImage.extraLarge));
         const embed = new RichEmbed();
         embed.setTitle(event.title);
-        embed.addField('Time', moment(event.start).format('MMM dd, hh:mm'));
-        embed.setDescription((event.description || ''));
+        embed.attachFile(new Attachment(await image.getBufferAsync(Jimp.MIME_PNG), 'image.png'));
+        embed.addField('Time', '```md\n' + moment(event.start).utc().format('< MMM DD, HH:mm')
+            + moment(event.end).utc().format(' — HH:mm >') + '\n```');
+        embed.setDescription(event.description || '');
         for (const media of series) {
-            embed.addField('*' + media.title.english + '*',
+            embed.addField('```' + media.title.english + ' ```',
                 media.description.replace('<br>', '\n').replace(/<[^>]+>/g, ''));
         }
         return embed;
@@ -84,18 +113,19 @@ export class Event extends Model<Event> {
         }
     }
 
-    @AfterUpdate
+    @BeforeUpdate
     public static async updateMessage(event: Event) {
         if (event.messageID) {
             const message = await this.getChannel().fetchMessages()
                 // @ts-ignore
                 .then((msgs) => msgs.get(event.messageID));
             if (message) {
-                message.edit(await this.renderMessage(event));
+                await message.delete();
             } else {
                 // tslint:disable-next-line:no-console
                 console.error('Can\'t find message: ' + event.messageID);
             }
+            await Event.postMessage(event);
         } else {
             await Event.postMessage(event);
         }

@@ -21,6 +21,5 @@ registerController([__dirname + '/workers/**/*.ts']);
 sequelize.addModels([__dirname + '/models']);
 client.silent = true;
 // tslint:disable-next-line:max-line-length
-client.login(discordConfig.token,
-    `${__dirname}/discord/*Discord.ts`);
+client.login(discordConfig.token, `${__dirname}/discord/*Discord.ts`);
 webServer.start(3000);
