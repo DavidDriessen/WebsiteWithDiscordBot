@@ -170,7 +170,7 @@
                           :max="
                             series.details.episodes
                               ? series.details.episodes + 1
-                              : 13
+                              : 31
                           "
                         >
                           <template v-slot:prepend>
@@ -317,8 +317,10 @@ export default class EventModal extends Vue {
   }
 
   setEpisodes(series: EventSeries, event: number[]) {
-    if (series.details && event[0] > series.details.episodes) {
-      event[0] = series.details.episodes;
+    if (series.details && series.details.episodes && event[0] > series.details.episodes) {
+        event[0] = series.details.episodes;
+    } else if((!series.details || !series.details.episodes) && event[0] > 30){
+      event[0] = 30;
     }
     if (series.episode !== event[0]) {
       if (series.episodes !== event[1] - series.episode) {
