@@ -26,7 +26,7 @@
     "axios": "latest",
     "body-parser": "^1.18.3",
     "cron-decorators": "^0.1.2",
-    "discord-oauth2": "latest",
+    "discord-oauth2": "2.0.2",
     "discord.js": "^11.6.3",
     "express": "^4.16.4",
     "jimp": "^0.10.3",
