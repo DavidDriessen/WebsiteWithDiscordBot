@@ -11,15 +11,14 @@ import WebServer from './WebServer';
 import {Client} from '@typeit/discord';
 import {registerController} from 'cron-decorators/lib';
 
-// @ts-ignore
-// tslint:disable-next-line:max-line-length
-const sequelize = process.env.NODE_ENV === 'production' ? new Sequelize(dbConfig.production) : new Sequelize(dbConfig.development);
+const sequelize = process.env.NODE_ENV === 'production' ?
+    // @ts-ignore
+    new Sequelize(dbConfig.production) : new Sequelize(dbConfig.development);
 const webServer = new WebServer();
 export const client = new Client();
 
-registerController([__dirname + '/workers/**/*.ts']);
+registerController([__dirname + '/workers/**/*Worker.*']);
 sequelize.addModels([__dirname + '/models']);
 client.silent = true;
-// tslint:disable-next-line:max-line-length
-client.login(discordConfig.token, `${__dirname}/discord/*Discord.ts`);
+client.login(discordConfig.token, `${__dirname}/discord/*Discord.*`);
 webServer.start(3000);

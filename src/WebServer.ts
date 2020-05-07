@@ -37,8 +37,7 @@ class WebServer extends Server {
     public start(port: number): void {
         this.app.use(express.static(__dirname + '/public/'));
         this.app.get('*', (req, res) => {
-            // @ts-ignore
-            if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+            if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
                 res.status(404).json({status: 'error', type: 'route', message: 'Page not found'});
             }
             res.sendFile(__dirname + '/public/index.html');

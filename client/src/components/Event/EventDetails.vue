@@ -41,8 +41,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import axios, { CancelTokenSource } from "axios";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import EventActions from "@/components/Event/EventActions.vue";
 
 @Component({ components: { EventActions } })
@@ -56,6 +55,6 @@ export default class EventDetails extends Vue {
 
 <style lang="scss">
 .v-slide-group__prev {
-  display: none!important;
+  display: none !important;
 }
 </style>

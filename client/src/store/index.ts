@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import axios from "axios";
-import router from '@/router';
+import router from "@/router";
 
 Vue.use(Vuex);
 
@@ -15,7 +15,7 @@ interface States {
   newUser: boolean;
 }
 
-const store =  new Vuex.Store({
+const store = new Vuex.Store({
   state: {
     user: null,
     newUser: false
@@ -43,18 +43,18 @@ const store =  new Vuex.Store({
               error => {
                 if (error.response && error.response.status == 401) {
                   commit("User", null);
-                  localStorage.removeItem('token');
+                  localStorage.removeItem("token");
                 }
                 return Promise.reject(error);
               }
             );
           })
           .catch(() => {
-            localStorage.removeItem('token');
+            localStorage.removeItem("token");
           });
       }
     },
-    setAttending({ state }, payload) {
+    setAttending(_context, payload) {
       if (
         !payload.event.attending ||
         payload.state !== payload.event.attending.decision
@@ -77,10 +77,10 @@ const store =  new Vuex.Store({
         );
       }
     },
-    Logout({ commit }){
+    Logout({ commit }) {
       commit("User", null);
-      localStorage.removeItem('token');
-      router.push('/');
+      localStorage.removeItem("token");
+      router.push("/");
     }
   },
   getters: {
@@ -94,4 +94,4 @@ const store =  new Vuex.Store({
   modules: {}
 });
 
-export default store
+export default store;

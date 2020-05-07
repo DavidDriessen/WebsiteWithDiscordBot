@@ -102,7 +102,7 @@ export default class EventActions extends Vue {
     }
   }
 
-  decisionColor(attendee: { Attendee: { decision: any } }) {
+  decisionColor(attendee: { Attendee: { decision: number | undefined } }) {
     switch (attendee.Attendee.decision) {
       case 1:
         return "success";

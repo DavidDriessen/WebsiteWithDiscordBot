@@ -230,11 +230,10 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import axios, { CancelTokenSource } from "axios";
+import axios from "axios";
 import { Event, Series, EventSeries } from "@/types";
 import draggable from "vuedraggable";
 import moment from "moment";
-import { ComponentOptions } from "vue/types/options";
 import cloneDeep from "lodash-ts/cloneDeep";
 
 @Component({
@@ -317,9 +316,13 @@ export default class EventModal extends Vue {
   }
 
   setEpisodes(series: EventSeries, event: number[]) {
-    if (series.details && series.details.episodes && event[0] > series.details.episodes) {
-        event[0] = series.details.episodes;
-    } else if((!series.details || !series.details.episodes) && event[0] > 30){
+    if (
+      series.details &&
+      series.details.episodes &&
+      event[0] > series.details.episodes
+    ) {
+      event[0] = series.details.episodes;
+    } else if ((!series.details || !series.details.episodes) && event[0] > 30) {
       event[0] = 30;
     }
     if (series.episode !== event[0]) {

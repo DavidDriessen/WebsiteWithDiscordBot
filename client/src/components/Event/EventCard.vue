@@ -41,8 +41,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import axios, { CancelTokenSource } from "axios";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import EventDetails from "@/components/Event/EventDetails.vue";
 import EventModal from "@/components/Event/EventModal.vue";
 import { Event } from "@/types";
