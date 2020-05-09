@@ -155,36 +155,15 @@ export class ScheduleController {
         event.end = req.body.end;
         event.description = req.body.description;
         if (req.body.series) {
-            // @ts-ignore
-            const ids = req.body.series.map((series) => series.details.id);
-            for (const series of event.series) {
-                if (ids.indexOf(series.seriesId) === -1) {
-                    series.destroy();
-                }
-            }
-            // tslint:disable-next-line:prefer-for-of
-            for (let i = 0; i < req.body.series.length; i++) {
-                SeriesEvent.findOrBuild({
-                    where: {
-                        event: event.id,
-                        seriesId: req.body.series[i].details.id,
-                    },
-                }).then((db) => {
-                    db[0].order = i;
-                    db[0].episode = req.body.series[i].episode;
-                    db[0].episodes = req.body.series[i].episodes;
-                    db[0].save();
-                });
-            }
             event.series = req.body.series
                 .map((s: { details: { id: any; }; episode: any; episodes: any; }, i: number) => {
-                    return {
-                        event: event.id,
-                        seriesId: s.details.id,
-                        order: i,
-                        episode: s.episode,
-                        episodes: s.episodes,
-                    } as SeriesEvent;
+                    const ss = event.series.find(
+                        (m) => m.event === event.id && m.seriesId === s.details.id) ||
+                        new SeriesEvent({event: event.id, seriesId: s.details.id});
+                    ss.order = i;
+                    ss.episode = req.body.series[i].episode;
+                    ss.episodes = req.body.series[i].episodes;
+                    return ss;
                 });
         }
         event.save();

@@ -7,6 +7,11 @@ function checkRemindMeRole(message: CommandMessage) {
     return message.member.roles.has(remindMeRole.id);
 }
 
+function checkAdminRole(message: CommandMessage) {
+    const remindMeRole = message.guild.roles.find('name', 'Admin');
+    return message.member.roles.has(remindMeRole.id);
+}
+
 @Discord({prefix: '!'})
 export class MainDiscord {
 
@@ -46,6 +51,7 @@ export class MainDiscord {
     }
 
     @Command('clear')
+    @Guard(checkAdminRole)
     public clear(message: CommandMessage) {
         message.channel.fetchMessages().then((msgs) => msgs.deleteAll());
     }

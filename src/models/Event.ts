@@ -51,13 +51,9 @@ export class Event extends Model<Event> {
     public messageID?: string;
 
     public async getSeries() {
-        const db = this.series || await this.$get('series');
-        if (!db) {
-            return [];
-        }
         const series = await SeriesController
-            .getSeriesById(db.map((seriesEvent) => seriesEvent.seriesId)) || [];
-        return db.map((s) => {
+            .getSeriesById(this.series.map((seriesEvent) => seriesEvent.seriesId)) || [];
+        return this.series.map((s) => {
             s.details = series.find((m: { id: number; }) => m.id === s.seriesId);
             return s;
         }).sort((a, b) => {
@@ -72,7 +68,25 @@ export class Event extends Model<Event> {
 
     @BeforeUpdate
     public static async updateMessage(event: Event) {
-        await EventDiscord.update(event);
+        const dbSeries = await SeriesEvent.findAll({where: {event: event.id}});
+        if (dbSeries.length === event.series.length) {
+            if (event.series.filter((s) => !s.changed()).length === event.series.length) {
+                await EventDiscord.update(event);
+                return;
+            }
+        } else {
+            // @ts-ignore
+            const ids = dbSeries.map((series) => series.seriesId);
+            for (const series of event.series) {
+                if (ids.indexOf(series.seriesId) === -1) {
+                    series.destroy();
+                }
+            }
+        }
+        for (const series of event.series) {
+            series.save();
+        }
+        await EventDiscord.update(event, true);
     }
 }
 

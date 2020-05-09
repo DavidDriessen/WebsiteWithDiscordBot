@@ -3,6 +3,7 @@ import {MessageReaction} from 'discord.js';
 import Event from '../models/Event';
 import User from '../models/User';
 import Attendee from '../models/Attendee';
+import {EventDiscord} from './EventDiscord';
 
 @Discord()
 export class AttendanceDiscord {
@@ -14,7 +15,10 @@ export class AttendanceDiscord {
         if (messageReaction.count <= 1) {
             return;
         }
-        const event = await Event.findOne({where: {messageID: messageReaction.message.id}});
+        const event = await Event.findOne({
+            where: {messageID: messageReaction.message.id},
+            include: ['series'],
+        });
         if (!event) {
             return;
         }
@@ -35,6 +39,6 @@ export class AttendanceDiscord {
                 attendee[0].save();
             }
         }
-        event.save();
+        await EventDiscord.update(event);
     }
 }

@@ -1,4 +1,3 @@
-import {Discord, On} from '@typeit/discord';
 import {Attachment, Message, RichEmbed, TextChannel} from 'discord.js';
 import Event from '../models/Event';
 import {client} from '../start';
@@ -11,10 +10,8 @@ import * as TurndownService from 'turndown';
 import Attendee from '../models/Attendee';
 import SeriesEvent from '../models/SeriesEvent';
 
-@Discord()
 export class EventDiscord {
 
-    @On('ready')
     public static async updateChannel() {
         const channel = EventDiscord.getChannel();
         const msgs = await channel.fetchMessages();
@@ -111,7 +108,7 @@ export class EventDiscord {
         return embed;
     }
 
-    public static async update(event: Event) {
+    public static async update(event: Event, force = false) {
         if (event.messageID) {
             const m = this.getChannel().messages.get(event.messageID);
             if (event.roomcode ||
@@ -123,9 +120,7 @@ export class EventDiscord {
                 return;
             }
             if (m) {
-                const series = event.series || await event.$get('series');
-                const time = Math.max(...series.map((s) => s.updatedAt));
-                if (moment(time).isSameOrAfter(event.updatedAt)) {
+                if (force) {
                     m.delete().then();
                     event.messageID = '';
                 } else {
