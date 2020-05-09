@@ -8,13 +8,16 @@ import {SeriesController} from '../controllers';
 import * as moment from 'moment';
 import {AttendanceDiscord} from './AttendanceDiscord';
 import {Op} from 'sequelize';
+import * as TurndownService from 'turndown';
+import Attendee from '../models/Attendee';
 
 @Discord()
 export class EventDiscord {
 
     @On('ready')
-    public async init() {
-        const msgs = await EventDiscord.getChannel().fetchMessages();
+    public static async updateChannel() {
+        const channel = EventDiscord.getChannel();
+        const msgs = await channel.fetchMessages();
         let events = await Event.findAll({
             where: {
                 start:
@@ -23,6 +26,7 @@ export class EventDiscord {
                         [Op.lte]: moment().add(1, 'week').toDate(),
                     },
             },
+            include: ['series', 'streamer', 'attendees'],
         });
         for (const event of events) {
             let msg;
@@ -37,9 +41,12 @@ export class EventDiscord {
             where: {
                 start:
                     {
-                        [Op.lte]: moment().toDate(),
-                        [Op.gte]: moment().add(1, 'week').toDate(),
+                        [Op.or]: {
+                            [Op.lt]: moment().toDate(),
+                            [Op.gt]: moment().add(1, 'week').toDate(),
+                        },
                     },
+                messageID: {[Op.ne]: null, [Op.ne]: ''},
             },
         });
         for (const event of events) {
@@ -78,25 +85,59 @@ export class EventDiscord {
             .sort((a: { id: number; }, b: { id: number; }) => {
                 return order.indexOf(a.id) - order.indexOf(b.id);
             });
+
         const image = await EventDiscord.renderImage(
             series.map((media: { coverImage: { extraLarge: string; }; }) =>
                 media.coverImage.extraLarge));
+        const service = new TurndownService();
+
         const embed = new RichEmbed();
+        embed.setURL(discordConfig.callbackHost + '/schedule');
         embed.setTitle(event.title);
         embed.attachFile(new Attachment(await image.getBufferAsync(Jimp.MIME_PNG), 'image.png'));
-        embed.addField('Time', '```md\n' + moment(event.start).utc().format('< MMM DD, HH:mm')
-            + moment(event.end).utc().format(' — HH:mm >') + '\n```');
-        embed.setDescription(event.description || '');
+        embed.addField('Time', '```md\n' + moment(event.start).utc().format('< ddd DD of MMM [at] HH:mm')
+            + moment(event.end).utc().format(' — HH:mm > UTC') + '\n```');
+        embed.setDescription((event.description || ''));
+
         for (const media of series) {
-            embed.addField('```' + media.title.english + ' ```',
-                media.description.replace('<br>', '\n').replace(/<[^>]+>/g, ''));
+            embed.addField('-',
+                '**[' + media.title.english + '](' + media.siteUrl + ')**\n' +
+                service.turndown(media.description));
         }
+
+        embed.addField('Attending', '```md\n- <Yes ' +
+            await Attendee.count({where: {event: event.id, decision: 1}}) +
+            '> <No  ' +
+            await Attendee.count({where: {event: event.id, decision: 0}}) +
+            '> <Undecided ' +
+            await Attendee.count({where: {event: event.id, decision: 2}}) +
+            '>\n```');
+
         return embed;
     }
 
     public static async update(event: Event) {
         if (event.messageID) {
-            this.getChannel().messages.get(event.messageID)?.delete().then();
+            const m = this.getChannel().messages.get(event.messageID);
+            if (event.roomcode ||
+                !moment(event.start).isBetween(moment(), moment().add(1, 'week'))) {
+                if (m) {
+                    m.delete().then();
+                }
+                event.messageID = '';
+                return;
+            }
+            if (m) {
+                const series = await event.$get('series');
+                const time = Math.max(...series.map((s) => s.updatedAt));
+                if (moment(time).isSameOrAfter(event.updatedAt)) {
+                    m.delete().then();
+                    event.messageID = '';
+                } else {
+                    m.edit(await this.renderMessage(event)).then();
+                    return;
+                }
+            }
         }
         if (event.roomcode || !moment(event.start).isBetween(moment(), moment().add(1, 'week'))) {
             return;

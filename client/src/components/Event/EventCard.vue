@@ -18,7 +18,7 @@
           >
             <EventCardImage :image="event.image" :series="event.series" />
             <v-icon class="info-icon">fas fa-info-circle</v-icon>
-            <v-card-title :style="'font-size: ' + titleFontSize + 'px;'">
+            <v-card-title class="text-truncate text-no-wrap" :style="'display: block; font-size: 16px;'">
               {{ event.title }}
             </v-card-title>
             <v-card-subtitle>{{ time }}</v-card-subtitle>
@@ -80,23 +80,6 @@ export default class EventCard extends Vue {
     }
   }
 
-  get titleFontSize() {
-    if (this.small) {
-      if (this.event.title.length < 10) {
-        return 20;
-      }
-      if (this.event.title.length <= 16) {
-        return 28 - this.event.title.length;
-      }
-      if (this.event.title.length < 20) {
-        return 29 - this.event.title.length;
-      }
-      return 9;
-    } else {
-      return 20;
-    }
-  }
-
   get small() {
     return this.width < 300;
   }
@@ -123,6 +106,6 @@ export default class EventCard extends Vue {
 .info-icon {
   position: absolute !important;
   right: 20px;
-  margin-top: 30px;
+  margin-top: 50px;
 }
 </style>

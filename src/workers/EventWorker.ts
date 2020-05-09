@@ -6,6 +6,7 @@ import {Op} from 'sequelize';
 import {client} from '../start';
 import * as discordConfig from '../config/discord.json';
 import User from '../models/User';
+import {EventDiscord} from '../discord/EventDiscord';
 
 @CronController('jobs')
 export class EventWorker {
@@ -48,22 +49,13 @@ export class EventWorker {
             include: ['series', 'streamer', 'attendees'],
         });
         for (const event of events) {
-            EventWorker.sendNotification(event);
+            EventWorker.sendNotification(event).then();
         }
     }
 
     @Cron('updateEventChannel', '0 0 0 * * *')
-    public async updateEventChannel() {
-        const events = await Event.findAll({
-            where: {
-                start: {[Op.gt]: moment(), [Op.lte]: moment().add(1, 'week')},
-                messageID: {[Op.and]: [{[Op.ne]: null}, {[Op.ne]: ''}]},
-            },
-            include: ['series', 'streamer', 'attendees'],
-        });
-        for (const event of events) {
-            Event.postMessage(event).then();
-        }
+    public updateEventChannel() {
+        EventDiscord.updateChannel().then();
     }
 
     public static async sendNotification(event: Event) {

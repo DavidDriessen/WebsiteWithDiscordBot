@@ -35,5 +35,6 @@ export class AttendanceDiscord {
                 attendee[0].save();
             }
         }
+        event.save();
     }
 }

@@ -45,8 +45,8 @@ export class MainDiscord {
         }).join('\n'));
     }
 
-    // @Command('clear')
-    // public clear(message: CommandMessage) {
-    //     message.channel.fetchMessages().then((msgs) => msgs.deleteAll());
-    // }
+    @Command('clear')
+    public clear(message: CommandMessage) {
+        message.channel.fetchMessages().then((msgs) => msgs.deleteAll());
+    }
 }
