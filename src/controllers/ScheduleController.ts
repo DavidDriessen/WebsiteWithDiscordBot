@@ -39,7 +39,7 @@ export class ScheduleController {
         if (req.payload) {
             include.push({
                 association: 'attendees', attributes: ['name', 'avatar'],
-                through: { attributes: ['decision'] },
+                through: {attributes: ['decision']},
             });
             include.push({
                 association: 'attending', attributes: ['decision'], required: false,
@@ -164,7 +164,7 @@ export class ScheduleController {
             }
             // tslint:disable-next-line:prefer-for-of
             for (let i = 0; i < req.body.series.length; i++) {
-                await SeriesEvent.findOrBuild({
+                SeriesEvent.findOrBuild({
                     where: {
                         event: event.id,
                         seriesId: req.body.series[i].details.id,
@@ -176,6 +176,16 @@ export class ScheduleController {
                     db[0].save();
                 });
             }
+            event.series = req.body.series
+                .map((s: { details: { id: any; }; episode: any; episodes: any; }, i: number) => {
+                    return {
+                        event: event.id,
+                        seriesId: s.details.id,
+                        order: i,
+                        episode: s.episode,
+                        episodes: s.episodes,
+                    } as SeriesEvent;
+                });
         }
         event.save();
         return res.status(200).json(ScheduleController.renderResponse(event));

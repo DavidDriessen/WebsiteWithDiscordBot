@@ -54,8 +54,8 @@
                     :rules="[
                       v => !!v || 'Title is required',
                       v =>
-                        (v && v.length <= 255) ||
-                        'Title must be less than 25 characters'
+                        (v && v.length <= 150) ||
+                        'Title must be less than 150 characters'
                     ]"
                   />
                 </v-col>

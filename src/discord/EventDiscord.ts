@@ -4,12 +4,12 @@ import Event from '../models/Event';
 import {client} from '../start';
 import * as discordConfig from '../config/discord.json';
 import * as Jimp from 'jimp';
-import {SeriesController} from '../controllers';
 import * as moment from 'moment';
 import {AttendanceDiscord} from './AttendanceDiscord';
 import {Op} from 'sequelize';
 import * as TurndownService from 'turndown';
 import Attendee from '../models/Attendee';
+import SeriesEvent from '../models/SeriesEvent';
 
 @Discord()
 export class EventDiscord {
@@ -76,19 +76,9 @@ export class EventDiscord {
     }
 
     private static async renderMessage(event: Event) {
-        const seriesDB = await event.$get('series');
-        const order = seriesDB.sort((a, b) => {
-            return a.order - b.order;
-        }).map((s) => s.seriesId);
-        const series = (await SeriesController
-            .getSeriesById(seriesDB.map((seriesEvent) => seriesEvent.seriesId)) || [])
-            .sort((a: { id: number; }, b: { id: number; }) => {
-                return order.indexOf(a.id) - order.indexOf(b.id);
-            });
-
-        const image = await EventDiscord.renderImage(
-            series.map((media: { coverImage: { extraLarge: string; }; }) =>
-                media.coverImage.extraLarge));
+        const series = await event.getSeries();
+        const image = await EventDiscord.renderImage(series.map((media: SeriesEvent) =>
+            media.details ? media.details.coverImage.extraLarge : ''));
         const service = new TurndownService();
 
         const embed = new RichEmbed();
@@ -100,9 +90,14 @@ export class EventDiscord {
         embed.setDescription((event.description || ''));
 
         for (const media of series) {
-            embed.addField('-',
-                '**[' + media.title.english + '](' + media.siteUrl + ')**\n' +
-                service.turndown(media.description));
+            if (media.details) {
+                embed.addField('-',
+                    '**[' + media.details.title.english + '](' + media.details.siteUrl + '): Ep ' +
+                    media.episode +
+                    (media.episodes > 1 ? '-' + (media.episode + media.episodes - 1) : '') +
+                    '**\n' +
+                    service.turndown(media.details.description).split(/\n( *)\n/)[0]);
+            }
         }
 
         embed.addField('Attending', '```md\n- <Yes ' +
@@ -128,7 +123,7 @@ export class EventDiscord {
                 return;
             }
             if (m) {
-                const series = await event.$get('series');
+                const series = event.series || await event.$get('series');
                 const time = Math.max(...series.map((s) => s.updatedAt));
                 if (moment(time).isSameOrAfter(event.updatedAt)) {
                     m.delete().then();

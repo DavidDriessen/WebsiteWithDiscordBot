@@ -19,6 +19,13 @@ export class SeriesEvent extends Model<SeriesEvent> {
 
     @Column
     public episodes!: number;
+
+    public details?: {
+        title: { english: string };
+        coverImage: { extraLarge: string; };
+        description: string;
+        siteUrl: string;
+    };
 }
 
 export default SeriesEvent;
