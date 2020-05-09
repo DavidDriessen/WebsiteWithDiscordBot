@@ -69,6 +69,9 @@ export class Event extends Model<Event> {
     @BeforeUpdate
     public static async updateMessage(event: Event) {
         const dbSeries = await SeriesEvent.findAll({where: {event: event.id}});
+        if (event.series === undefined) {
+            event.series = dbSeries;
+        }
         if (dbSeries.length === event.series.length) {
             if (event.series.filter((s) => !s.changed()).length === event.series.length) {
                 await EventDiscord.update(event);

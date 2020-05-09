@@ -63,7 +63,7 @@ export class EventWorker {
         EventWorker.getChannel()
             .send('Reminder: ' + event.title +
                 ' will be starting **' +
-                (moment(event.start) > moment() ? 'Soon' : moment(event.start).fromNow()) + '**.' +
+                (moment().isAfter(event.start) ? 'Soon' : moment(event.start).fromNow()) + '**.' +
                 EventWorker.getAttendees(attendees, 1) +
                 EventWorker.getAttendees(attendees, 2) +
                 (event.roomcode ? '\nRoom code: ' + event.roomcode : ''))
