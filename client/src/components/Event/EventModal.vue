@@ -302,9 +302,17 @@ export default class EventModal extends Vue {
         this.event.start.add(1, "week");
         this.event.end.add(1, "week");
         for (const series of this.event.series) {
-          series.episode = series.episode + series.episodes;
-          if (series.details && series.episode > series.details.episodes) {
-            this.event.series.splice(this.event.series.indexOf(series), 1);
+          if (series.details && series.details.episodes) {
+            if (series.episode + 1 > series.details.episodes) {
+              this.event.series.splice(this.event.series.indexOf(series), 1);
+            }
+            if (series.episode + series.episodes > series.details.episodes) {
+              series.episode = series.details.episodes;
+            } else {
+              series.episode = series.episode + series.episodes;
+            }
+          } else {
+            series.episode = series.episode + series.episodes;
           }
         }
       }

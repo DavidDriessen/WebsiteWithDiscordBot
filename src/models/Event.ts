@@ -72,24 +72,21 @@ export class Event extends Model<Event> {
         if (event.series === undefined) {
             event.series = dbSeries;
         }
-        if (dbSeries.length === event.series.length) {
-            if (event.series.filter((s) => !s.changed()).length === event.series.length) {
-                await EventDiscord.update(event);
-                return;
-            }
+        const deleted = dbSeries.filter((db) =>
+            event.series.filter((s) =>
+                s.seriesId === db.seriesId).length === 0);
+        const changed = event.series.filter((s) => s.changed());
+        if (deleted.length === 0 && changed.length === 0) {
+            await EventDiscord.update(event);
         } else {
-            // @ts-ignore
-            const ids = dbSeries.map((series) => series.seriesId);
-            for (const series of event.series) {
-                if (ids.indexOf(series.seriesId) === -1) {
-                    series.destroy();
-                }
+            for (const series of deleted) {
+                series.destroy();
             }
+            for (const series of changed) {
+                series.save();
+            }
+            await EventDiscord.update(event, true);
         }
-        for (const series of event.series) {
-            series.save();
-        }
-        await EventDiscord.update(event, true);
     }
 }
 
