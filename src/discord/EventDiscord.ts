@@ -51,7 +51,7 @@ export class EventDiscord {
         }
     }
 
-    private static getChannel() {
+    public static getChannel() {
         return client.channels.get(discordConfig.channel.event) as TextChannel;
     }
 

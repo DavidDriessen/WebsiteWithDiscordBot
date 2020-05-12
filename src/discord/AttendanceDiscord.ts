@@ -4,11 +4,32 @@ import Event from '../models/Event';
 import User from '../models/User';
 import Attendee from '../models/Attendee';
 import {EventDiscord} from './EventDiscord';
+import {Op} from 'sequelize';
 
 @Discord()
 export class AttendanceDiscord {
 
     public static readonly options = ['❌', '✅', '❔'];
+
+    @On('ready')
+    public async init() {
+        const msgs = await EventDiscord.getChannel().fetchMessages();
+        const events = await Event.findAll({
+            where: {messageID: {[Op.in]: msgs.keyArray()}},
+            include: ['series'],
+        });
+        for (const event of events) {
+            if (event.messageID) {
+                const msg = msgs.get(event.messageID);
+                if (msg) {
+                    for (const messageReaction of msg.reactions.array()) {
+                        await messageReaction.fetchUsers();
+                        await this.attending(messageReaction);
+                    }
+                }
+            }
+        }
+    }
 
     @On('messageReactionAdd')
     public async attending(messageReaction: MessageReaction) {
