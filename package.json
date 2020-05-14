@@ -9,7 +9,8 @@
     "build-server": "rimraf ./build && tsc",
     "build": "node rimraf ./build && tsc && npm run build --prefix client -- --dest ../build/public",
     "start": "node build/start.js",
-    "migrate": "node util/migrate.js"
+    "migrate": "node util/migrate.js",
+    "addmodel": "npx sequelize-cli model:generate --config src/config/database.json --migrations-path util/migrations --models-path src/models --name "
   },
   "author": "DavidDual",
   "license": "MIT",
