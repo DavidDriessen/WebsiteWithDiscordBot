@@ -17,25 +17,28 @@
             @click="onClick"
           >
             <EventCardImage :image="event.image" :series="event.series" />
-            <v-icon class="info-icon">fas fa-info-circle</v-icon>
-            <v-card-title class="text-truncate text-no-wrap" :style="'display: block; font-size: 16px;'">
+<!--            <v-icon class="info-icon">fas fa-info-circle</v-icon>-->
+            <v-card-title
+              class="text-truncate text-no-wrap"
+              :style="'display: block; font-size: 16px;'"
+            >
               {{ event.title }}
             </v-card-title>
             <v-card-subtitle>{{ time }}</v-card-subtitle>
             <EventActions
-              v-if="$store.getters.isLoggedIn"
+              v-if="$store.getters.isLoggedIn && !history"
               :event="event"
-              :small="small"
             />
+            <v-icon class="info-icon">fas fa-info-circle</v-icon>
           </v-card>
         </template>
       </event-details>
     </template>
 
     <v-list>
-      <EventModal :event-to-edit="event" :small="small" />
-      <EventModal :event-to-clone="event" :small="small" />
-      <EventModal :event-to-clone="event" :small="small" :next="true" />
+      <EventModal :event-to-edit="event" />
+      <EventModal :event-to-clone="event" />
+      <EventModal :event-to-clone="event" :next="true" />
     </v-list>
   </v-menu>
 </template>
@@ -55,6 +58,7 @@ import EventCardImage from "@/components/Event/EventCardImage.vue";
 export default class EventCard extends Vue {
   @Prop() event!: Event;
   @Prop() width!: number;
+  @Prop() history!: boolean;
   dialog = false;
   menu = false;
   time = "";
@@ -105,7 +109,7 @@ export default class EventCard extends Vue {
 <style lang="scss">
 .info-icon {
   position: absolute !important;
-  right: 20px;
-  margin-top: 50px;
+  right: 13px;
+  bottom: 13px;
 }
 </style>

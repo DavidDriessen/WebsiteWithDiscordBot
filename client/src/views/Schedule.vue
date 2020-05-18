@@ -1,14 +1,20 @@
 <template>
-  <v-container fluid class="schedule">
+  <v-container fluid v-resize="onResize">
     <v-overlay :value="loading" absolute>
       <v-progress-circular indeterminate size="128">
         <h1>Loading</h1>
       </v-progress-circular>
     </v-overlay>
+    <v-row style="padding-right: 100px">
+      <v-spacer />
+      <v-switch v-model="history" label="History" @change="getSchedule" />
+    </v-row>
+    <v-divider />
     <v-row
       v-for="(chunkEvent, chunkIndex) of chunkedEvents"
       :key="chunkIndex"
       justify="space-around"
+      style="padding: 20px"
     >
       <event-card
         v-for="(event, index) of chunkEvent"
@@ -16,6 +22,7 @@
         :cols="chunkEvent / 12"
         :event.sync="event"
         :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
+        :history="history"
       />
     </v-row>
   </v-container>
@@ -40,29 +47,26 @@ export default class Schedule extends Vue {
   loading = false;
   chunkSize = 3;
   width = 350;
+  history = false;
 
   mounted() {
     this.getSchedule();
     this.onResize();
-    window.addEventListener("resize", this.onResize);
-  }
-
-  beforeDestroy() {
-    // Unregister the event listener before destroying this Vue instance
-    window.removeEventListener("resize", this.onResize);
   }
 
   onResize() {
     this.width = document.documentElement.clientWidth;
     this.chunkSize = Math.floor(this.width / 420);
-    if (this.chunkSize == 1) this.chunkSize = Math.floor(this.width / 160);
+    if (this.chunkSize == 1) {
+      this.chunkSize = Math.floor(this.width / 160);
+    }
   }
 
   getSchedule() {
     this.loading = true;
     axios
       .get(
-        "/api/schedule",
+        "/api/schedule" + (this.history ? "?history=true" : ""),
         localStorage.token
           ? {
               headers: {
@@ -93,7 +97,9 @@ export default class Schedule extends Vue {
   }
 
   getSeries(id: number) {
-    if (!this.seriesCache[id]) this.seriesCache[id] = {} as Series;
+    if (!this.seriesCache[id]) {
+      this.seriesCache[id] = {} as Series;
+    }
     return this.seriesCache[id];
   }
 
@@ -127,8 +133,4 @@ export default class Schedule extends Vue {
 }
 </script>
 
-<style lang="scss">
-.schedule {
-  margin-top: 30px;
-}
-</style>
+<style lang="scss"></style>

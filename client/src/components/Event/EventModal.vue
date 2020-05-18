@@ -7,25 +7,24 @@
         color="primary"
         dark
         v-on="on"
-        :x-small="small"
       >
         Add event
       </v-btn>
       <v-list-item v-if="eventToEdit" v-on="on">
         <v-list-item-icon>
-          <v-icon :x-small="small" color="gray">fas fa-pencil-alt</v-icon>
+          <v-icon color="gray">fas fa-pencil-alt</v-icon>
         </v-list-item-icon>
         <v-list-item-title>Edit event</v-list-item-title>
       </v-list-item>
       <v-list-item v-if="eventToClone && !next" v-on="on">
         <v-list-item-icon>
-          <v-icon :x-small="small" color="gray">fas fa-clone</v-icon>
+          <v-icon color="gray">fas fa-clone</v-icon>
         </v-list-item-icon>
         <v-list-item-title>Clone event</v-list-item-title>
       </v-list-item>
       <v-list-item v-if="eventToClone && next" v-on="on">
         <v-list-item-icon>
-          <v-icon :x-small="small" color="gray">fas fa-clone</v-icon>
+          <v-icon color="gray">fas fa-clone</v-icon>
         </v-list-item-icon>
         <v-list-item-title>Clone next</v-list-item-title>
       </v-list-item>
@@ -242,7 +241,6 @@ import cloneDeep from "lodash-ts/cloneDeep";
 export default class EventModal extends Vue {
   @Prop() eventToEdit?: Event;
   @Prop() eventToClone?: Event;
-  @Prop() small?: boolean;
   @Prop() next!: boolean;
   dialog = false;
   event: Event = {

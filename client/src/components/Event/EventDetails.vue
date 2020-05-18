@@ -9,17 +9,30 @@
         <span class="headline">{{ event.title }}</span>
       </v-card-title>
       <v-card-text>{{ event.description }}</v-card-text>
-      <v-tabs v-model="selected" center-active grow>
-        <v-tab v-for="eventSeries in event.series" :key="eventSeries.seriesId">
-          {{ eventSeries.details.title.english }}
-        </v-tab>
-      </v-tabs>
-      <v-tabs-items v-model="selected">
-        <v-tab-item
+
+      <v-expansion-panels popout hover>
+        <v-expansion-panel
           v-for="eventSeries in event.series"
           :key="eventSeries.seriesId"
         >
-          <v-container>
+          <v-expansion-panel-header>
+            <v-row>
+              <v-col cols="8" sm="10">
+                {{ eventSeries.details.title.english }}
+              </v-col>
+              <v-col cols="4" sm="2">
+                <b>
+                  Ep {{ eventSeries.episode
+                  }}{{
+                    eventSeries.episodes > 1
+                      ? "-" + (eventSeries.episode + eventSeries.episode - 1)
+                      : ""
+                  }}
+                </b>
+              </v-col>
+            </v-row>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
             <v-row>
               <v-col cols="3">
                 <v-img :src="eventSeries.details.coverImage.extraLarge" />
@@ -28,13 +41,12 @@
                 <v-card-subtitle v-html="eventSeries.details.description" />
               </v-col>
             </v-row>
-          </v-container>
-        </v-tab-item>
-      </v-tabs-items>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
       <EventActions
-        v-if="$store.getters.isLoggedIn"
+        v-if="$store.getters.isLoggedIn && !history"
         :event="event"
-        :small="small"
       />
     </v-card>
   </v-dialog>
@@ -48,13 +60,8 @@ import EventActions from "@/components/Event/EventActions.vue";
 export default class EventDetails extends Vue {
   @Prop() event!: Event;
   @Prop() small?: boolean;
+  @Prop() history!: boolean;
   dialog = false;
   selected = "";
 }
 </script>
-
-<style lang="scss">
-.v-slide-group__prev {
-  display: none !important;
-}
-</style>
