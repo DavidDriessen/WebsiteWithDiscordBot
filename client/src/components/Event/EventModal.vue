@@ -402,6 +402,7 @@ export default class EventModal extends Vue {
       this.form.reset();
       this.event.series = [];
     }
+    this.$emit("close");
   }
 
   save() {
@@ -426,8 +427,9 @@ export default class EventModal extends Vue {
             }
           })
           .then(() => {
-            this.close();
-            this.loading = false;
+            // this.close();
+            // this.loading = false;
+            this.$emit("save");
           });
       }
     }

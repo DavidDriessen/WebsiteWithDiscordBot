@@ -1,46 +1,59 @@
 <!--suppress ALL -->
 <template>
-  <v-menu
-    v-model="menu"
-    :disabled="!$store.getters.isAdmin"
-    absolute
-    close-on-click
-  >
-    <template v-slot:activator="{ on }">
-      <event-details :event="event" :small="small">
-        <template v-slot:activator="{ onClick }">
-          <v-card
-            :width="width"
-            style="margin-bottom: 40px"
-            hover
-            @contextmenu.prevent="on.click"
-            @click="onClick"
-          >
-            <EventCardImage :image="event.image" :series="event.series" />
-<!--            <v-icon class="info-icon">fas fa-info-circle</v-icon>-->
-            <v-card-title
-              class="text-truncate text-no-wrap"
-              :style="'display: block; font-size: 16px;'"
+  <v-lazy>
+    <v-menu
+      v-model="menu"
+      :disabled="!$store.getters.isAdmin"
+      absolute
+      close-on-click
+      close-on-content-click
+    >
+      <template v-slot:activator="{ on }">
+        <event-details :event="event" :small="small">
+          <template v-slot:activator="{ onClick }">
+            <v-card
+              :width.sync="width"
+              style="margin-bottom: 40px"
+              hover
+              @contextmenu.prevent="on.click"
+              @click="onClick"
             >
-              {{ event.title }}
-            </v-card-title>
-            <v-card-subtitle>{{ time }}</v-card-subtitle>
-            <EventActions
-              v-if="$store.getters.isLoggedIn && !history"
-              :event="event"
-            />
-            <v-icon class="info-icon">fas fa-info-circle</v-icon>
-          </v-card>
-        </template>
-      </event-details>
-    </template>
+              <EventCardImage :image="event.image" :series="event.series" />
+              <!--            <v-icon class="info-icon">fas fa-info-circle</v-icon>-->
+              <v-card-title
+                class="text-truncate text-no-wrap"
+                :style="'display: block; font-size: 16px;'"
+              >
+                {{ event.title }}
+              </v-card-title>
+              <v-card-subtitle>{{ time }}</v-card-subtitle>
+              <EventActions v-if="isLoggedIn && !history" :event="event" />
+              <v-icon class="info-icon">fas fa-info-circle</v-icon>
+            </v-card>
+          </template>
+        </event-details>
+      </template>
 
-    <v-list>
-      <EventModal :event-to-edit="event" />
-      <EventModal :event-to-clone="event" />
-      <EventModal :event-to-clone="event" :next="true" />
-    </v-list>
-  </v-menu>
+      <v-list>
+        <EventModal
+          :event-to-edit="event"
+          @save="$emit('save')"
+          @close="menu = false"
+        />
+        <EventModal
+          :event-to-clone="event"
+          @save="$emit('save')"
+          @close="menu = false"
+        />
+        <EventModal
+          :event-to-clone="event"
+          @save="$emit('save')"
+          @close="menu = false"
+          :next="true"
+        />
+      </v-list>
+    </v-menu>
+  </v-lazy>
 </template>
 
 <script lang="ts">
@@ -48,39 +61,73 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import EventDetails from "@/components/Event/EventDetails.vue";
 import EventModal from "@/components/Event/EventModal.vue";
 import { Event } from "@/types";
-import moment from "moment";
+import moment, { Moment } from "moment";
 import EventActions from "@/components/Event/EventActions.vue";
 import EventCardImage from "@/components/Event/EventCardImage.vue";
+import { mapGetters } from "vuex";
 
 @Component({
-  components: { EventCardImage, EventActions, EventDetails, EventModal }
+  components: { EventCardImage, EventActions, EventDetails, EventModal },
+  computed: { ...mapGetters(["isLoggedIn"]) }
 })
 export default class EventCard extends Vue {
   @Prop() event!: Event;
   @Prop() width!: number;
   @Prop() history!: boolean;
+  @Prop() ampm!: boolean;
   dialog = false;
   menu = false;
-  time = "";
+  intervals: { time: number; now: Moment } = { time: 0, now: moment() };
 
   mounted() {
-    this.updateTime();
-    setInterval(this.updateTime, 60000);
+    this.intervals.time = setInterval(() => {
+      this.intervals.now = moment();
+    }, 30000);
   }
 
-  updateTime() {
-    if (this.event.start < moment() && moment() < this.event.end) {
-      this.time = "Now";
-    } else if (moment().dayOfYear() + 1 > this.event.start.dayOfYear()) {
-      this.time = this.event.start.fromNow();
-    } else if (moment().dayOfYear() + 7 > this.event.start.dayOfYear()) {
-      this.time =
-        this.event.start.format("dddd h:mma - ") +
-        this.event.end.format("h:mma");
+  beforeDestroy() {
+    clearInterval(this.intervals.time);
+  }
+
+  get time() {
+    const timeFormat = this.ampm ? "h:mma" : "H:mm";
+    if (this.intervals.now.isBetween(this.event.start, this.event.end)) {
+      return "Now";
+    } else if (
+      this.event.start.isBetween(
+        this.intervals.now,
+        this.intervals.now.clone().add(3, "hour")
+      )
+    ) {
+      return this.event.start.fromNow();
+    } else if (
+      this.event.start.isBetween(
+        this.intervals.now,
+        this.intervals.now.clone().add(1, "day")
+      )
+    ) {
+      return "Today at " + this.event.start.format(timeFormat);
+    } else if (
+      this.event.start.isBetween(
+        this.intervals.now,
+        this.intervals.now.clone().add(2, "day")
+      ) &&
+      (!this.small || !this.ampm)
+    ) {
+      return "Tomorrow at " + this.event.start.format(timeFormat);
+    } else if (
+      this.event.start.isBetween(
+        this.intervals.now,
+        this.intervals.now.clone().add(1, "week")
+      )
+    ) {
+      if (this.small) {
+        return this.event.start.format("ddd [at] " + timeFormat);
+      } else {
+        return this.event.start.format("dddd [at] " + timeFormat);
+      }
     } else {
-      this.time =
-        this.event.start.format("ddd, D MMM h:mma - ") +
-        this.event.end.format("h:mma");
+      return this.event.start.format("D MMM, " + timeFormat);
     }
   }
 

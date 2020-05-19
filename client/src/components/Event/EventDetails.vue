@@ -44,10 +44,7 @@
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
-      <EventActions
-        v-if="$store.getters.isLoggedIn && !history"
-        :event="event"
-      />
+      <EventActions v-if="isLoggedIn && !history" :event="event" />
     </v-card>
   </v-dialog>
 </template>
@@ -55,8 +52,12 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import EventActions from "@/components/Event/EventActions.vue";
+import { mapGetters } from "vuex";
 
-@Component({ components: { EventActions } })
+@Component({
+  components: { EventActions },
+  computed: { ...mapGetters(["isLoggedIn"]) }
+})
 export default class EventDetails extends Vue {
   @Prop() event!: Event;
   @Prop() small?: boolean;

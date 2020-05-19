@@ -4,8 +4,11 @@ import "./registerServiceWorker";
 import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
+import VuePreferences from "vue-preferences";
 
 Vue.config.productionTip = false;
+
+Vue.use(VuePreferences);
 
 const app = new Vue({
   router,

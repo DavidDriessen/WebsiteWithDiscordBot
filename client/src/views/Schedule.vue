@@ -7,6 +7,7 @@
     </v-overlay>
     <v-row style="padding-right: 100px">
       <v-spacer />
+      <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />
       <v-switch v-model="history" label="History" @change="getSchedule" />
     </v-row>
     <v-divider />
@@ -23,6 +24,8 @@
         :event.sync="event"
         :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
         :history="history"
+        :ampm.sync="ampm"
+        @save="getSchedule"
       />
     </v-row>
   </v-container>
@@ -32,14 +35,19 @@
 import { Component, Vue } from "vue-property-decorator";
 import { Event, EventSeries, Series } from "@/types";
 import EventCard from "@/components/Event/EventCard.vue";
+import { mapPreferences } from "vue-preferences";
 import { AxiosResponse } from "axios";
 import axios from "../plugins/axios";
 import moment from "moment";
 
 @Component({
-  components: { EventCard }
+  components: { EventCard },
+  computed: {
+    ...mapPreferences({ ampm: { defaultValue: true } })
+  }
 })
 export default class Schedule extends Vue {
+  ampm!: boolean;
   events: Event[] = [];
   seriesCache: {
     [k: number]: Series;
@@ -48,10 +56,16 @@ export default class Schedule extends Vue {
   chunkSize = 3;
   width = 350;
   history = false;
+  intervals: { update: number } = { update: 0 };
 
   mounted() {
     this.getSchedule();
     this.onResize();
+    this.intervals.update = setInterval(this.getSchedule, 1000 * 60 * 60);
+  }
+
+  beforeDestroy() {
+    clearInterval(this.intervals.update);
   }
 
   onResize() {
@@ -64,6 +78,7 @@ export default class Schedule extends Vue {
 
   getSchedule() {
     this.loading = true;
+    this.events = [];
     axios
       .get(
         "/api/schedule" + (this.history ? "?history=true" : ""),
