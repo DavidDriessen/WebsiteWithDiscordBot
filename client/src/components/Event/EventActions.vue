@@ -84,8 +84,8 @@ export default class EventActions extends Vue {
   }
 
   get attending() {
-    if (this.event.attending) {
-      return this.event.attending.decision;
+    if (this.event.attending !== undefined) {
+      return this.event.attending;
     }
     return -1;
   }
@@ -96,8 +96,8 @@ export default class EventActions extends Vue {
     }
   }
 
-  decisionColor(attendee: { Attendee: { decision: number | undefined } }) {
-    switch (attendee.Attendee.decision) {
+  decisionColor(attendee: { Attendee: number | undefined }) {
+    switch (attendee.Attendee) {
       case 1:
         return "success";
       case 2:

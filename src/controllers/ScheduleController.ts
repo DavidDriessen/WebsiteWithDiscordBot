@@ -1,6 +1,6 @@
-import {Controller, Get, Middleware, Post, Put} from '@overnightjs/core';
+import {Controller, Delete, Get, Middleware, Post, Put} from '@overnightjs/core';
 import {ISecureRequest, JwtManager} from '@overnightjs/jwt';
-import {Includeable, Order, WhereOptions} from 'sequelize/types/lib/model';
+import {Order, WhereOptions} from 'sequelize/types/lib/model';
 import * as expressJwt from 'express-jwt';
 import Attendee from '../models/Attendee';
 import Event from '../models/Event';
@@ -32,44 +32,38 @@ export class ScheduleController {
     credentialsRequired: false,
   }))
   private async getEvents(req: ISecureRequest, res: Response) {
-    const include: Includeable[] = [
-      {association: 'series', attributes: ['seriesId', 'episode', 'episodes']},
-      {association: 'streamer', attributes: ['id', 'name', 'avatar']},
-    ];
-    if (req.payload) {
-      include.push({
-        association: 'attendees', attributes: ['name', 'avatar'],
-        through: {attributes: ['decision']},
-      });
-      include.push({
-        association: 'attending', attributes: ['decision'], required: false,
-        where: {user: req.payload.user.id},
-      });
-    }
     let where: WhereOptions = {end: {[Op.gte]: moment().toISOString()}};
     let order: Order = ['start', ['series', 'order', 'asc']];
     if (req.query.history) {
       where = {end: {[Op.lte]: moment().toISOString()}};
       order = [['start', 'desc'], ['series', 'order', 'asc']];
     }
-    const events: Event[] = await Event.findAll({
-      include, where, order,
-      attributes: ['id', 'title', 'description', 'image', 'start', 'end', 'roomcode'],
-    });
     if (req.payload) {
-      res.status(200).json(events.map((event) => {
-        // @ts-ignore
-        event = event.toJSON();
-        if (event.streamer.id === req.payload.user.id) {
-          event.streaming = true;
-        } else {
-          delete event.attendees;
-        }
-        delete event.streamer.id;
-        return event;
-      }));
+      const events: Event[] = await Event.findAll({
+        include: [
+          {association: 'series', attributes: ['seriesId', 'episode', 'episodes']},
+          {association: 'streamer', attributes: ['id', 'name', 'avatar']},
+          {
+            association: 'attendees', attributes: ['name', 'avatar'],
+            through: {attributes: ['decision']},
+          },
+          {
+            association: 'attending', attributes: ['decision'], required: false,
+            where: {user: req.payload.user.id},
+          },
+        ], where, order,
+        attributes: ['id', 'title', 'description', 'image', 'start', 'end', 'roomcode'],
+      });
+      res.status(200).json(events.map((event) =>
+        ScheduleController.renderResponse(event, req.payload.user)));
     } else {
-      res.status(200).json(events);
+      res.status(200).json(await Event.findAll({
+        include: [
+          {association: 'series', attributes: ['seriesId', 'episode', 'episodes']},
+          {association: 'streamer', attributes: ['name', 'avatar']},
+        ], where, order,
+        attributes: ['title', 'description', 'image', 'start', 'end', 'roomcode'],
+      }));
     }
   }
 
@@ -106,10 +100,14 @@ export class ScheduleController {
   @Middleware(JwtManager.middleware)
   @isAdmin
   private async addEvent(req: ISecureRequest, res: Response) {
+    const streamer = await User.findByPk(req.body.streamer.id);
+    if (!streamer) {
+      return res.status(404).json({msg: 'Streamer not found!'});
+    }
     const data = {
       title: req.body.title,
       description: req.body.description,
-      streamerId: req.payload.user.id,
+      streamerId: streamer.id,
       start: req.body.start,
       end: req.body.end,
     };
@@ -125,16 +123,10 @@ export class ScheduleController {
       });
     }
     const event = await Event.create(data, {
-      include: [
-        'series',
-        'streamer',
-        'attendees',
-        {
-          association: 'attending', attributes: ['decision'], required: false,
-          where: {user: req.payload.user.id},
-        }],
+      include: ['series', 'streamer', 'attendees'],
     });
-    return res.status(200).json(ScheduleController.renderResponse(event));
+    event.streamer = streamer;
+    return res.status(200).json(ScheduleController.renderResponse(event, req.payload.user));
   }
 
   @Post('')
@@ -145,12 +137,11 @@ export class ScheduleController {
     if (!req.body.title || !req.body.start || !req.body.end) {
       return res.status(401).send('');
     }
-    const include: Includeable[] = ['series', 'streamer', 'attendees',
-      {
-        association: 'attending', attributes: ['decision'], required: false,
-        where: {user: req.payload.user.id},
-      }];
-    const event = await Event.findByPk(req.body.id, {include});
+    const streamer = await User.findByPk(req.body.streamer.id);
+    if (!streamer) {
+      return res.status(404).json({msg: 'Streamer not found!'});
+    }
+    const event = await Event.findByPk(req.body.id, {include: ['series', 'streamer', 'attendees']});
     if (!event) {
       return res.status(200).json({message: 'Event not found'});
     }
@@ -158,6 +149,8 @@ export class ScheduleController {
     event.start = req.body.start;
     event.end = req.body.end;
     event.description = req.body.description;
+    event.streamer = streamer;
+    event.$set('streamer', streamer);
     if (req.body.series) {
       event.series = req.body.series
         .map((s: { details: { id: any; }; episode: any; episodes: any; }, i: number) => {
@@ -170,21 +163,40 @@ export class ScheduleController {
           return ss;
         });
     }
-    event.save();
-    return res.status(200).json(ScheduleController.renderResponse(event));
+    return res.status(200)
+      .json(ScheduleController.renderResponse(await event.save(), req.payload.user));
   }
 
-  private static renderResponse(event: Event) {
-    // @ts-ignore
+  @Delete(':id')
+  @Middleware(JwtManager.middleware)
+  @isAdmin
+  private async removeEvent(req: ISecureRequest, res: Response) {
+    const event = await Event.findByPk(req.params.id);
+    if (event) {
+      event.destroy();
+      return res.status(200).json({msg: 'ok'});
+    } else {
+      return res.status(404).json({msg: 'Event not found!'});
+    }
+  }
+
+  private static renderResponse(event: Event, user: User) {
+    const admin = user.role === 'Admin';
     const response: Event = {
-      id: event.id,
       title: event.title,
       description: event.description,
       image: event.image,
       start: event.start,
       end: event.end,
       roomcode: event.roomcode,
+      // @ts-ignore
+      attending: event.attending?.decision,
+      streaming: event.streamer.id === user.id,
+      series: [] as SeriesEvent[],
+      attendees: [] as User[],
+      streamer: {name: event.streamer.name, avatar: event.streamer.avatar} as User,
     };
+    // Format series
     if (event.series) {
       response.series = event.series.map((series) => {
         return {
@@ -194,13 +206,20 @@ export class ScheduleController {
         } as SeriesEvent;
       });
     }
+    // Format attendees
     if (event.attendees) {
-      response.attendees = event.attendees.map((attendee) => {
-        return {name: attendee.name, avatar: attendee.avatar} as User;
-      });
+      // @ts-ignore
+      if (response.streaming || admin) {
+        response.attendees = event.attendees.map((attendee) => {
+          return {name: attendee.name, avatar: attendee.avatar} as User;
+        });
+      } else {
+        delete response.attendees;
+      }
     }
-    if (event.streamer) {
-      response.streamer = {name: event.streamer.name, avatar: event.streamer.avatar} as User;
+    if (admin) {
+      response.id = event.id;
+      response.streamer.id = event.streamer.id;
     }
     return response;
   }

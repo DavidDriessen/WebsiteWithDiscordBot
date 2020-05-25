@@ -33,7 +33,7 @@ export interface Event {
   end: Moment;
   series: EventSeries[];
   attendees?: User[];
-  attending?: { decision: number };
+  attending?: number;
   streamer?: User;
   streaming?: boolean;
   roomcode?: string;
