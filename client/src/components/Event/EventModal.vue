@@ -311,10 +311,10 @@ export default class EventModal extends Vue {
       this.loadingSeries = true;
       axios
         .get("/api/series/search/" + encodeURIComponent(search))
-        .then(response => {
+        .then((response: { data: { media: Series[] } }) => {
           this.items = response.data.media;
         })
-        .catch(error => {
+        .catch((error: object) => {
           console.log(error);
         })
         .finally(() => {
@@ -333,10 +333,10 @@ export default class EventModal extends Vue {
         // @ts-ignore
         useCache: true
       })
-      .then(response => {
+      .then((response: { data: User[] }) => {
         this.streamers = response.data;
       })
-      .catch(error => {
+      .catch((error: object) => {
         console.log(error);
       });
   }
