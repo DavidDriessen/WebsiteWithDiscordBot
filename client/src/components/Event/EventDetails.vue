@@ -2,7 +2,7 @@
 <template>
   <v-dialog v-model="dialog" max-width="600px">
     <template v-slot:activator="{ on }">
-      <slot name="activator" :onClick="on.click"/>
+      <slot name="activator" :onClick="on.click" />
     </template>
     <v-card>
       <v-card-title>
@@ -12,11 +12,11 @@
         <v-label>Streamer:</v-label>
         <v-chip>
           <v-avatar left>
-            <img :src="event.streamer.avatar" :alt="event.streamer.name"/>
+            <img :src="event.streamer.avatar" :alt="event.streamer.name" />
           </v-avatar>
           <span> {{ event.streamer.name }}</span>
         </v-chip>
-        <br/>
+        <br />
         {{ event.description }}
       </v-card-text>
 
@@ -34,9 +34,9 @@
                 <b>
                   Ep {{ eventSeries.episode
                   }}{{
-                  eventSeries.episodes > 1
-                  ? "-" + (eventSeries.episode + eventSeries.episode - 1)
-                  : ""
+                    eventSeries.episodes > 1
+                      ? "-" + (eventSeries.episode + eventSeries.episode - 1)
+                      : ""
                   }}
                 </b>
               </v-col>
@@ -45,34 +45,34 @@
           <v-expansion-panel-content>
             <v-row>
               <v-col cols="3">
-                <v-img :src="eventSeries.details.coverImage.extraLarge"/>
+                <v-img :src="eventSeries.details.coverImage.extraLarge" />
               </v-col>
               <v-col cols="9">
-                <v-card-subtitle v-html="eventSeries.details.description"/>
+                <v-card-subtitle v-html="eventSeries.details.description" />
               </v-col>
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
-      <EventActions v-if="isLoggedIn && !history" :event="event"/>
+      <EventActions v-if="isLoggedIn && !history" :event="event" />
     </v-card>
   </v-dialog>
 </template>
 
 <script lang="ts">
-  import {Component, Prop, Vue} from 'vue-property-decorator';
-  import EventActions from '@/components/Event/EventActions.vue';
-  import {mapGetters} from 'vuex';
+import { Component, Prop, Vue } from "vue-property-decorator";
+import EventActions from "@/components/Event/EventActions.vue";
+import { mapGetters } from "vuex";
 
-  @Component({
-    components: {EventActions},
-    computed: {...mapGetters(['isLoggedIn'])}
-  })
-  export default class EventDetails extends Vue {
-    @Prop() event!: Event;
-    @Prop() small?: boolean;
-    @Prop() history!: boolean;
-    dialog = false;
-    selected = '';
-  }
+@Component({
+  components: { EventActions },
+  computed: { ...mapGetters(["isLoggedIn"]) }
+})
+export default class EventDetails extends Vue {
+  @Prop() event!: Event;
+  @Prop() small?: boolean;
+  @Prop() history!: boolean;
+  dialog = false;
+  selected = "";
+}
 </script>

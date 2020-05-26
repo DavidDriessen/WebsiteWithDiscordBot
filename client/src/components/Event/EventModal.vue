@@ -98,7 +98,7 @@
               </v-row>
               <v-row>
                 <v-col cols="12">
-                  <v-textarea label="Description" v-model="event.description"/>
+                  <v-textarea label="Description" v-model="event.description" />
                 </v-col>
               </v-row>
             </v-card-text>
@@ -116,21 +116,19 @@
                     auto-select-first
                     hide-selected
                     chips
-                    :rules="[
-                      v => !!v || 'Streamer is required'
-                    ]"
+                    :rules="[v => !!v || 'Streamer is required']"
                   >
-                    <template v-slot:selection="{item}">
+                    <template v-slot:selection="{ item }">
                       <v-chip>
                         <v-avatar left>
-                          <img :src="item.avatar" :alt="item.name"/>
+                          <img :src="item.avatar" :alt="item.name" />
                         </v-avatar>
                         <span> {{ item.name }}</span>
                       </v-chip>
                     </template>
-                    <template v-slot:item="{item}">
+                    <template v-slot:item="{ item }">
                       <v-avatar>
-                        <img :src="item.avatar" :alt="item.name"/>
+                        <img :src="item.avatar" :alt="item.name" />
                       </v-avatar>
                       <span> {{ item.name }}</span>
                     </template>
@@ -157,13 +155,13 @@
                     hide-no-data
                     multiple
                   >
-                    <template v-slot:selection="{}"/>
-                    <template v-slot:item="{item}">
+                    <template v-slot:selection="{}" />
+                    <template v-slot:item="{ item }">
                       <v-avatar>
                         <img
                           :src="item.coverImage.medium"
                           :alt="item.title.english"
-                        /></v-avatar>
+                      /></v-avatar>
                       <span> {{ item.title.english }}</span>
                     </template>
                   </v-autocomplete>
@@ -249,10 +247,10 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="close()" :loading="loading"
-        >Close
+          >Close
         </v-btn>
         <v-btn color="blue darken-1" text @click="save()" :loading="loading"
-        >Save
+          >Save
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -260,234 +258,234 @@
 </template>
 
 <script lang="ts">
-  import {Component, Prop, Vue, Watch} from 'vue-property-decorator';
-  import axios from '../../plugins/axios';
-  import {Event, Series, EventSeries, User} from '@/types';
-  import draggable from 'vuedraggable';
-  import moment from 'moment';
-  import cloneDeep from 'lodash-ts/cloneDeep';
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import axios from "../../plugins/axios";
+import { Event, Series, EventSeries, User } from "@/types";
+import draggable from "vuedraggable";
+import moment from "moment";
+import cloneDeep from "lodash-ts/cloneDeep";
 
-  @Component({
-    components: {draggable}
-  })
-  export default class EventModal extends Vue {
-    @Prop() eventToEdit?: Event;
-    @Prop() eventToClone?: Event;
-    @Prop() next!: boolean;
-    dialog = false;
-    event: Event = {
-      id: 0,
-      title: '',
-      series: [],
-      start: moment(),
-      end: moment()
-    } as Event;
-    loading = false;
-    loadingSeries = false;
-    search = '';
-    items: Series[] = [];
-    streamers: User[] = [];
-    typingTimer: number | null = null;
-    tab = 'details';
+@Component({
+  components: { draggable }
+})
+export default class EventModal extends Vue {
+  @Prop() eventToEdit?: Event;
+  @Prop() eventToClone?: Event;
+  @Prop() next!: boolean;
+  dialog = false;
+  event: Event = {
+    id: 0,
+    title: "",
+    series: [],
+    start: moment(),
+    end: moment()
+  } as Event;
+  loading = false;
+  loadingSeries = false;
+  search = "";
+  items: Series[] = [];
+  streamers: User[] = [];
+  typingTimer: number | null = null;
+  tab = "details";
 
-    mounted() {
-      this.getStreamers();
-      if (this.eventToClone) {
-        this.clone();
-      }
-      if (this.eventToEdit) {
-        this.event = this.eventToEdit;
-      }
+  mounted() {
+    this.getStreamers();
+    if (this.eventToClone) {
+      this.clone();
     }
-
-    @Watch('search')
-    getSeries(search: string, previousSearch: string, isTyping = true) {
-      if (this.typingTimer) {
-        clearTimeout(this.typingTimer);
-      }
-      if (isTyping) {
-        this.typingTimer = setTimeout(() => {
-          this.getSeries(search, previousSearch, false);
-        }, 1000);
-      } else if (search) {
-        this.loadingSeries = true;
-        axios
-          .get('/api/series/search/' + encodeURIComponent(search))
-          .then(response => {
-            this.items = response.data.media;
-          })
-          .catch(error => {
-            console.log(error);
-          })
-          .finally(() => {
-            this.loadingSeries = false;
-          });
-      }
+    if (this.eventToEdit) {
+      this.event = this.eventToEdit;
     }
+  }
 
-    getStreamers() {
+  @Watch("search")
+  getSeries(search: string, previousSearch: string, isTyping = true) {
+    if (this.typingTimer) {
+      clearTimeout(this.typingTimer);
+    }
+    if (isTyping) {
+      this.typingTimer = setTimeout(() => {
+        this.getSeries(search, previousSearch, false);
+      }, 1000);
+    } else if (search) {
+      this.loadingSeries = true;
       axios
-        .get('/api/user/streamers', {
-          headers: {
-            Authorization: `Bearer ${localStorage.token}`
-          },
-          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-          // @ts-ignore
-          useCache: true
-        })
+        .get("/api/series/search/" + encodeURIComponent(search))
         .then(response => {
-          this.streamers = response.data;
+          this.items = response.data.media;
         })
         .catch(error => {
           console.log(error);
+        })
+        .finally(() => {
+          this.loadingSeries = false;
         });
     }
+  }
 
-    clone() {
-      if (this.eventToClone) {
-        this.event = cloneDeep(this.eventToClone);
-        this.event.start = this.eventToClone.start.clone();
-        this.event.end = this.eventToClone.end.clone();
-        if (this.next) {
-          this.event.start.add(1, 'week');
-          this.event.end.add(1, 'week');
-          for (const series of this.event.series) {
-            if (series.details && series.details.episodes) {
-              if (series.episode + 1 > series.details.episodes) {
-                this.event.series.splice(this.event.series.indexOf(series), 1);
-              }
-              if (series.episode + series.episodes > series.details.episodes) {
-                series.episode = series.details.episodes;
-              } else {
-                series.episode = series.episode + series.episodes;
-              }
+  getStreamers() {
+    axios
+      .get("/api/user/streamers", {
+        headers: {
+          Authorization: `Bearer ${localStorage.token}`
+        },
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        useCache: true
+      })
+      .then(response => {
+        this.streamers = response.data;
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }
+
+  clone() {
+    if (this.eventToClone) {
+      this.event = cloneDeep(this.eventToClone);
+      this.event.start = this.eventToClone.start.clone();
+      this.event.end = this.eventToClone.end.clone();
+      if (this.next) {
+        this.event.start.add(1, "week");
+        this.event.end.add(1, "week");
+        for (const series of this.event.series) {
+          if (series.details && series.details.episodes) {
+            if (series.episode + 1 > series.details.episodes) {
+              this.event.series.splice(this.event.series.indexOf(series), 1);
+            }
+            if (series.episode + series.episodes > series.details.episodes) {
+              series.episode = series.details.episodes;
             } else {
               series.episode = series.episode + series.episodes;
             }
+          } else {
+            series.episode = series.episode + series.episodes;
           }
-        }
-      }
-    }
-
-    seriesItemValue(v: Series) {
-      return v;
-    }
-
-    setEpisodes(series: EventSeries, event: number[]) {
-      if (
-        series.details &&
-        series.details.episodes &&
-        event[0] > series.details.episodes
-      ) {
-        event[0] = series.details.episodes;
-      } else if ((!series.details || !series.details.episodes) && event[0] > 30) {
-        event[0] = 30;
-      }
-      if (series.episode !== event[0]) {
-        if (series.episodes !== event[1] - series.episode) {
-          series.episodes = event[1] - event[0];
-        }
-        series.episode = event[0];
-      } else {
-        series.episodes = event[1] - event[0];
-        if (series.episodes <= 0) {
-          series.episodes = 1;
-        }
-      }
-    }
-
-    get series() {
-      if (this.event.series) {
-        return this.event.series.map((series: EventSeries) => {
-          if (series.details) {
-            return series.details;
-          }
-          return {} as Series;
-        });
-      }
-      return [];
-    }
-
-    set series(series: Series[]) {
-      for (let i = this.event.series.length; i < series.length; i++) {
-        this.event.series.push({
-          details: series[i],
-          episode: 1,
-          episodes: 1
-        } as EventSeries);
-      }
-    }
-
-    get start() {
-      return this.event.start.toDate();
-    }
-
-    set start(date) {
-      this.form.resetValidation();
-      this.event.start = moment(date);
-    }
-
-    get end() {
-      return this.event.end.toDate();
-    }
-
-    set end(date) {
-      this.form.resetValidation();
-      this.event.end = moment(date);
-    }
-
-    get form() {
-      return (this.$refs.form as unknown) as {
-        reset(): void;
-        resetValidation(): void;
-        validate(): boolean;
-      };
-    }
-
-    close() {
-      this.dialog = false;
-      if (this.eventToEdit) {
-        this.form.resetValidation();
-      } else if (this.eventToClone) {
-        this.clone();
-      } else {
-        this.form.reset();
-        this.event.series = [];
-      }
-      this.$emit('close');
-    }
-
-    save() {
-      if (this.form.validate()) {
-        this.loading = true;
-        if (this.eventToEdit) {
-          axios
-            .post('/api/schedule', this.event, {
-              headers: {
-                Authorization: `Bearer ${localStorage.token}`
-              }
-            })
-            .then(() => {
-              this.close();
-              this.loading = false;
-              this.$emit('save');
-            });
-        } else {
-          axios
-            .put('/api/schedule', this.event, {
-              headers: {
-                Authorization: `Bearer ${localStorage.token}`
-              }
-            })
-            .then(() => {
-              // this.close();
-              // this.loading = false;
-              this.$emit('save');
-            });
         }
       }
     }
   }
+
+  seriesItemValue(v: Series) {
+    return v;
+  }
+
+  setEpisodes(series: EventSeries, event: number[]) {
+    if (
+      series.details &&
+      series.details.episodes &&
+      event[0] > series.details.episodes
+    ) {
+      event[0] = series.details.episodes;
+    } else if ((!series.details || !series.details.episodes) && event[0] > 30) {
+      event[0] = 30;
+    }
+    if (series.episode !== event[0]) {
+      if (series.episodes !== event[1] - series.episode) {
+        series.episodes = event[1] - event[0];
+      }
+      series.episode = event[0];
+    } else {
+      series.episodes = event[1] - event[0];
+      if (series.episodes <= 0) {
+        series.episodes = 1;
+      }
+    }
+  }
+
+  get series() {
+    if (this.event.series) {
+      return this.event.series.map((series: EventSeries) => {
+        if (series.details) {
+          return series.details;
+        }
+        return {} as Series;
+      });
+    }
+    return [];
+  }
+
+  set series(series: Series[]) {
+    for (let i = this.event.series.length; i < series.length; i++) {
+      this.event.series.push({
+        details: series[i],
+        episode: 1,
+        episodes: 1
+      } as EventSeries);
+    }
+  }
+
+  get start() {
+    return this.event.start.toDate();
+  }
+
+  set start(date) {
+    this.form.resetValidation();
+    this.event.start = moment(date);
+  }
+
+  get end() {
+    return this.event.end.toDate();
+  }
+
+  set end(date) {
+    this.form.resetValidation();
+    this.event.end = moment(date);
+  }
+
+  get form() {
+    return (this.$refs.form as unknown) as {
+      reset(): void;
+      resetValidation(): void;
+      validate(): boolean;
+    };
+  }
+
+  close() {
+    this.dialog = false;
+    if (this.eventToEdit) {
+      this.form.resetValidation();
+    } else if (this.eventToClone) {
+      this.clone();
+    } else {
+      this.form.reset();
+      this.event.series = [];
+    }
+    this.$emit("close");
+  }
+
+  save() {
+    if (this.form.validate()) {
+      this.loading = true;
+      if (this.eventToEdit) {
+        axios
+          .post("/api/schedule", this.event, {
+            headers: {
+              Authorization: `Bearer ${localStorage.token}`
+            }
+          })
+          .then(() => {
+            this.close();
+            this.loading = false;
+            this.$emit("save");
+          });
+      } else {
+        axios
+          .put("/api/schedule", this.event, {
+            headers: {
+              Authorization: `Bearer ${localStorage.token}`
+            }
+          })
+          .then(() => {
+            // this.close();
+            // this.loading = false;
+            this.$emit("save");
+          });
+      }
+    }
+  }
+}
 </script>
 
 <style lang="scss"></style>
