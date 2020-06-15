@@ -6,6 +6,7 @@
     "prefix" : "!",
     "callbackHost": "http://localhost:8080",
     "channel": {
+       "lobby": "",
        "event": "",
        "notify": "",
        "poll": ""
