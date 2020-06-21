@@ -1,14 +1,21 @@
 <template>
-  <v-container fluid class="schedule">
+  <v-container fluid v-resize="onResize">
     <v-overlay :value="loading" absolute>
       <v-progress-circular indeterminate size="128">
         <h1>Loading</h1>
       </v-progress-circular>
     </v-overlay>
+    <v-row style="padding-right: 100px">
+      <v-spacer />
+      <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />
+      <v-switch v-model="history" label="History" @change="getSchedule" />
+    </v-row>
+    <v-divider />
     <v-row
       v-for="(chunkEvent, chunkIndex) of chunkedEvents"
       :key="chunkIndex"
       justify="space-around"
+      style="padding: 20px"
     >
       <event-card
         v-for="(event, index) of chunkEvent"
@@ -16,6 +23,9 @@
         :cols="chunkEvent / 12"
         :event.sync="event"
         :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
+        :history="history"
+        :ampm.sync="ampm"
+        @save="getSchedule"
       />
     </v-row>
   </v-container>
@@ -25,14 +35,19 @@
 import { Component, Vue } from "vue-property-decorator";
 import { Event, EventSeries, Series } from "@/types";
 import EventCard from "@/components/Event/EventCard.vue";
+import { mapPreferences } from "vue-preferences";
 import { AxiosResponse } from "axios";
 import axios from "../plugins/axios";
 import moment from "moment";
 
 @Component({
-  components: { EventCard }
+  components: { EventCard },
+  computed: {
+    ...mapPreferences({ ampm: { defaultValue: true } })
+  }
 })
 export default class Schedule extends Vue {
+  ampm!: boolean;
   events: Event[] = [];
   seriesCache: {
     [k: number]: Series;
@@ -40,29 +55,33 @@ export default class Schedule extends Vue {
   loading = false;
   chunkSize = 3;
   width = 350;
+  history = false;
+  intervals: { update: number } = { update: 0 };
 
   mounted() {
     this.getSchedule();
     this.onResize();
-    window.addEventListener("resize", this.onResize);
+    this.intervals.update = setInterval(this.getSchedule, 1000 * 60 * 60);
   }
 
   beforeDestroy() {
-    // Unregister the event listener before destroying this Vue instance
-    window.removeEventListener("resize", this.onResize);
+    clearInterval(this.intervals.update);
   }
 
   onResize() {
     this.width = document.documentElement.clientWidth;
     this.chunkSize = Math.floor(this.width / 420);
-    if (this.chunkSize == 1) this.chunkSize = Math.floor(this.width / 160);
+    if (this.chunkSize == 1) {
+      this.chunkSize = Math.floor(this.width / 160);
+    }
   }
 
   getSchedule() {
     this.loading = true;
+    this.events = [];
     axios
       .get(
-        "/api/schedule",
+        "/api/schedule" + (this.history ? "?history=true" : ""),
         localStorage.token
           ? {
               headers: {
@@ -93,7 +112,9 @@ export default class Schedule extends Vue {
   }
 
   getSeries(id: number) {
-    if (!this.seriesCache[id]) this.seriesCache[id] = {} as Series;
+    if (!this.seriesCache[id]) {
+      this.seriesCache[id] = {} as Series;
+    }
     return this.seriesCache[id];
   }
 
@@ -127,8 +148,4 @@ export default class Schedule extends Vue {
 }
 </script>
 
-<style lang="scss">
-.schedule {
-  margin-top: 30px;
-}
-</style>
+<style lang="scss"></style>

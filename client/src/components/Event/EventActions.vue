@@ -3,23 +3,18 @@
   <v-card-actions class="justify-center">
     <v-dialog v-model="dialog" :persistent="event.streaming" max-width="600px">
       <template v-slot:activator="{ on }">
-        <v-btn
-          v-if="event.streaming"
-          color="success"
-          v-on="on"
-          :x-small="small"
-        >
+        <v-btn v-if="event.streaming" color="success" v-on="on">
           Stream
         </v-btn>
         <div @click.stop v-if="!event.streaming">
-          <v-btn v-if="roomcode" color="success" :x-small="small" v-on="on">
+          <v-btn v-if="roomcode" color="success" v-on="on">
             Join
           </v-btn>
           <v-btn-toggle v-if="!roomcode" v-model="attending" group>
-            <v-btn :value="1" :x-small="small" icon>
+            <v-btn :value="1" icon>
               <v-icon color="green">fas fa-check-circle</v-icon>
             </v-btn>
-            <v-btn :value="0" :x-small="small" icon>
+            <v-btn :value="0" icon>
               <v-icon color="red">fas fa-times-circle</v-icon>
             </v-btn>
           </v-btn-toggle>
@@ -78,7 +73,6 @@ import { Event } from "@/types";
 @Component
 export default class EventActions extends Vue {
   @Prop() event!: Event;
-  @Prop() small?: boolean;
   dialog = false;
 
   get roomcode() {
@@ -90,8 +84,8 @@ export default class EventActions extends Vue {
   }
 
   get attending() {
-    if (this.event.attending) {
-      return this.event.attending.decision;
+    if (this.event.attending !== undefined) {
+      return this.event.attending;
     }
     return -1;
   }
@@ -102,8 +96,8 @@ export default class EventActions extends Vue {
     }
   }
 
-  decisionColor(attendee: { Attendee: { decision: number | undefined } }) {
-    switch (attendee.Attendee.decision) {
+  decisionColor(attendee: { Attendee: number | undefined }) {
+    switch (attendee.Attendee) {
       case 1:
         return "success";
       case 2:

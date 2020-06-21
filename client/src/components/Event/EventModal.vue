@@ -7,25 +7,24 @@
         color="primary"
         dark
         v-on="on"
-        :x-small="small"
       >
         Add event
       </v-btn>
       <v-list-item v-if="eventToEdit" v-on="on">
         <v-list-item-icon>
-          <v-icon :x-small="small" color="gray">fas fa-pencil-alt</v-icon>
+          <v-icon color="gray">fas fa-pencil-alt</v-icon>
         </v-list-item-icon>
         <v-list-item-title>Edit event</v-list-item-title>
       </v-list-item>
       <v-list-item v-if="eventToClone && !next" v-on="on">
         <v-list-item-icon>
-          <v-icon :x-small="small" color="gray">fas fa-clone</v-icon>
+          <v-icon color="gray">fas fa-clone</v-icon>
         </v-list-item-icon>
         <v-list-item-title>Clone event</v-list-item-title>
       </v-list-item>
       <v-list-item v-if="eventToClone && next" v-on="on">
         <v-list-item-icon>
-          <v-icon :x-small="small" color="gray">fas fa-clone</v-icon>
+          <v-icon color="gray">fas fa-clone</v-icon>
         </v-list-item-icon>
         <v-list-item-title>Clone next</v-list-item-title>
       </v-list-item>
@@ -41,6 +40,7 @@
       <v-form ref="form" lazy-validation @submit="save()">
         <v-tabs v-model="tab">
           <v-tab>Details</v-tab>
+          <v-tab>Streamer</v-tab>
           <v-tab>Series</v-tab>
         </v-tabs>
         <v-tabs-items v-model="tab">
@@ -108,6 +108,40 @@
               <v-row>
                 <v-col cols="12" sm="12">
                   <v-autocomplete
+                    v-model="event.streamer"
+                    :items.sync="streamers"
+                    label="Streamer"
+                    item-text="name"
+                    :item-value="seriesItemValue"
+                    auto-select-first
+                    hide-selected
+                    chips
+                    :rules="[v => !!v || 'Streamer is required']"
+                  >
+                    <template v-slot:selection="{ item }">
+                      <v-chip>
+                        <v-avatar left>
+                          <img :src="item.avatar" :alt="item.name" />
+                        </v-avatar>
+                        <span> {{ item.name }}</span>
+                      </v-chip>
+                    </template>
+                    <template v-slot:item="{ item }">
+                      <v-avatar>
+                        <img :src="item.avatar" :alt="item.name" />
+                      </v-avatar>
+                      <span> {{ item.name }}</span>
+                    </template>
+                  </v-autocomplete>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-tab-item>
+          <v-tab-item>
+            <v-card-text>
+              <v-row>
+                <v-col cols="12" sm="12">
+                  <v-autocomplete
                     v-model="series"
                     :items.sync="items"
                     :loading="loadingSeries"
@@ -121,19 +155,14 @@
                     hide-no-data
                     multiple
                   >
-                    <template
-                      v-slot:selection="
-                        // eslint-disable-next-line vue/no-unused-vars
-                        data
-                      "
-                    />
-                    <template v-slot:item="data">
+                    <template v-slot:selection="{}" />
+                    <template v-slot:item="{ item }">
                       <v-avatar>
                         <img
-                          :src="data.item.coverImage.medium"
-                          :alt="data.item.title.english"
+                          :src="item.coverImage.medium"
+                          :alt="item.title.english"
                       /></v-avatar>
-                      <span> {{ data.item.title.english }}</span>
+                      <span> {{ item.title.english }}</span>
                     </template>
                   </v-autocomplete>
                 </v-col>
@@ -230,8 +259,8 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import axios from "axios";
-import { Event, Series, EventSeries } from "@/types";
+import axios from "../../plugins/axios";
+import { Event, Series, EventSeries, User } from "@/types";
 import draggable from "vuedraggable";
 import moment from "moment";
 import cloneDeep from "lodash-ts/cloneDeep";
@@ -242,7 +271,6 @@ import cloneDeep from "lodash-ts/cloneDeep";
 export default class EventModal extends Vue {
   @Prop() eventToEdit?: Event;
   @Prop() eventToClone?: Event;
-  @Prop() small?: boolean;
   @Prop() next!: boolean;
   dialog = false;
   event: Event = {
@@ -256,10 +284,12 @@ export default class EventModal extends Vue {
   loadingSeries = false;
   search = "";
   items: Series[] = [];
+  streamers: User[] = [];
   typingTimer: number | null = null;
   tab = "details";
 
   mounted() {
+    this.getStreamers();
     if (this.eventToClone) {
       this.clone();
     }
@@ -281,16 +311,34 @@ export default class EventModal extends Vue {
       this.loadingSeries = true;
       axios
         .get("/api/series/search/" + encodeURIComponent(search))
-        .then(response => {
+        .then((response: { data: { media: Series[] } }) => {
           this.items = response.data.media;
         })
-        .catch(error => {
+        .catch((error: object) => {
           console.log(error);
         })
         .finally(() => {
           this.loadingSeries = false;
         });
     }
+  }
+
+  getStreamers() {
+    axios
+      .get("/api/user/streamers", {
+        headers: {
+          Authorization: `Bearer ${localStorage.token}`
+        },
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        useCache: true
+      })
+      .then((response: { data: User[] }) => {
+        this.streamers = response.data;
+      })
+      .catch((error: object) => {
+        console.log(error);
+      });
   }
 
   clone() {
@@ -404,6 +452,7 @@ export default class EventModal extends Vue {
       this.form.reset();
       this.event.series = [];
     }
+    this.$emit("close");
   }
 
   save() {
@@ -419,6 +468,7 @@ export default class EventModal extends Vue {
           .then(() => {
             this.close();
             this.loading = false;
+            this.$emit("save");
           });
       } else {
         axios
@@ -428,8 +478,9 @@ export default class EventModal extends Vue {
             }
           })
           .then(() => {
-            this.close();
-            this.loading = false;
+            // this.close();
+            // this.loading = false;
+            this.$emit("save");
           });
       }
     }

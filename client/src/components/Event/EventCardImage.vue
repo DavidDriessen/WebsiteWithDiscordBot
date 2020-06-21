@@ -15,7 +15,7 @@
         v-for="(value, index) in seriesImages"
         :key="index"
         :src="value"
-        @click.prevent="gotoSeries(index)"
+        @click="gotoSeries(index)"
       />
     </div>
   </div>
@@ -29,6 +29,7 @@ import { EventSeries } from "@/types";
 export default class EventCardImage extends Vue {
   @Prop() series!: EventSeries[];
   @Prop() image!: string;
+  @Prop() small!: boolean;
 
   get seriesImages() {
     return this.series.map(series => {
@@ -40,11 +41,13 @@ export default class EventCardImage extends Vue {
   }
 
   gotoSeries(index: number) {
-    const url = this.series[index].details?.siteUrl;
-    if (url) {
-      const win = window.open(url, "_blank");
-      if (win) {
-        win.focus();
+    if (!this.small) {
+      const url = this.series[index].details?.siteUrl;
+      if (url) {
+        const win = window.open(url, "_blank");
+        if (win) {
+          win.focus();
+        }
       }
     }
   }

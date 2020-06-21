@@ -4,28 +4,31 @@ import Event from './Event';
 @Table
 export class SeriesEvent extends Model<SeriesEvent> {
 
-    // @ts-ignore
-    @ForeignKey(() => Event)
-    public event!: Event;
+  // @ts-ignore
+  @ForeignKey(() => Event)
+  public event!: Event;
 
-    @Column({primaryKey: true})
-    public seriesId!: number;
+  @Column({primaryKey: true, field: 'event'})
+  public eventId!: number;
 
-    @Column
-    public order!: number;
+  @Column({primaryKey: true})
+  public seriesId!: number;
 
-    @Column
-    public episode!: number;
+  @Column
+  public order!: number;
 
-    @Column
-    public episodes!: number;
+  @Column
+  public episode!: number;
 
-    public details?: {
-        title: { english: string };
-        coverImage: { extraLarge: string; };
-        description: string;
-        siteUrl: string;
-    };
+  @Column
+  public episodes!: number;
+
+  public details?: {
+    title: { english: string };
+    coverImage: { extraLarge: string; };
+    description: string;
+    siteUrl: string;
+  };
 }
 
 export default SeriesEvent;
