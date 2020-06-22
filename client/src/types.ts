@@ -38,3 +38,24 @@ export interface Event {
   streaming?: boolean;
   roomcode?: string;
 }
+
+export interface Poll {
+  id: number;
+  title: string;
+  description?: string;
+  end: Moment;
+  options: PollOption[]
+}
+
+export enum PollOptionType {
+  General = 'General',
+  Series = 'Series'
+}
+
+export interface PollOption {
+  id: number;
+  content: number;
+  type:PollOptionType;
+  series: Series | undefined;
+  users: User[];
+}

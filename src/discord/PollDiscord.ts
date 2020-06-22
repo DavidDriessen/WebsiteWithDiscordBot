@@ -36,7 +36,7 @@ export class PollDiscord {
         }
         const option = PollDiscord.options.indexOf(messageReaction.emoji.name);
         if (option > -1) {
-            await this.changeVote(messageReaction.message.id, option, user);
+            await PollDiscord.changeVote(messageReaction.message.id, option, user);
         }
     }
 

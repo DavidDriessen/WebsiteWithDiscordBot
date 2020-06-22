@@ -38,7 +38,7 @@ const routes = [
   {
     path: "/polls",
     name: "polls",
-    component: () => import("../views/UnderConstruction.vue")
+    component: () => import("../views/Poll.vue")
   }
 ];
 
