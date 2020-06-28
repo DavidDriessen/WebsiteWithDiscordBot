@@ -2,15 +2,14 @@ import {Controller, Delete, Get, Middleware, Post, Put} from '@overnightjs/core'
 import {ISecureRequest, JwtManager} from '@overnightjs/jwt';
 import {Order, WhereOptions} from 'sequelize/types/lib/model';
 import * as expressJwt from 'express-jwt';
-import Attendee from '../models/Attendee';
 import Event from '../models/Event';
 import {Response} from 'express';
 import * as moment from 'moment';
 import {Op} from 'sequelize';
 import SeriesEvent from '../models/SeriesEvent';
 import User from '../models/User';
-import {EventWorker} from '../workers/EventWorker';
 import Poll from '../models/Poll';
+import PollOption from '../models/PollOption';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
@@ -39,9 +38,10 @@ export class PollController {
       where = {end: {[Op.lte]: moment().toISOString()}};
       order = [['end', 'desc'], ['series', 'order', 'asc']];
     }
-    res.status(200).json(await Poll.findAll({
+    const polls = await Poll.findAll({
       include: [{association: 'options', include: ['users']}], where, order,
-    }));
+    });
+    res.status(200).json(polls.map((poll) => poll.serialize(req.payload?.user)));
   }
 
   @Put('')

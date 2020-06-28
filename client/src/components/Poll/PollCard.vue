@@ -9,25 +9,24 @@
       close-on-content-click
     >
       <template v-slot:activator="{ on }">
-        <poll-details :poll="poll" :small="small">
-          <template v-slot:activator="{ onClick }">
-            <v-card
-              :width.sync="width"
-              style="margin-bottom: 40px"
-              hover
-              @contextmenu.prevent="on.click"
-              @click="onClick"
-            >
-              <v-card-title
-                class="text-truncate text-no-wrap"
-                :style="'display: block; font-size: 16px;'"
-              >
-                {{ poll.title }}
-              </v-card-title>
-              <v-icon class="info-icon">fas fa-info-circle</v-icon>
-            </v-card>
-          </template>
-        </poll-details>
+        <v-card
+          :width.sync="width"
+          style="margin-bottom: 40px"
+          hover
+          @contextmenu.prevent="on.click"
+        >
+          <v-card-title
+            class="text-truncate text-no-wrap"
+            :style="'display: block; font-size: 16px;'"
+          >
+            {{ poll.title }}
+          </v-card-title>
+          <v-card-text>
+            <v-chip v-for="option in poll.options" :key="option.id" :color="option.voted ? 'blue' : 'gray'" @click="option.voted=!option.voted">
+              {{ getContent(option) }}
+            </v-chip>
+          </v-card-text>
+        </v-card>
       </template>
 
       <v-list>
@@ -42,17 +41,17 @@
               <v-list-item-icon>
                 <v-icon color="red">fas fa-minus</v-icon>
               </v-list-item-icon>
-              <v-list-item-title>Delete event</v-list-item-title>
+              <v-list-item-title>Delete poll</v-list-item-title>
             </v-list-item>
           </template>
           <v-card>
             <v-card-title>Delete poll?</v-card-title>
             <v-card-text
-            >Are you sure you want to delete this poll?
+              >Are you sure you want to delete this poll?
               <v-chip>{{ poll.title }}</v-chip>
             </v-card-text>
             <v-card-actions>
-              <v-spacer/>
+              <v-spacer />
               <v-btn color="blue" text @click="deleteDialog = false">
                 No, don't
               </v-btn>
@@ -73,63 +72,63 @@
 </template>
 
 <script lang="ts">
-  import {Component, Prop, Vue} from 'vue-property-decorator';
-  import PollDetails from '@/components/Poll/PollDetails.vue';
-  import PollModal from '@/components/Poll/PollModal.vue';
-  import {Poll} from '@/types';
-  import moment, {Moment} from 'moment';
-  import {mapGetters} from 'vuex';
-  import axios from '@/plugins/axios';
+import { Component, Prop, Vue } from "vue-property-decorator";
+import PollModal from "@/components/Poll/PollModal.vue";
+import { Poll, PollOption, PollOptionType, Series } from "@/types";
+import { mapGetters } from "vuex";
+import axios from "@/plugins/axios";
 
-  @Component({
-    components: {PollDetails, PollModal},
-    computed: {...mapGetters(['isLoggedIn'])}
-  })
-  export default class PollCard extends Vue {
-    @Prop() poll!: Poll;
-    @Prop() width!: number;
-    @Prop() history!: boolean;
-    @Prop() ampm!: boolean;
-    dialog = false;
-    menu = false;
-    deleteDialog = false;
-    deleteLoading = false;
+@Component({
+  components: { PollModal },
+  computed: { ...mapGetters(["isLoggedIn"]) }
+})
+export default class PollCard extends Vue {
+  @Prop() poll!: Poll;
+  @Prop() width!: number;
+  @Prop() history!: boolean;
+  @Prop() ampm!: boolean;
+  dialog = false;
+  menu = false;
+  deleteDialog = false;
+  deleteLoading = false;
 
-    mounted() {
-    }
-
-    beforeDestroy() {
-    }
-
-    get small() {
-      return this.width < 300;
-    }
-
-    deletePoll() {
-      this.deleteLoading = true;
-      axios
-        .delete('/api/polls/' + this.poll.id, {
-          headers: {
-            Authorization: `Bearer ${localStorage.token}`
-          }
-        })
-        .then(() => {
-          this.$emit('save');
-        })
-        .catch(error => {
-          console.log(error);
-        })
-        .finally(() => {
-          this.deleteLoading = false;
-        });
-    }
+  get small() {
+    return this.width < 300;
   }
+
+  deletePoll() {
+    this.deleteLoading = true;
+    axios
+      .delete("/api/polls/" + this.poll.id, {
+        headers: {
+          Authorization: `Bearer ${localStorage.token}`
+        }
+      })
+      .then(() => {
+        this.$emit("save");
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .finally(() => {
+        this.deleteLoading = false;
+      });
+  }
+
+  getContent(option: PollOption) {
+    switch (option.type) {
+      case PollOptionType.Series:
+        if (option.content) {
+          return (option.content as Series).title.english;
+        }
+        break;
+      default:
+        return option.content;
+    }
+    return "Error loading content.";
+  }
+}
 </script>
 
 <style lang="scss">
-  .info-icon {
-    position: absolute !important;
-    right: 13px;
-    bottom: 13px;
-  }
 </style>

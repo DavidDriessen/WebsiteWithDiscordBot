@@ -18,10 +18,10 @@
       style="padding: 20px"
     >
       <poll-card
-        v-for="(event, index) of chunkEvent"
+        v-for="(poll, index) of chunkEvent"
         :key="index"
         :cols="chunkEvent / 12"
-        :event.sync="event"
+        :poll.sync="poll"
         :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
         :history="history"
         :ampm.sync="ampm"
@@ -32,21 +32,21 @@
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator';
-  import {EventSeries, Poll, PollOption, PollOptionType, Series} from '@/types';
-  import PollCard from '@/components/Poll/PollCard.vue';
-  import {mapPreferences} from 'vue-preferences';
-  import {AxiosResponse} from 'axios';
-  import axios from '../plugins/axios';
-  import moment from 'moment';
+import { Component, Vue } from "vue-property-decorator";
+import { Poll, PollOption, PollOptionType, Series } from "@/types";
+import PollCard from "@/components/Poll/PollCard.vue";
+import { mapPreferences } from "vue-preferences";
+import { AxiosResponse } from "axios";
+import axios from "../plugins/axios";
+import moment from "moment";
 
-  @Component({
+@Component({
   components: { PollCard },
   computed: {
     ...mapPreferences({ ampm: { defaultValue: true } })
   }
 })
-export default class Schedule extends Vue {
+export default class Polls extends Vue {
   ampm!: boolean;
   polls: Poll[] = [];
   seriesCache: {
@@ -95,13 +95,10 @@ export default class Schedule extends Vue {
         for (const poll of polls) {
           if (poll) {
             poll.end = moment(poll.end);
-            const series: PollOption[] | undefined = poll.options.filter(
-              o => o.type == PollOptionType.Series
-            );
-            if (series) {
-              for (let i = 0; i < series.length; i++) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                series[i].series = this.getSeries(series[i].content);
+            if (poll.options) {
+              for (const option of poll.options) {
+                if (option.type == PollOptionType.Series)
+                  option.content = this.getSeries(Number(option.content));
               }
             }
           }
@@ -144,7 +141,7 @@ export default class Schedule extends Vue {
 
   get chunkedEvents() {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require("chunk")(this.events, this.chunkSize);
+    return require("chunk")(this.polls, this.chunkSize);
   }
 }
 </script>

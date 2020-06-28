@@ -18,7 +18,7 @@
       style="padding: 20px"
     >
       <event-card
-        v-for="(event, index) of chunkEvent"
+        v-for="(poll, index) of chunkEvent"
         :key="index"
         :cols="chunkEvent / 12"
         :event.sync="event"
@@ -92,7 +92,7 @@ export default class Schedule extends Vue {
       )
       .then(async response => {
         const events: Event[] = response.data;
-        for (const event of events) {
+        for (const poll of events) {
           if (event) {
             event.start = moment(event.start);
             event.end = moment(event.end);

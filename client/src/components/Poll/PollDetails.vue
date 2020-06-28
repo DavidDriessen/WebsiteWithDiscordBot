@@ -6,7 +6,7 @@
     </template>
     <v-card>
       <v-card-title>
-        <span class="headline">{{ event.title }}</span>
+        <span class="headline">{{ poll.title }}</span>
       </v-card-title>
       <v-card-text>
         <v-label>Streamer:</v-label>
@@ -14,10 +14,10 @@
           <v-avatar left>
             <img :src="event.streamer.avatar" :alt="event.streamer.name" />
           </v-avatar>
-          <span> {{ event.streamer.name }}</span>
+          <span> {{ poll.streamer.name }}</span>
         </v-chip>
         <br />
-        {{ event.description }}
+        {{ poll.description }}
       </v-card-text>
 
       <v-expansion-panels popout hover>
@@ -69,7 +69,7 @@ import { mapGetters } from "vuex";
   computed: { ...mapGetters(["isLoggedIn"]) }
 })
 export default class EventDetails extends Vue {
-  @Prop() event!: Event;
+  @Prop() poll!: Event;
   @Prop() small?: boolean;
   @Prop() history!: boolean;
   dialog = false;

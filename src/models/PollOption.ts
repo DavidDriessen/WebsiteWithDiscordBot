@@ -29,6 +29,8 @@ export class PollOption extends Model<PollOption> {
     @BelongsToMany(() => User, () => PollVote)
     public users!: User[];
 
+    public voted?: boolean;
+
     public details?: {
         title: { english: string };
         coverImage: { extraLarge: string; };
