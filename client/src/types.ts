@@ -2,7 +2,7 @@ import { Moment } from "moment";
 
 export interface Series {
   id: number;
-  title: { english: string; userPreferred: string };
+  title: { english: string; romaji: string; userPreferred: string };
   description: string;
   siteUrl: string;
   coverImage: { extraLarge: string; medium: string };

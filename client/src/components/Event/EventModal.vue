@@ -147,7 +147,7 @@
                     :loading="loadingSeries"
                     :search-input.sync="search"
                     label="Series"
-                    item-text="title.english"
+                    :item-text="seriesItemText"
                     :item-value="seriesItemValue"
                     auto-select-first
                     hide-selected
@@ -162,7 +162,7 @@
                           :src="item.coverImage.medium"
                           :alt="item.title.english"
                       /></v-avatar>
-                      <span> {{ item.title.english }}</span>
+                      <span> {{ item.title.english ? item.title.english : item.title.romaji }}</span>
                     </template>
                   </v-autocomplete>
                 </v-col>
@@ -182,7 +182,7 @@
                               :alt="series.details.title.english"
                             />
                           </v-avatar>
-                          {{ series.details.title.english }}
+                          {{ series.details.title.english ? series.details.title.english : series.details.title.romaji }}
                           <v-btn @click="event.series.splice(index, 1)" icon>
                             <v-icon>fas fa-times-circle</v-icon>
                           </v-btn>
@@ -365,6 +365,10 @@ export default class EventModal extends Vue {
         }
       }
     }
+  }
+
+  seriesItemText(v: Series){
+    return v.title.english + " " + v.title.romaji + " " + v.title.userPreferred + " " + v.description;
   }
 
   seriesItemValue(v: Series) {
