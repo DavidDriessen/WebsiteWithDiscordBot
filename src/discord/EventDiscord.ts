@@ -94,11 +94,11 @@ export class EventDiscord {
     for (const media of series) {
       if (media.details) {
         embed.addField('-',
-          '**[' + media.details.title.english + '](' + media.details.siteUrl + '): Ep ' +
+          '**[' + media.details.title.userPreferred + '](' + media.details.siteUrl + '): Ep ' +
           media.episode +
           (media.episodes > 1 ? '-' + (media.episode + media.episodes - 1) : '') +
-          '**\n' +
-          service.turndown(media.details.description).split(/\n( *)\n/)[0]);
+          '**\n' + (media.details.description ?
+          service.turndown(media.details.description).split(/\n( *)\n/)[0] : ''));
       }
     }
 
