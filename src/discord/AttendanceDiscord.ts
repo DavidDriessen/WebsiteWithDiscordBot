@@ -1,7 +1,7 @@
 import {Discord, On} from '@typeit/discord';
 import {MessageReaction} from 'discord.js';
 import Event from '../models/Event';
-import User from '../models/User';
+import User, {IUser} from '../models/User';
 import Attendee from '../models/Attendee';
 import {EventDiscord} from './EventDiscord';
 import {Op} from 'sequelize';
@@ -13,7 +13,7 @@ export class AttendanceDiscord {
 
     @On('ready')
     public async init() {
-        const msgs = await EventDiscord.getChannel().fetchMessages();
+        const msgs = await (await EventDiscord.getChannel()).messages.fetch();
         const events = await Event.findAll({
             where: {messageID: {[Op.in]: msgs.keyArray()}},
             include: ['series'],
@@ -22,8 +22,8 @@ export class AttendanceDiscord {
             if (event.messageID) {
                 const msg = msgs.get(event.messageID);
                 if (msg) {
-                    for (const messageReaction of msg.reactions.array()) {
-                        await messageReaction.fetchUsers();
+                    for (const messageReaction of msg.reactions.cache.array()) {
+                        await messageReaction.users.fetch();
                         await this.attending(messageReaction);
                     }
                 }
@@ -33,7 +33,7 @@ export class AttendanceDiscord {
 
     @On('messageReactionAdd')
     public async attending(messageReaction: MessageReaction) {
-        if (messageReaction.count <= 1) {
+        if (messageReaction.count == null || messageReaction.count <= 1) {
             return;
         }
         const event = await Event.findOne({
@@ -43,10 +43,10 @@ export class AttendanceDiscord {
         if (!event) {
             return;
         }
-        const users = messageReaction.users.filter((user) => !user.bot);
+        const users = messageReaction.users.cache.filter((user) => !user.bot);
         const dbUsers = await Promise.all(users.map((discordUser) => {
-            return User.get(discordUser).then((u) => {
-                messageReaction.remove(discordUser).then();
+            return User.get(discordUser as unknown as IUser).then((u) => {
+                messageReaction.users.remove(discordUser).then();
                 return u[0];
             });
         }));

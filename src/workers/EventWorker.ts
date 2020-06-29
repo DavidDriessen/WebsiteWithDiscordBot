@@ -12,7 +12,7 @@ import {EventDiscord} from '../discord/EventDiscord';
 export class EventWorker {
 
   private static getChannel() {
-    return client.channels.get(discordConfig.channel.notify) as TextChannel;
+    return client.channels.cache.get(discordConfig.channel.notify) as TextChannel;
   }
 
   private static getAttendees(attendees: User[], decision: number) {
@@ -53,7 +53,7 @@ export class EventWorker {
     }
   }
 
-  @Cron('updateEventChannel', '0 0 0 * * *')
+  @Cron('updateEventChannel', '0 0 */4 * * *')
   public updateEventChannel() {
     EventDiscord.updateChannel().then();
   }
@@ -69,7 +69,7 @@ export class EventWorker {
         (event.roomcode ? '\nRoom code: ' + event.roomcode : ''))
       .then(() => {
         if (event.roomcode && event.messageID) {
-          this.getChannel().fetchMessages()
+          this.getChannel().messages.fetch()
             .then((msgs) => {
               if (event.messageID) {
                 const msg = msgs.get(event.messageID);

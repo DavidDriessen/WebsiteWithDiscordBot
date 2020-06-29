@@ -28,22 +28,26 @@
         @save="getSchedule"
       />
     </v-row>
+    <EventModal v-if="isAdmin" />
   </v-container>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { Event, EventSeries, Series } from "@/types";
+import EventModal from "@/components/Event/EventModal.vue";
 import EventCard from "@/components/Event/EventCard.vue";
 import { mapPreferences } from "vue-preferences";
 import { AxiosResponse } from "axios";
 import axios from "../plugins/axios";
 import moment from "moment";
+import { mapGetters } from "vuex";
 
 @Component({
-  components: { EventCard },
+  components: { EventCard, EventModal },
   computed: {
-    ...mapPreferences({ ampm: { defaultValue: true } })
+    ...mapPreferences({ ampm: { defaultValue: true } }),
+    ...mapGetters(["isLoggedIn", "isAdmin"])
   }
 })
 export default class Schedule extends Vue {

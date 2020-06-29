@@ -4,11 +4,15 @@
     <template v-slot:activator="{ on }">
       <v-btn
         v-if="!eventToEdit && !eventToClone"
-        color="primary"
+        fixed
         dark
+        fab
+        bottom
+        right
+        color="primary"
         v-on="on"
       >
-        Add event
+        <v-icon>fas fa-plus</v-icon>
       </v-btn>
       <v-list-item v-if="eventToEdit" v-on="on">
         <v-list-item-icon>
@@ -162,7 +166,13 @@
                           :src="item.coverImage.medium"
                           :alt="item.title.english"
                       /></v-avatar>
-                      <span> {{ item.title.english ? item.title.english : item.title.romaji }}</span>
+                      <span>
+                        {{
+                          item.title.english
+                            ? item.title.english
+                            : item.title.romaji
+                        }}</span
+                      >
                     </template>
                   </v-autocomplete>
                 </v-col>
@@ -182,7 +192,11 @@
                               :alt="series.details.title.english"
                             />
                           </v-avatar>
-                          {{ series.details.title.english ? series.details.title.english : series.details.title.romaji }}
+                          {{
+                            series.details.title.english
+                              ? series.details.title.english
+                              : series.details.title.romaji
+                          }}
                           <v-btn @click="event.series.splice(index, 1)" icon>
                             <v-icon>fas fa-times-circle</v-icon>
                           </v-btn>
@@ -367,8 +381,19 @@ export default class EventModal extends Vue {
     }
   }
 
-  seriesItemText(v: Series){
-    return v.title.english + " " + v.title.romaji + " " + v.title.userPreferred + " " + v.description;
+  seriesItemText(v: Series) {
+    if (v.title) {
+      return (
+        v.title.english +
+        " " +
+        v.title.romaji +
+        " " +
+        v.title.userPreferred +
+        " " +
+        v.description
+      );
+    }
+    return "";
   }
 
   seriesItemValue(v: Series) {
@@ -482,8 +507,8 @@ export default class EventModal extends Vue {
             }
           })
           .then(() => {
-            // this.close();
-            // this.loading = false;
+            this.close();
+            this.loading = false;
             this.$emit("save");
           });
       }
