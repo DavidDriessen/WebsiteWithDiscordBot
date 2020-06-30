@@ -9,21 +9,19 @@ import {Op} from 'sequelize';
 import * as TurndownService from 'turndown';
 import Attendee from '../models/Attendee';
 import SeriesEvent from '../models/SeriesEvent';
-import {Command, CommandMessage, Discord, Guard} from '@typeit/discord';
-
-function checkAdminRole(message: CommandMessage) {
-  const remindMeRole = message.guild?.roles.cache.find((r) => r.name === 'Admin');
-  if (remindMeRole) {
-    return message.member?.roles.cache.has(remindMeRole.id);
-  }
-  return false;
-}
+import {Command, Description, Discord, Guard} from '@typeit/discord';
+import {CheckRole} from './Guards';
 
 @Discord('!')
 export class EventDiscord {
 
   @Command('forceupdate')
-  @Guard(checkAdminRole)
+  @Description('Force update bot channels')
+  @Guard(CheckRole('Admin'))
+  private forceupdate() {
+    EventDiscord.updateChannel();
+  }
+
   public static async updateChannel() {
     const channel = await EventDiscord.getChannel();
     const msgs = await channel.messages.fetch();

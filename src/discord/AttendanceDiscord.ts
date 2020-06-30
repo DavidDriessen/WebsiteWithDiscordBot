@@ -24,7 +24,7 @@ export class AttendanceDiscord {
                 if (msg) {
                     for (const messageReaction of msg.reactions.cache.array()) {
                         await messageReaction.users.fetch();
-                        await this.attending(messageReaction);
+                        await this.attending([messageReaction]);
                     }
                 }
             }
@@ -32,7 +32,7 @@ export class AttendanceDiscord {
     }
 
     @On('messageReactionAdd')
-    public async attending(messageReaction: MessageReaction) {
+    public async attending([messageReaction]: MessageReaction[]) {
         if (messageReaction.count == null || messageReaction.count <= 1) {
             return;
         }
