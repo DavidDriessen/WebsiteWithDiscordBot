@@ -150,7 +150,6 @@ export class ScheduleController {
     event.end = req.body.end;
     event.description = req.body.description;
     event.streamer = streamer;
-    event.$set('streamer', streamer);
     if (req.body.series) {
       event.series = req.body.series
         .map((s: { details: { id: any; }; episode: any; episodes: any; }, i: number) => {
@@ -163,6 +162,7 @@ export class ScheduleController {
           return ss;
         });
     }
+    await event.$set('streamer', streamer);
     return res.status(200)
       .json(ScheduleController.renderResponse(await event.save(), req.payload.user));
   }

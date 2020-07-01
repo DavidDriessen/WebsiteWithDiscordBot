@@ -22,9 +22,11 @@
             {{ poll.title }}
           </v-card-title>
           <v-card-text>
-            <v-chip v-for="option in poll.options" :key="option.id" :color="option.voted ? 'blue' : 'gray'" @click="option.voted=!option.voted">
-              {{ getContent(option) }}
-            </v-chip>
+            <div v-for="option in poll.options" :key="option.id">
+              <v-chip :color="option.voted ? 'blue' : 'gray'" @click="option.voted=!option.voted">
+                {{ getContent(option) }}
+              </v-chip>
+            </div>
           </v-card-text>
         </v-card>
       </template>
@@ -47,11 +49,11 @@
           <v-card>
             <v-card-title>Delete poll?</v-card-title>
             <v-card-text
-              >Are you sure you want to delete this poll?
+            >Are you sure you want to delete this poll?
               <v-chip>{{ poll.title }}</v-chip>
             </v-card-text>
             <v-card-actions>
-              <v-spacer />
+              <v-spacer/>
               <v-btn color="blue" text @click="deleteDialog = false">
                 No, don't
               </v-btn>
@@ -72,62 +74,66 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import PollModal from "@/components/Poll/PollModal.vue";
-import { Poll, PollOption, PollOptionType, Series } from "@/types";
-import { mapGetters } from "vuex";
-import axios from "@/plugins/axios";
+  import {Component, Prop, Vue} from 'vue-property-decorator';
+  import PollModal from '@/components/Poll/PollModal.vue';
+  import {Poll, PollOption, PollOptionType, Series} from '@/types';
+  import {mapGetters} from 'vuex';
+  import axios from '@/plugins/axios';
 
-@Component({
-  components: { PollModal },
-  computed: { ...mapGetters(["isLoggedIn"]) }
-})
-export default class PollCard extends Vue {
-  @Prop() poll!: Poll;
-  @Prop() width!: number;
-  @Prop() history!: boolean;
-  @Prop() ampm!: boolean;
-  dialog = false;
-  menu = false;
-  deleteDialog = false;
-  deleteLoading = false;
+  @Component({
+    components: {PollModal},
+    computed: {...mapGetters(['isLoggedIn'])}
+  })
+  export default class PollCard extends Vue {
+    @Prop() poll!: Poll;
+    @Prop() width!: number;
+    @Prop() history!: boolean;
+    @Prop() ampm!: boolean;
+    dialog = false;
+    menu = false;
+    deleteDialog = false;
+    deleteLoading = false;
 
-  get small() {
-    return this.width < 300;
-  }
-
-  deletePoll() {
-    this.deleteLoading = true;
-    axios
-      .delete("/api/polls/" + this.poll.id, {
-        headers: {
-          Authorization: `Bearer ${localStorage.token}`
-        }
-      })
-      .then(() => {
-        this.$emit("save");
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .finally(() => {
-        this.deleteLoading = false;
-      });
-  }
-
-  getContent(option: PollOption) {
-    switch (option.type) {
-      case PollOptionType.Series:
-        if (option.content) {
-          return (option.content as Series).title.english;
-        }
-        break;
-      default:
-        return option.content;
+    get small() {
+      return this.width < 300;
     }
-    return "Error loading content.";
+
+    deletePoll() {
+      this.deleteLoading = true;
+      axios
+        .delete('/api/polls/' + this.poll.id, {
+          headers: {
+            Authorization: `Bearer ${localStorage.token}`
+          }
+        })
+        .then(() => {
+          this.$emit('save');
+        })
+        .catch(error => {
+          console.log(error);
+        })
+        .finally(() => {
+          this.deleteLoading = false;
+        });
+    }
+
+    getContent(option: PollOption) {
+      switch (option.type) {
+        case PollOptionType.Series:
+          if (option.content) {
+            const title = (option.content as Series).title;
+            if (title) {
+              return title.english;
+            }
+            return '';
+          }
+          break;
+        default:
+          return option.content;
+      }
+      return 'Error loading content.';
+    }
   }
-}
 </script>
 
 <style lang="scss">

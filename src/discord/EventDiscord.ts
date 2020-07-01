@@ -1,4 +1,4 @@
-import {Attachment, Message, RichEmbed, TextChannel} from 'discord.js';
+import {MessageAttachment, Message, MessageEmbed, TextChannel} from 'discord.js';
 import Event from '../models/Event';
 import {client} from '../start';
 import * as discordConfig from '../config/discord.json';
@@ -9,19 +9,26 @@ import {Op} from 'sequelize';
 import * as TurndownService from 'turndown';
 import Attendee from '../models/Attendee';
 import SeriesEvent from '../models/SeriesEvent';
+import {Command, Description, Discord, Guard} from '@typeit/discord';
+import {CheckRole} from './Guards';
 
+@Discord('!')
 export class EventDiscord {
 
+  @Command('forceupdate')
+  @Description('Force update bot channels')
+  @Guard(CheckRole('Admin'))
+  private forceupdate() {
+    EventDiscord.updateChannel();
+  }
+
   public static async updateChannel() {
-    const channel = EventDiscord.getChannel();
-    const msgs = await channel.fetchMessages();
+    const channel = await EventDiscord.getChannel();
+    const msgs = await channel.messages.fetch();
     let events = await Event.findAll({
       where: {
-        start:
-          {
-            [Op.gte]: moment().toDate(),
-            [Op.lte]: moment().add(1, 'week').toDate(),
-          },
+        start: {[Op.lte]: moment().add(1, 'week').add(12, 'hours').toDate()},
+        end: {[Op.gt]: moment().toDate()},
       },
       include: ['series', 'streamer', 'attendees'],
     });
@@ -36,13 +43,7 @@ export class EventDiscord {
     }
     events = await Event.findAll({
       where: {
-        start:
-          {
-            [Op.or]: {
-              [Op.lt]: moment().toDate(),
-              [Op.gt]: moment().add(1, 'week').toDate(),
-            },
-          },
+        end: {[Op.lt]: moment().toDate()},
         messageID: {[Op.ne]: null, [Op.ne]: ''},
       },
     });
@@ -51,8 +52,8 @@ export class EventDiscord {
     }
   }
 
-  public static getChannel() {
-    return client.channels.get(discordConfig.channel.event) as TextChannel;
+  public static async getChannel() {
+    return (await client.channels.fetch(discordConfig.channel.event)) as TextChannel;
   }
 
   public static renderImage(urls: string[]) {
@@ -78,10 +79,11 @@ export class EventDiscord {
       media.details ? media.details.coverImage.extraLarge : ''));
     const service = new TurndownService();
 
-    const embed = new RichEmbed();
+    const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/schedule');
     embed.setTitle(event.title);
-    embed.attachFile(new Attachment(await image.getBufferAsync(Jimp.MIME_PNG), 'image.png'));
+    embed.attachFiles([
+      new MessageAttachment(await image.getBufferAsync(Jimp.MIME_PNG), 'image.png')]);
     embed.addField('Time', '```md\n' + moment(event.start).utc()
       .format('< ddd DD of MMM [at] HH:mm')
       + moment(event.end).utc().format(' — HH:mm > UTC') + '\n```');
@@ -94,11 +96,11 @@ export class EventDiscord {
     for (const media of series) {
       if (media.details) {
         embed.addField('-',
-          '**[' + media.details.title.english + '](' + media.details.siteUrl + '): Ep ' +
+          '**[' + media.details.title.userPreferred + '](' + media.details.siteUrl + '): Ep ' +
           media.episode +
           (media.episodes > 1 ? '-' + (media.episode + media.episodes - 1) : '') +
-          '**\n' +
-          service.turndown(media.details.description).split(/\n( *)\n/)[0]);
+          '**\n' + (media.details.description ?
+          service.turndown(media.details.description).split(/\n( *)\n/)[0] : 'No description.'));
       }
     }
 
@@ -110,14 +112,19 @@ export class EventDiscord {
       await Attendee.count({where: {event: event.id, decision: 2}}) +
       '>\n```');
 
+    if (event.roomcode) {
+      embed.addField('Roomcode', '```md\n- < ' + event.roomcode + ' >\n```');
+    }
+
     return embed;
   }
 
   public static async update(event: Event, force = false) {
     if (event.messageID) {
-      const m = this.getChannel().messages.get(event.messageID);
-      if (event.roomcode ||
-        !moment(event.start).isBetween(moment(), moment().add(1, 'week'))) {
+      const m = (await this.getChannel()).messages.cache.get(event.messageID);
+      if (!moment().isBetween(
+        moment(event.start).subtract(1, 'week').subtract(12, 'hours'),
+        moment(event.end))) {
         if (m) {
           m.delete().then();
         }
@@ -134,19 +141,23 @@ export class EventDiscord {
         }
       }
     }
-    if (event.roomcode || !moment(event.start).isBetween(moment(), moment().add(1, 'week'))) {
+    if (!moment().isBetween(
+      moment(event.start).subtract(1, 'week').subtract(12, 'hours'),
+      moment(event.end))) {
       return;
     }
-    const message: Message = await this.getChannel().send(await this.renderMessage(event));
+    const message: Message = await (await this.getChannel()).send(await this.renderMessage(event));
     event.messageID = message.id;
-    await message.react(AttendanceDiscord.options[1]);
-    await message.react(AttendanceDiscord.options[0]);
-    await message.react(AttendanceDiscord.options[2]);
+    if (!event.roomcode) {
+      await message.react(AttendanceDiscord.options[1]);
+      await message.react(AttendanceDiscord.options[0]);
+      await message.react(AttendanceDiscord.options[2]);
+    }
   }
 
   public static async removeEvent(event: Event) {
     if (event.messageID) {
-      const m = this.getChannel().messages.get(event.messageID);
+      const m = (await this.getChannel()).messages.cache.get(event.messageID);
       if (m) {
         m.delete().then();
       }

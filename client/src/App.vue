@@ -16,9 +16,6 @@
           </div>
         </router-link>
       </v-toolbar-title>
-
-      <v-spacer></v-spacer>
-      <NewEvent v-if="isAdmin && !mobile" />
       <v-spacer></v-spacer>
       <div v-if="!mobile">
         <v-btn to="/polls" text>
@@ -89,12 +86,11 @@
 
 <script lang="ts">
 import Vue from "vue";
-import NewEvent from "@/components/Event/EventModal.vue";
 import { mapGetters, mapState } from "vuex";
 
 export default Vue.extend({
   name: "App",
-  components: { NewEvent },
+  components: {},
   data: () => ({
     drawer: false
   }),

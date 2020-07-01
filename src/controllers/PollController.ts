@@ -41,7 +41,11 @@ export class PollController {
     const polls = await Poll.findAll({
       include: [{association: 'options', include: ['users']}], where, order,
     });
-    res.status(200).json(polls.map((poll) => poll.serialize(req.payload?.user)));
+    if (req.payload.user.role === 'Admin') {
+      res.status(200).json(polls);
+    } else {
+      res.status(200).json(polls.map((poll) => poll.serialize(req.payload?.user)));
+    }
   }
 
   @Put('')
@@ -82,37 +86,39 @@ export class PollController {
   @isAdmin
   private async editPoll(req: ISecureRequest, res: Response) {
     // tslint:disable-next-line:max-line-length
-    if (!req.body.title || !req.body.start || !req.body.end) {
+    if (!req.body.title || !req.body.end || !req.body.options) {
       return res.status(401).send('');
     }
-    const streamer = await User.findByPk(req.body.streamer.id);
-    if (!streamer) {
-      return res.status(404).json({msg: 'Streamer not found!'});
-    }
-    const event = await Event.findByPk(req.body.id, {include: ['series', 'streamer', 'attendees']});
-    if (!event) {
+    const poll = await Poll.findByPk(req.body.id, {include: ['options']});
+    if (!poll) {
       return res.status(200).json({message: 'Event not found'});
     }
-    event.title = req.body.title;
-    event.start = req.body.start;
-    event.end = req.body.end;
-    event.description = req.body.description;
-    event.streamer = streamer;
-    event.$set('streamer', streamer);
-    if (req.body.series) {
-      event.series = req.body.series
-        .map((s: { details: { id: any; }; episode: any; episodes: any; }, i: number) => {
-          const ss = event.series.find(
-            (m) => m.event === event.id && m.seriesId === s.details.id) ||
-            new SeriesEvent({event: event.id, seriesId: s.details.id});
-          ss.order = i;
-          ss.episode = req.body.series[i].episode;
-          ss.episodes = req.body.series[i].episodes;
-          return ss;
+    poll.title = req.body.title;
+    poll.end = req.body.end;
+    poll.description = req.body.description;
+    if (req.body.options) {
+      // const ids: number[] = req.body.options.filter((option: PollOption) => !!option.id)
+      //   .map((option: PollOption) => option.id);
+      // for (const option of poll.options) {
+      //   if (!ids.indexOf(option.id)) {
+      //     option.destroy();
+      //   }
+      // }
+      // for (const option: PollOption of req.body.options) {
+      //   if (option.id) {
+      //     PollOption(option).save
+      //   } else {
+      //     poll.$add('options', option);
+      //   }
+      // }
+      poll.options = req.body.options
+        .map((s: PollOption, i: number) => {
+          return poll.options.find(
+            (m) => m.poll === poll.id && m.id === s.id) ||
+            new PollOption(Object.assign({pollId: poll.id}, s));
         });
     }
-    return res.status(200)
-      .json(PollController.renderResponse(await event.save(), req.payload.user));
+    return res.status(200).json(await poll.save());
   }
 
   @Delete(':id')

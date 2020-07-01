@@ -24,7 +24,7 @@ export class SeriesEvent extends Model<SeriesEvent> {
   public episodes!: number;
 
   public details?: {
-    title: { english: string };
+    title: { english: string; romaji: string; userPreferred: string };
     coverImage: { extraLarge: string; };
     description: string;
     siteUrl: string;

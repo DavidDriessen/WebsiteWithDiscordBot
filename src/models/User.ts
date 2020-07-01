@@ -2,7 +2,7 @@ import {BelongsToMany, Column, HasMany, Model, Table} from 'sequelize-typescript
 import Attendee from './Attendee';
 import Event from './Event';
 
-interface IUser {
+export interface IUser {
   id: string;
   avatar: string | null | undefined;
   username: string;

@@ -18,7 +18,7 @@
       style="padding: 20px"
     >
       <event-card
-        v-for="(poll, index) of chunkEvent"
+        v-for="(event, index) of chunkEvent"
         :key="index"
         :cols="chunkEvent / 12"
         :event.sync="event"
@@ -28,22 +28,26 @@
         @save="getSchedule"
       />
     </v-row>
+    <EventModal v-if="isAdmin" />
   </v-container>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { Event, EventSeries, Series } from "@/types";
+import EventModal from "@/components/Event/EventModal.vue";
 import EventCard from "@/components/Event/EventCard.vue";
 import { mapPreferences } from "vue-preferences";
-import { AxiosResponse } from "axios";
+import AnimeCache from "@/store/animeCache";
 import axios from "../plugins/axios";
 import moment from "moment";
+import { mapGetters } from "vuex";
 
 @Component({
-  components: { EventCard },
+  components: { EventCard, EventModal },
   computed: {
-    ...mapPreferences({ ampm: { defaultValue: true } })
+    ...mapPreferences({ ampm: { defaultValue: true } }),
+    ...mapGetters(["isLoggedIn", "isAdmin"])
   }
 })
 export default class Schedule extends Vue {
@@ -92,7 +96,7 @@ export default class Schedule extends Vue {
       )
       .then(async response => {
         const events: Event[] = response.data;
-        for (const poll of events) {
+        for (const event of events) {
           if (event) {
             event.start = moment(event.start);
             event.end = moment(event.end);
@@ -100,44 +104,14 @@ export default class Schedule extends Vue {
             if (series) {
               for (let i = 0; i < series.length; i++) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                series[i].details = this.getSeries(series[i].seriesId);
+                series[i].details = AnimeCache.getSeries(series[i].seriesId);
               }
             }
           }
         }
-        await this.fetchSeries();
+        await AnimeCache.fetch();
         this.events = events;
         this.loading = false;
-      });
-  }
-
-  getSeries(id: number) {
-    if (!this.seriesCache[id]) {
-      this.seriesCache[id] = {} as Series;
-    }
-    return this.seriesCache[id];
-  }
-
-  fetchSeries() {
-    return axios
-      .get("/api/series/get", {
-        params: { ids: Object.keys(this.seriesCache) },
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        useCache: true
-      })
-      .then((response: AxiosResponse) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const series: Series[] = response.data;
-        for (let i = 0; i < series.length; i++) {
-          this.seriesCache[series[i].id].id = series[i].id;
-          this.seriesCache[series[i].id].title = series[i].title;
-          this.seriesCache[series[i].id].description = series[i].description;
-          this.seriesCache[series[i].id].coverImage = series[i].coverImage;
-          this.seriesCache[series[i].id].episodes = series[i].episodes;
-          this.seriesCache[series[i].id].siteUrl = series[i].siteUrl;
-        }
-        return series;
       });
   }
 

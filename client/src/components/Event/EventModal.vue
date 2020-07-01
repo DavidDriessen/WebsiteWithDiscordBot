@@ -4,11 +4,15 @@
     <template v-slot:activator="{ on }">
       <v-btn
         v-if="!eventToEdit && !eventToClone"
-        color="primary"
+        fixed
         dark
+        fab
+        bottom
+        right
+        color="primary"
         v-on="on"
       >
-        Add event
+        <v-icon>fas fa-plus</v-icon>
       </v-btn>
       <v-list-item v-if="eventToEdit" v-on="on">
         <v-list-item-icon>
@@ -147,7 +151,7 @@
                     :loading="loadingSeries"
                     :search-input.sync="search"
                     label="Series"
-                    item-text="title.english"
+                    :item-text="seriesItemText"
                     :item-value="seriesItemValue"
                     auto-select-first
                     hide-selected
@@ -162,7 +166,13 @@
                           :src="item.coverImage.medium"
                           :alt="item.title.english"
                       /></v-avatar>
-                      <span> {{ item.title.english }}</span>
+                      <span>
+                        {{
+                          item.title.english
+                            ? item.title.english
+                            : item.title.romaji
+                        }}</span
+                      >
                     </template>
                   </v-autocomplete>
                 </v-col>
@@ -182,7 +192,11 @@
                               :alt="series.details.title.english"
                             />
                           </v-avatar>
-                          {{ series.details.title.english }}
+                          {{
+                            series.details.title.english
+                              ? series.details.title.english
+                              : series.details.title.romaji
+                          }}
                           <v-btn @click="event.series.splice(index, 1)" icon>
                             <v-icon>fas fa-times-circle</v-icon>
                           </v-btn>
@@ -263,7 +277,7 @@ import axios from "../../plugins/axios";
 import { Event, Series, EventSeries, User } from "@/types";
 import draggable from "vuedraggable";
 import moment from "moment";
-import cloneDeep from "lodash-ts/cloneDeep";
+import {cloneDeep} from 'lodash'
 
 @Component({
   components: { draggable }
@@ -365,6 +379,21 @@ export default class EventModal extends Vue {
         }
       }
     }
+  }
+
+  seriesItemText(v: Series) {
+    if (v.title) {
+      return (
+        v.title.english +
+        " " +
+        v.title.romaji +
+        " " +
+        v.title.userPreferred +
+        " " +
+        v.description
+      );
+    }
+    return "";
   }
 
   seriesItemValue(v: Series) {
@@ -478,8 +507,8 @@ export default class EventModal extends Vue {
             }
           })
           .then(() => {
-            // this.close();
-            // this.loading = false;
+            this.close();
+            this.loading = false;
             this.$emit("save");
           });
       }
