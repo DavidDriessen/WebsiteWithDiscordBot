@@ -2,8 +2,17 @@
 <template>
   <v-dialog v-model="dialog" persistent max-width="600px">
     <template v-slot:activator="{ on }">
-      <v-btn v-if="!pollToEdit && !eventToClone" color="primary" dark v-on="on">
-        Add poll
+      <v-btn
+        v-if="!pollToEdit"
+        fixed
+        dark
+        fab
+        bottom
+        right
+        color="primary"
+        v-on="on"
+      >
+        <v-icon>fas fa-plus</v-icon>
       </v-btn>
       <v-list-item v-if="pollToEdit" v-on="on">
         <v-list-item-icon>
@@ -22,13 +31,13 @@
       <v-form ref="form" lazy-validation @submit="save()">
         <v-tabs v-model="tab">
           <v-tab>Details</v-tab>
-          <v-tab>Options</v-tab>
+          <v-tab>Series options</v-tab>
         </v-tabs>
         <v-tabs-items v-model="tab">
           <v-tab-item>
             <v-card-text>
               <v-row>
-                <v-col cols="12">
+                <v-col cols="8">
                   <v-text-field
                     label="Title"
                     v-model="poll.title"
@@ -40,6 +49,22 @@
                     ]"
                   />
                 </v-col>
+                <v-col cols="4">
+                  <v-datetime-picker
+                    label="Result date"
+                    v-model="end"
+                    :text-field-props="{
+                      rules: [v => !!v || 'Start is required']
+                    }"
+                  >
+                    <template v-slot:dateIcon>
+                      <v-icon>fas fa-calendar-alt</v-icon>
+                    </template>
+                    <template v-slot:timeIcon>
+                      <v-icon>fas fa-clock</v-icon>
+                    </template>
+                  </v-datetime-picker>
+                </v-col>
               </v-row>
               <v-row>
                 <v-col cols="12">
@@ -50,12 +75,7 @@
           </v-tab-item>
           <v-tab-item>
             <v-card-text>
-              <autocomplete-anime
-                v-for="option of poll.options"
-                :key="option.id"
-                v-model="option.content"
-              />
-              <v-btn @click="addSerieOption">Add option</v-btn>
+              <anime-selector v-model="poll.options" />
             </v-card-text>
           </v-tab-item>
         </v-tabs-items>
@@ -74,20 +94,20 @@
 </template>
 
 <script lang="ts">
-  import {Component, Prop, Vue} from 'vue-property-decorator';
-  import {Poll, PollOption, PollOptionType} from '@/types';
-  import AutocompleteAnime from '../AutocompleteAnime.vue';
-  import axios from '@/plugins/axios';
-  import {cloneDeep} from 'lodash';
-  import moment from 'moment';
+import { Component, Prop, Vue } from "vue-property-decorator";
+import { Poll, PollOption, PollOptionType } from "@/types";
+import AnimeSelector from "../AnimeSelector/Poll.vue";
+import axios from "@/plugins/axios";
+import { cloneDeep } from "lodash";
+import moment from "moment";
 
-  @Component({
-  components: { AutocompleteAnime }
+@Component({
+  components: { AnimeSelector }
 })
 export default class PollModal extends Vue {
   @Prop() pollToEdit?: Poll;
   dialog = false;
-  poll: Poll = { title: "", options: [], end: moment() } as Poll;
+  poll: Poll = { title: "", options: [], end: moment().add(1, "week") } as Poll;
   loading = false;
   tab = "details";
 
@@ -134,8 +154,11 @@ export default class PollModal extends Vue {
   save() {
     if (this.form.validate()) {
       const poll = cloneDeep(this.poll);
-      for(const option of poll.options){
-        if(option.type == PollOptionType.Series && typeof option.content == 'object'){
+      for (const option of poll.options) {
+        if (
+          option.type == PollOptionType.Series &&
+          typeof option.content == "object"
+        ) {
           option.content = option.content.id;
         }
       }

@@ -7,8 +7,8 @@
     </v-overlay>
     <v-row style="padding-right: 100px">
       <v-spacer />
-      <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />
-      <v-switch v-model="history" label="History" @change="getSchedule" />
+      <!--      <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />-->
+      <!--      <v-switch v-model="history" label="History" @change="getPolls" />-->
     </v-row>
     <v-divider />
     <v-row
@@ -22,43 +22,54 @@
         :key="index"
         :cols="chunkEvent / 12"
         :poll.sync="poll"
-        :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
+        :width="400"
         :history="history"
         :ampm.sync="ampm"
-        @save="getSchedule"
+        @save="getPolls"
+        @notLoggedin="loginNotice = true"
       />
     </v-row>
+    <poll-modal v-if="isAdmin" @save="getPolls" />
+    <v-snackbar v-model="loginNotice" :timeout="3000">
+      <p class="text-center" style="width: 100%">
+        Please login to perform that action.
+      </p>
+    </v-snackbar>
   </v-container>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { Poll, PollOption, PollOptionType, Series } from "@/types";
+import { Poll, PollOptionType } from "@/types";
 import PollCard from "@/components/Poll/PollCard.vue";
 import { mapPreferences } from "vue-preferences";
 import AnimeCache from "@/store/animeCache";
 import axios from "../plugins/axios";
 import moment from "moment";
+import PollModal from "@/components/Poll/PollModal.vue";
+import { mapGetters } from "vuex";
 
 @Component({
-  components: { PollCard },
+  components: { PollModal, PollCard },
   computed: {
-    ...mapPreferences({ ampm: { defaultValue: true } })
+    ...mapPreferences({ ampm: { defaultValue: true } }),
+    ...mapGetters(["isLoggedIn", "isAdmin"])
   }
 })
 export default class Polls extends Vue {
+  loginNotice = false;
   ampm!: boolean;
   polls: Poll[] = [];
   loading = false;
   chunkSize = 3;
-  width = 350;
+  width = 400;
   history = false;
   intervals: { update: number } = { update: 0 };
 
   mounted() {
-    this.getSchedule();
+    this.getPolls();
     this.onResize();
-    this.intervals.update = setInterval(this.getSchedule, 1000 * 60 * 60);
+    this.intervals.update = setInterval(this.getPolls, 1000 * 60 * 60);
   }
 
   beforeDestroy() {
@@ -73,7 +84,7 @@ export default class Polls extends Vue {
     }
   }
 
-  getSchedule() {
+  getPolls() {
     this.loading = true;
     this.polls = [];
     axios
@@ -94,8 +105,9 @@ export default class Polls extends Vue {
             poll.end = moment(poll.end);
             if (poll.options) {
               for (const option of poll.options) {
-                if (option.type == PollOptionType.Series)
+                if (option.type == PollOptionType.Series) {
                   option.content = AnimeCache.getSeries(Number(option.content));
+                }
               }
             }
           }

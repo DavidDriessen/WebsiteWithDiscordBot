@@ -5,15 +5,14 @@ import {
   Column,
   HasMany,
   Model,
-  Table
+  Table,
 } from 'sequelize-typescript';
 import PollOption from './PollOption';
 import {SeriesController} from '../controllers';
 // @ts-ignore
 import * as Serializer from '../../node_modules/sequelize-to-json/index';
 import User from './User';
-import {EventDiscord} from '../discord/EventDiscord';
-import SeriesEvent from './SeriesEvent';
+import {PollDiscord} from '../discord/PollDiscord';
 
 @Table
 export class Poll extends Model<Poll> {
@@ -24,7 +23,7 @@ export class Poll extends Model<Poll> {
   @Column
   public description!: string;
 
-  @Column
+  @Column({allowNull: true})
   public messageID?: string;
 
   @Column
@@ -51,22 +50,32 @@ export class Poll extends Model<Poll> {
 
   public serialize(user: User | undefined) {
     const scheme = {
-      include: ['@all', 'options'],
-      exclude: ['@pk', '@fk', '@auto'],
+      include: ['title', 'description', 'end', 'options'],
+      exclude: ['@fk', '@auto'],
       assoc: {
         options: {
+          include: ['@all'],
           exclude: ['@fk', '@auto'],
           postSerialize: (serialized: PollOption, original: PollOption) => {
             if (user) {
+              if (user.role === 'Admin') {
+                serialized.id = original.id;
+              }
               serialized.voted = original.users.some((u) => u.id === user.id);
             }
             return serialized;
           },
         },
       },
+      postSerialize: (serialized: PollOption, original: PollOption) => {
+        if (user && user.role === 'Admin') {
+          serialized.id = original.id;
+        }
+        return serialized;
+      },
     };
     if (user?.role === 'Admin') {
-      scheme.exclude = ['@fk', '@auto'];
+      scheme.assoc.options.include.push('users');
     }
     const options = {};
     return (new Serializer(Poll, scheme, options)).serialize(this);
@@ -74,8 +83,8 @@ export class Poll extends Model<Poll> {
 
 
   @BeforeCreate
-  public static async postMessage(poll: Poll) {
-    return;
+  public static postMessage(poll: Poll) {
+    PollDiscord.addPoll(poll);
   }
 
   @BeforeUpdate
@@ -88,7 +97,7 @@ export class Poll extends Model<Poll> {
       poll.options.filter((option) => option.id === db.id).length === 0);
     const changed = poll.options.filter((s) => s.changed());
     if (deleted.length === 0 && changed.length === 0) {
-      return;
+      await PollDiscord.updatePoll(poll);
     } else {
       for (const option of deleted) {
         option.destroy();
@@ -96,12 +105,13 @@ export class Poll extends Model<Poll> {
       for (const option of changed) {
         option.save();
       }
+      await PollDiscord.updatePoll(poll, true);
     }
   }
 
   @BeforeDestroy
-  public static async removeEvent(poll: Poll) {
-    return;
+  public static removeEvent(poll: Poll) {
+    PollDiscord.removePoll(poll);
   }
 }
 

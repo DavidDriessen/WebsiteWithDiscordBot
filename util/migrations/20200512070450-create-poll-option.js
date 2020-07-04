@@ -8,15 +8,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      type: {
-        allowNull: false,
-        defaultValue: 'General',
-        type: Sequelize.ENUM('Series', 'Date', 'Time', 'DateTime', 'WeekTime', 'Game', 'General')
-      },
-      content: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
       pollId: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -26,6 +17,19 @@ module.exports = {
         },
         onUpdate: "cascade",
         onDelete: "cascade",
+      },
+      type: {
+        allowNull: false,
+        defaultValue: 'General',
+        type: Sequelize.ENUM('Series', 'Date', 'Time', 'DateTime', 'WeekTime', 'Game', 'General')
+      },
+      content: {
+        allowNull: false,
+        type: Sequelize.STRING
+      },
+      order: {
+        allowNull: false,
+        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,

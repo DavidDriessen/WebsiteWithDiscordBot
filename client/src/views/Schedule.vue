@@ -28,7 +28,7 @@
         @save="getSchedule"
       />
     </v-row>
-    <EventModal v-if="isAdmin" />
+    <EventModal v-if="isAdmin" @save="getSchedule" />
   </v-container>
 </template>
 

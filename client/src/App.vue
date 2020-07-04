@@ -47,7 +47,7 @@
           </v-list-item-content>
         </v-list-item>
         <v-divider v-if="isLoggedIn" />
-        <v-list-item to="/poll">
+        <v-list-item to="/polls">
           <v-list-item-icon>
             <v-icon>fas fa-poll</v-icon>
           </v-list-item-icon>

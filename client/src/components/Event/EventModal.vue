@@ -116,7 +116,7 @@
                     :items.sync="streamers"
                     label="Streamer"
                     item-text="name"
-                    :item-value="seriesItemValue"
+                    :item-value="itemValue"
                     auto-select-first
                     hide-selected
                     chips
@@ -143,117 +143,7 @@
           </v-tab-item>
           <v-tab-item>
             <v-card-text>
-              <v-row>
-                <v-col cols="12" sm="12">
-                  <v-autocomplete
-                    v-model="series"
-                    :items.sync="items"
-                    :loading="loadingSeries"
-                    :search-input.sync="search"
-                    label="Series"
-                    :item-text="seriesItemText"
-                    :item-value="seriesItemValue"
-                    auto-select-first
-                    hide-selected
-                    hide-details
-                    hide-no-data
-                    multiple
-                  >
-                    <template v-slot:selection="{}" />
-                    <template v-slot:item="{ item }">
-                      <v-avatar>
-                        <img
-                          :src="item.coverImage.medium"
-                          :alt="item.title.english"
-                      /></v-avatar>
-                      <span>
-                        {{
-                          item.title.english
-                            ? item.title.english
-                            : item.title.romaji
-                        }}</span
-                      >
-                    </template>
-                  </v-autocomplete>
-                </v-col>
-              </v-row>
-              <v-container>
-                <draggable v-model="event.series" handle=".handle">
-                  <v-row v-for="(series, index) in event.series" :key="index">
-                    <v-col cols="1">
-                      <v-icon class="handle">fas fa-bars</v-icon>
-                    </v-col>
-                    <v-col cols="11">
-                      <v-row>
-                        <v-chip>
-                          <v-avatar left>
-                            <img
-                              :src="series.details.coverImage.medium"
-                              :alt="series.details.title.english"
-                            />
-                          </v-avatar>
-                          {{
-                            series.details.title.english
-                              ? series.details.title.english
-                              : series.details.title.romaji
-                          }}
-                          <v-btn @click="event.series.splice(index, 1)" icon>
-                            <v-icon>fas fa-times-circle</v-icon>
-                          </v-btn>
-                        </v-chip>
-                      </v-row>
-                      <v-row>
-                        <v-range-slider
-                          :value="[
-                            series.episode,
-                            series.episode + series.episodes
-                          ]"
-                          @input="setEpisodes(series, $event)"
-                          :min="1"
-                          :max="
-                            series.details.episodes
-                              ? series.details.episodes + 1
-                              : 31
-                          "
-                        >
-                          <template v-slot:prepend>
-                            <v-text-field
-                              :value="series.episode"
-                              class="mt-0 pt-0"
-                              hide-details
-                              single-line
-                              type="number"
-                              style="width: 60px"
-                              @input="
-                                setEpisodes(series, [
-                                  Number($event),
-                                  series.episode + series.episodes
-                                ])
-                              "
-                            ></v-text-field>
-                          </template>
-                          <template v-slot:append>
-                            <v-text-field
-                              :value="series.episode + series.episodes - 1"
-                              class="mt-0 pt-0"
-                              hide-details
-                              single-line
-                              type="number"
-                              style="width: 60px"
-                              @input="
-                                setEpisodes(series, [
-                                  series.episode,
-                                  Number($event) + 1
-                                ])
-                              "
-                            ></v-text-field>
-                          </template>
-                        </v-range-slider>
-                      </v-row>
-                    </v-col>
-                  </v-row>
-                </draggable>
-              </v-container>
+              <anime-selector v-model="event.series" />
             </v-card-text>
           </v-tab-item>
         </v-tabs-items>
@@ -277,10 +167,11 @@ import axios from "../../plugins/axios";
 import { Event, Series, EventSeries, User } from "@/types";
 import draggable from "vuedraggable";
 import moment from "moment";
-import {cloneDeep} from 'lodash'
+import { cloneDeep } from "lodash";
+import AnimeSelector from "@/components/AnimeSelector/Event.vue";
 
 @Component({
-  components: { draggable }
+  components: { AnimeSelector, draggable }
 })
 export default class EventModal extends Vue {
   @Prop() eventToEdit?: Event;
@@ -295,11 +186,7 @@ export default class EventModal extends Vue {
     end: moment()
   } as Event;
   loading = false;
-  loadingSeries = false;
-  search = "";
-  items: Series[] = [];
   streamers: User[] = [];
-  typingTimer: number | null = null;
   tab = "details";
 
   mounted() {
@@ -312,29 +199,8 @@ export default class EventModal extends Vue {
     }
   }
 
-  @Watch("search")
-  getSeries(search: string, previousSearch: string, isTyping = true) {
-    if (this.typingTimer) {
-      clearTimeout(this.typingTimer);
-    }
-    if (isTyping) {
-      this.typingTimer = setTimeout(() => {
-        this.getSeries(search, previousSearch, false);
-      }, 1000);
-    } else if (search) {
-      this.loadingSeries = true;
-      axios
-        .get("/api/series/search/" + encodeURIComponent(search))
-        .then((response: { data: { media: Series[] } }) => {
-          this.items = response.data.media;
-        })
-        .catch((error: object) => {
-          console.log(error);
-        })
-        .finally(() => {
-          this.loadingSeries = false;
-        });
-    }
+  itemValue(user: User) {
+    return user;
   }
 
   getStreamers() {
@@ -378,70 +244,6 @@ export default class EventModal extends Vue {
           }
         }
       }
-    }
-  }
-
-  seriesItemText(v: Series) {
-    if (v.title) {
-      return (
-        v.title.english +
-        " " +
-        v.title.romaji +
-        " " +
-        v.title.userPreferred +
-        " " +
-        v.description
-      );
-    }
-    return "";
-  }
-
-  seriesItemValue(v: Series) {
-    return v;
-  }
-
-  setEpisodes(series: EventSeries, event: number[]) {
-    if (
-      series.details &&
-      series.details.episodes &&
-      event[0] > series.details.episodes
-    ) {
-      event[0] = series.details.episodes;
-    } else if ((!series.details || !series.details.episodes) && event[0] > 30) {
-      event[0] = 30;
-    }
-    if (series.episode !== event[0]) {
-      if (series.episodes !== event[1] - series.episode) {
-        series.episodes = event[1] - event[0];
-      }
-      series.episode = event[0];
-    } else {
-      series.episodes = event[1] - event[0];
-      if (series.episodes <= 0) {
-        series.episodes = 1;
-      }
-    }
-  }
-
-  get series() {
-    if (this.event.series) {
-      return this.event.series.map((series: EventSeries) => {
-        if (series.details) {
-          return series.details;
-        }
-        return {} as Series;
-      });
-    }
-    return [];
-  }
-
-  set series(series: Series[]) {
-    for (let i = this.event.series.length; i < series.length; i++) {
-      this.event.series.push({
-        details: series[i],
-        episode: 1,
-        episodes: 1
-      } as EventSeries);
     }
   }
 

@@ -6,11 +6,12 @@ import * as Jimp from 'jimp';
 import * as moment from 'moment';
 import {AttendanceDiscord} from './AttendanceDiscord';
 import {Op} from 'sequelize';
-import * as TurndownService from 'turndown';
 import Attendee from '../models/Attendee';
 import SeriesEvent from '../models/SeriesEvent';
 import {Command, Description, Discord, Guard} from '@typeit/discord';
 import {CheckRole} from './Guards';
+import {Order} from 'sequelize/types/lib/model';
+import {DiscordHelper} from '../helpers/Discord';
 
 @Discord('!')
 export class EventDiscord {
@@ -25,11 +26,12 @@ export class EventDiscord {
   public static async updateChannel() {
     const channel = await EventDiscord.getChannel();
     const msgs = await channel.messages.fetch();
+    const order: Order = ['start', ['series', 'order', 'asc']];
     let events = await Event.findAll({
       where: {
         start: {[Op.lte]: moment().add(1, 'week').add(12, 'hours').toDate()},
         end: {[Op.gt]: moment().toDate()},
-      },
+      }, order,
       include: ['series', 'streamer', 'attendees'],
     });
     for (const event of events) {
@@ -56,28 +58,10 @@ export class EventDiscord {
     return (await client.channels.fetch(discordConfig.channel.event)) as TextChannel;
   }
 
-  public static renderImage(urls: string[]) {
-    return Promise.all(urls.map((url) => Jimp.read(url)))
-      .then((images) => {
-        const h = Math.min(...images.map((j) => j.getHeight()));
-        // tslint:disable-next-line:no-shadowed-variable
-        for (const image of images) {
-          image.scale(h / image.getHeight());
-        }
-        const widths = images.map((j) => j.getWidth());
-        const image = new Jimp(widths.reduce((a, b) => a + b), h);
-        for (let i = 0; i < images.length; i++) {
-          image.composite(images[i], widths.slice(0, i).reduce((a, b) => a + b, 0), 0);
-        }
-        return image;
-      });
-  }
-
   private static async renderMessage(event: Event) {
     const series = await event.getSeries();
-    const image = await EventDiscord.renderImage(series.map((media: SeriesEvent) =>
+    const image = await DiscordHelper.renderImage(series.map((media: SeriesEvent) =>
       media.details ? media.details.coverImage.extraLarge : ''));
-    const service = new TurndownService();
 
     const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/schedule');
@@ -93,14 +77,17 @@ export class EventDiscord {
     }
     embed.setDescription((event.description || ''));
 
+    let limit = Math.floor((6000 - event.title.length - event.description.length) / series.length);
+    if (limit > 1024) {
+      limit = 1024;
+    }
+
     for (const media of series) {
       if (media.details) {
-        embed.addField('-',
-          '**[' + media.details.title.userPreferred + '](' + media.details.siteUrl + '): Ep ' +
-          media.episode +
-          (media.episodes > 1 ? '-' + (media.episode + media.episodes - 1) : '') +
-          '**\n' + (media.details.description ?
-          service.turndown(media.details.description).split(/\n( *)\n/)[0] : 'No description.'));
+        const title = '**[' + media.details.title.userPreferred + '](' + media.details.siteUrl + '): Ep ' +
+          media.episode + (media.episodes > 1 ? '-' + (media.episode + media.episodes - 1) : '') + '**\n';
+        const description = DiscordHelper.wrapText(media.details.description, limit - title.length);
+        embed.addField('-', title + description);
       }
     }
 

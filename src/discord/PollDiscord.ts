@@ -1,12 +1,13 @@
 import {ArgsOf, Discord, On} from '@typeit/discord';
-import {MessageEmbed, TextChannel, User as DiscordUser} from 'discord.js';
+import {Message, MessageEmbed, TextChannel, User as DiscordUser} from 'discord.js';
 import {Op} from 'sequelize';
 import Poll from '../models/Poll';
-import * as TurndownService from 'turndown';
 import * as discordConfig from '../config/discord.json';
 import * as moment from 'moment';
 import {client} from '../start';
 import User, {IUser} from '../models/User';
+import {Order} from 'sequelize/types/lib/model';
+import {DiscordHelper} from '../helpers/Discord';
 
 @Discord()
 export class PollDiscord {
@@ -20,12 +21,17 @@ export class PollDiscord {
   @On('ready')
   public async init() {
     await PollDiscord.getChannel().messages.fetch();
-    const polls = await Poll.findAll({
-      where: {messageID: {[Op.or]: [null, '']}},
-      include: ['options'],
-    });
-    for (const poll of polls) {
-      this.addPoll(poll);
+    const order: Order = ['end', ['options', 'order', 'asc']];
+    for (const poll of await Poll.findAll({
+      where: {end: {[Op.gte]: moment()}},
+      include: ['options'], order,
+    })) {
+      poll.save();
+    }
+    for (const poll of await Poll.findAll({
+      where: {messageID: {[Op.ne]: null, [Op.ne]: ''}, end: {[Op.lt]: moment()}},
+    })) {
+      poll.save();
     }
   }
 
@@ -57,6 +63,7 @@ export class PollDiscord {
     const poll = await Poll.findOne({
       where: {messageID: msgId},
       include: ['options'],
+      order: ['end', ['options', 'order', 'asc']],
     });
     if (poll && poll.options.length > option) {
       const u = await User.get(user as unknown as IUser);
@@ -70,56 +77,99 @@ export class PollDiscord {
     }
   }
 
-
   private static async renderMessage(poll: Poll) {
     await poll.fetchSeries();
-    const service = new TurndownService();
     const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/polls');
     embed.setTitle(poll.title);
     embed.setDescription(poll.description);
 
+    let limit = Math.ceil((6000 - poll.title.length - poll.description.length)
+      / poll.options.length);
+    if (limit > 1024) {
+      limit = 1024;
+    }
+
     for (const [i, option] of poll.options.entries()) {
       let content = '-';
-      if (option.type === 'Series') {
-        if (option.details) {
-          content = '**[' + option.details.title.english + '](' + option.details.siteUrl + ')**\n' +
-            service.turndown(option.details.description).split(/\n( *)\n/)[0];
-        }
-      } else if (option.type === 'Time') {
-        content = '```md\n' + moment(option.content).utc().format('< HH:mm >') + ' UTC \n```';
-      } else if (option.type === 'WeekTime') {
-        content = '```md\n' + moment(option.content).utc().format('< ddd [at] HH:mm >') + ' UTC \n```';
-      } else if (option.type === 'DateTime') {
-        content = '```md\n' + moment(option.content).utc().format('< ddd DD of MMM [at] HH:mm >') + ' UTC \n```';
-      } else if (option.type === 'Date') {
-        content = '```md\n' + moment(option.content).utc().format('< ddd DD of MMM >') + ' UTC \n```';
-      } else {
-        content = service.turndown(option.content);
+      switch (option.type) {
+        case 'Series':
+          if (option.details) {
+            const title = '**[' + (option.details.title.english ?
+              option.details.title.english : option.details.title.romaji) +
+              '](' + option.details.siteUrl + ')**\n';
+            const description = DiscordHelper.wrapText(option.details.description,
+              limit - title.length);
+            content = title + description;
+          }
+          break;
+        case 'Time':
+          content = '```md\n' + moment(option.content).utc().format('< HH:mm >') + ' UTC \n```';
+          break;
+        case 'WeekTime':
+          content = '```md\n' + moment(option.content).utc().format('< ddd [at] HH:mm >') + ' UTC \n```';
+          break;
+        case 'DateTime':
+          content = '```md\n' + moment(option.content).utc()
+            .format('< ddd DD of MMM [at] HH:mm >') + ' UTC \n```';
+          break;
+        case 'Date':
+          content = '```md\n' + moment(option.content).utc().format('< ddd DD of MMM >') + ' UTC \n```';
+          break;
+        case 'General':
+        default:
+          content = DiscordHelper.wrapText(option.content, limit);
       }
-      embed.addField(this.options[i], content);
+      embed.addField(PollDiscord.options[i], content);
     }
     return embed;
   }
 
-  public async addPoll(poll: Poll) {
-    const msg = await PollDiscord.getChannel()
-      .send(await PollDiscord.renderMessage(poll));
-    poll.messageID = msg.id;
-    for (let i = 0; i < poll.options.length; i++) {
-      await msg.react(PollDiscord.options[i]);
+  public static async updatePoll(poll: Poll, force = false) {
+    if (poll.messageID) {
+      const msg = PollDiscord.getChannel().messages.cache.get(poll.messageID);
+      if (msg) {
+        if (force) {
+          await msg.delete();
+        } else {
+          try {
+            await msg.edit(await PollDiscord.renderMessage(poll));
+          } catch (e) {
+            // tslint:disable-next-line:no-console
+            console.error('Error editing Poll: ' + poll.id + '\n', e);
+          }
+          return;
+        }
+      }
     }
-    poll.save();
+    await PollDiscord.addPoll(poll);
   }
 
-  public async removePoll(poll: Poll) {
+  private static async addReactions(msg: Message, count: number) {
+    for (let i = 0; i < count; i++) {
+      await msg.react(PollDiscord.options[i]);
+    }
+  }
+
+  public static async addPoll(poll: Poll) {
+    try {
+      const msg = await PollDiscord.getChannel()
+        .send(await PollDiscord.renderMessage(poll));
+      poll.messageID = msg.id;
+      this.addReactions(msg, poll.options.length);
+    } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.error('Error adding Poll: ' + poll.id + '\n', e);
+    }
+  }
+
+  public static async removePoll(poll: Poll) {
     if (poll.messageID) {
       const msg = PollDiscord.getChannel().messages.cache.get(poll.messageID);
       if (msg) {
         await msg.delete();
-        poll.messageID = '';
-        poll.save();
       }
+      poll.messageID = '';
     }
   }
 }

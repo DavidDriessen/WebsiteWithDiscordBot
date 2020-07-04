@@ -21,17 +21,24 @@
           >
             {{ poll.title }}
           </v-card-title>
+          <v-card-subtitle>{{ poll.description }}</v-card-subtitle>
           <v-card-text>
-            <div v-for="option in poll.options" :key="option.id">
-              <v-chip :color="option.voted ? 'blue' : 'gray'" @click="option.voted=!option.voted">
-                {{ getContent(option) }}
-              </v-chip>
-            </div>
+            <v-list>
+              <v-list-item v-for="option in poll.options" :key="option.id">
+                <v-chip
+                  :color="option.voted ? 'blue' : 'gray'"
+                  @click="vote(option)"
+                >
+                  {{ getContent(option) }}
+                </v-chip>
+              </v-list-item>
+            </v-list>
           </v-card-text>
         </v-card>
       </template>
 
       <v-list>
+        <poll-results :poll="poll" />
         <poll-modal
           :poll-to-edit="poll"
           @save="$emit('save')"
@@ -48,19 +55,19 @@
           </template>
           <v-card>
             <v-card-title>Delete poll?</v-card-title>
-            <v-card-text
-            >Are you sure you want to delete this poll?
+            <v-card-text>
+              Are you sure you want to delete this poll?
               <v-chip>{{ poll.title }}</v-chip>
             </v-card-text>
             <v-card-actions>
-              <v-spacer/>
+              <v-spacer />
               <v-btn color="blue" text @click="deleteDialog = false">
                 No, don't
               </v-btn>
               <v-btn
                 color="red"
                 text
-                @click="deleteEvent()"
+                @click="deletePoll()"
                 :loading="deleteLoading"
               >
                 Yes, please
@@ -74,67 +81,81 @@
 </template>
 
 <script lang="ts">
-  import {Component, Prop, Vue} from 'vue-property-decorator';
-  import PollModal from '@/components/Poll/PollModal.vue';
-  import {Poll, PollOption, PollOptionType, Series} from '@/types';
-  import {mapGetters} from 'vuex';
-  import axios from '@/plugins/axios';
+import { Component, Prop, Vue } from "vue-property-decorator";
+import PollModal from "@/components/Poll/PollModal.vue";
+import { Poll, PollOption, PollOptionType, Series } from "@/types";
+import { mapGetters } from "vuex";
+import axios from "@/plugins/axios";
+import PollResults from "@/components/Poll/PollResults.vue";
 
-  @Component({
-    components: {PollModal},
-    computed: {...mapGetters(['isLoggedIn'])}
-  })
-  export default class PollCard extends Vue {
-    @Prop() poll!: Poll;
-    @Prop() width!: number;
-    @Prop() history!: boolean;
-    @Prop() ampm!: boolean;
-    dialog = false;
-    menu = false;
-    deleteDialog = false;
-    deleteLoading = false;
+@Component({
+  components: { PollResults, PollModal },
+  computed: { ...mapGetters(["isLoggedIn"]) }
+})
+export default class PollCard extends Vue {
+  @Prop() poll!: Poll;
+  @Prop() width!: number;
+  @Prop() history!: boolean;
+  @Prop() ampm!: boolean;
+  dialog = false;
+  menu = false;
+  deleteDialog = false;
+  deleteLoading = false;
+  isLoggedIn!: boolean;
 
-    get small() {
-      return this.width < 300;
-    }
+  get small() {
+    return this.width < 300;
+  }
 
-    deletePoll() {
-      this.deleteLoading = true;
-      axios
-        .delete('/api/polls/' + this.poll.id, {
-          headers: {
-            Authorization: `Bearer ${localStorage.token}`
+  deletePoll() {
+    this.deleteLoading = true;
+    axios
+      .delete("/api/polls/" + this.poll.id, {
+        headers: {
+          Authorization: `Bearer ${localStorage.token}`
+        }
+      })
+      .then(() => {
+        this.$emit("save");
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .finally(() => {
+        this.deleteLoading = false;
+      });
+  }
+
+  getContent(option: PollOption) {
+    switch (option.type) {
+      case PollOptionType.Series:
+        if (option.content) {
+          const title = (option.content as Series).title;
+          if (title) {
+            return title.english || title.romaji;
           }
-        })
-        .then(() => {
-          this.$emit('save');
-        })
-        .catch(error => {
-          console.log(error);
-        })
-        .finally(() => {
-          this.deleteLoading = false;
-        });
+          return "";
+        }
+        break;
+      default:
+        return option.content;
     }
+    return "Error loading content.";
+  }
 
-    getContent(option: PollOption) {
-      switch (option.type) {
-        case PollOptionType.Series:
-          if (option.content) {
-            const title = (option.content as Series).title;
-            if (title) {
-              return title.english;
-            }
-            return '';
-          }
-          break;
-        default:
-          return option.content;
-      }
-      return 'Error loading content.';
+  vote(option: PollOption) {
+    if (this.isLoggedIn) {
+      axios.post("/api/polls/vote", option, {
+        headers: {
+          Authorization: `Bearer ${localStorage.token}`
+        }
+      });
+      option.voted = !option.voted;
+    } else {
+      this.$emit("notLoggedin");
     }
   }
+}
 </script>
 
-<style lang="scss">
-</style>
+<style lang="scss"></style>

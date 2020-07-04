@@ -1,10 +1,10 @@
 import {
-    BelongsTo,
-    BelongsToMany,
-    Column,
-    Default,
-    Model,
-    Table,
+  BelongsTo,
+  BelongsToMany,
+  Column,
+  Default,
+  Model,
+  Table,
 } from 'sequelize-typescript';
 import Poll from './Poll';
 import User from './User';
@@ -16,27 +16,30 @@ export type PollOptionTypes = 'Series' | 'Time' | 'Date' | 'DateTime' | 'WeekTim
 @Table
 export class PollOption extends Model<PollOption> {
 
-    @BelongsTo(() => Poll, 'pollId')
-    public poll!: Poll;
+  @BelongsTo(() => Poll, 'pollId')
+  public poll!: Poll;
 
-    @Default('General')
-    @Column(DataTypes.ENUM('Series', 'Time', 'Date', 'DateTime', 'WeekTime', 'General'))
-    public type!: PollOptionTypes;
+  @Default('General')
+  @Column(DataTypes.ENUM('Series', 'Time', 'Date', 'DateTime', 'WeekTime', 'General'))
+  public type!: PollOptionTypes;
 
-    @Column
-    public content!: string;
+  @Column
+  public content!: string;
 
-    @BelongsToMany(() => User, () => PollVote)
-    public users!: User[];
+  @Column
+  public order!: number;
 
-    public voted?: boolean;
+  @BelongsToMany(() => User, () => PollVote)
+  public users!: User[];
 
-    public details?: {
-        title: { english: string };
-        coverImage: { extraLarge: string; };
-        description: string;
-        siteUrl: string;
-    };
+  public voted?: boolean;
+
+  public details?: {
+    title: { english: string; romaji: string; userPreferred: string };
+    coverImage: { extraLarge: string; };
+    description: string;
+    siteUrl: string;
+  };
 
 }
 
