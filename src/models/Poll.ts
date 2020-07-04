@@ -10,7 +10,7 @@ import {
 import PollOption from './PollOption';
 import {SeriesController} from '../controllers';
 // @ts-ignore
-import * as Serializer from '../../node_modules/sequelize-to-json/index';
+import * as Serializer from 'sequelize-to-json/index.js';
 import User from './User';
 import {PollDiscord} from '../discord/PollDiscord';
 
