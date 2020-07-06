@@ -59,29 +59,34 @@ export class EventWorker {
   }
 
   public static async sendNotification(event: Event) {
-    const attendees = await event.$get('attendees');
-    EventWorker.getChannel()
-      .send('Reminder: ' + event.title + ' will be starting **' +
-        (moment().isAfter(event.start) ? 'Soon' : moment(event.start).fromNow()) + '**.' +
-        '\nStreamer: <@' + event.streamer.discordId + '>' +
-        EventWorker.getAttendees(attendees, 1) +
-        EventWorker.getAttendees(attendees, 2) +
-        (event.roomcode ? '\nRoom code: ' + event.roomcode : ''))
-      .then(() => {
-        if (event.roomcode && event.messageID) {
-          this.getChannel().messages.fetch()
-            .then((msgs) => {
-              if (event.messageID) {
-                const msg = msgs.get(event.messageID);
-                if (msg) {
-                  msg.delete().then(() => {
-                    event.messageID = '';
-                    event.save({fields: ['messageID']});
-                  });
+    try {
+      const attendees = await event.$get('attendees');
+      EventWorker.getChannel()
+        .send('Reminder: ' + event.title + ' will be starting **' +
+          (moment().isAfter(event.start) ? 'Soon' : moment(event.start).fromNow()) + '**.' +
+          '\nStreamer: <@' + event.streamer.discordId + '>' +
+          EventWorker.getAttendees(attendees, 1) +
+          EventWorker.getAttendees(attendees, 2) +
+          (event.roomcode ? '\nRoom code: ' + event.roomcode : ''))
+        .then(() => {
+          if (event.roomcode && event.messageID) {
+            this.getChannel().messages.fetch()
+              .then((msgs) => {
+                if (event.messageID) {
+                  const msg = msgs.get(event.messageID);
+                  if (msg) {
+                    msg.delete().then(() => {
+                      event.messageID = '';
+                      event.save({fields: ['messageID']});
+                    });
+                  }
                 }
-              }
-            });
-        }
-      });
+              });
+          }
+        });
+    } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.error('Error sending notification for event: ', event.id, '\n', e);
+    }
   }
 }

@@ -61,7 +61,9 @@ export class Poll extends Model<Poll> {
               if (user.role === 'Admin') {
                 serialized.id = original.id;
               }
-              serialized.voted = original.users.some((u) => u.id === user.id);
+              if (original.users) {
+                serialized.voted = original.users.some((u) => u.id === user.id);
+              }
             }
             return serialized;
           },

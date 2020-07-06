@@ -39,6 +39,7 @@ export class PollOption extends Model<PollOption> {
     coverImage: { extraLarge: string; };
     description: string;
     siteUrl: string;
+    genres: string[];
   };
 
 }

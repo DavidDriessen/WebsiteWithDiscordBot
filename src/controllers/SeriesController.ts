@@ -12,11 +12,15 @@ import axios from 'axios';
 export class SeriesController {
 
     private static readonly media = `id
+                    idMal
                     title { english romaji  userPreferred }
                     description
+                    synonyms
                     siteUrl
                     status
                     season
+                    duration
+                    genres
                     episodes
                     coverImage { extraLarge large medium }`;
 

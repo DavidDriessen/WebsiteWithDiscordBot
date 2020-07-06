@@ -75,9 +75,11 @@ export class EventDiscord {
     if (streamer) {
       embed.addField('Streamer', '<@' + streamer.discordId + '>');
     }
-    embed.setDescription((event.description || ''));
+    if (event.description) {
+      embed.setDescription((event.description || ''));
+    }
 
-    let limit = Math.floor((6000 - event.title.length - event.description.length) / series.length);
+    let limit = Math.floor((6000 - event.title.length - event.description?.length) / series.length);
     if (limit > 1024) {
       limit = 1024;
     }
@@ -123,7 +125,10 @@ export class EventDiscord {
           m.delete().then();
           event.messageID = '';
         } else {
-          m.edit(await this.renderMessage(event)).then();
+          m.edit(await this.renderMessage(event)).catch((e) => {
+            // tslint:disable-next-line:no-console
+            console.error('Error editing message for Event: ', event.id, '\n', e);
+          });
           return;
         }
       }
@@ -133,12 +138,18 @@ export class EventDiscord {
       moment(event.end))) {
       return;
     }
-    const message: Message = await (await this.getChannel()).send(await this.renderMessage(event));
-    event.messageID = message.id;
-    if (!event.roomcode) {
-      await message.react(AttendanceDiscord.options[1]);
-      await message.react(AttendanceDiscord.options[0]);
-      await message.react(AttendanceDiscord.options[2]);
+    try {
+      const message: Message = await (await this.getChannel())
+        .send(await this.renderMessage(event));
+      event.messageID = message.id;
+      if (!event.roomcode) {
+        await message.react(AttendanceDiscord.options[1]);
+        await message.react(AttendanceDiscord.options[0]);
+        await message.react(AttendanceDiscord.options[2]);
+      }
+    } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.error('Error adding message for Event: ', event.id, '\n', e);
     }
   }
 

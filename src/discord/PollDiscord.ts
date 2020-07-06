@@ -82,9 +82,11 @@ export class PollDiscord {
     const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/polls');
     embed.setTitle(poll.title);
-    embed.setDescription(poll.description);
+    if (poll.description) {
+      embed.setDescription(poll.description);
+    }
 
-    let limit = Math.ceil((6000 - poll.title.length - poll.description.length)
+    let limit = Math.ceil((6000 - poll.title.length - poll.description?.length)
       / poll.options.length);
     if (limit > 1024) {
       limit = 1024;
@@ -98,9 +100,10 @@ export class PollDiscord {
             const title = '**[' + (option.details.title.english ?
               option.details.title.english : option.details.title.romaji) +
               '](' + option.details.siteUrl + ')**\n';
-            const description = DiscordHelper.wrapText(option.details.description,
-              limit - title.length);
-            content = title + description;
+            // const description = DiscordHelper.wrapText(option.details.description,
+            //   limit - title.length);
+            const genres = '(' + option.details.genres.join(', ') + ')';
+            content = title + genres;
           }
           break;
         case 'Time':
@@ -136,7 +139,7 @@ export class PollDiscord {
             await msg.edit(await PollDiscord.renderMessage(poll));
           } catch (e) {
             // tslint:disable-next-line:no-console
-            console.error('Error editing Poll: ' + poll.id + '\n', e);
+            console.error('Error editing message for Poll: ' + poll.id + '\n', e);
           }
           return;
         }
@@ -159,7 +162,7 @@ export class PollDiscord {
       this.addReactions(msg, poll.options.length);
     } catch (e) {
       // tslint:disable-next-line:no-console
-      console.error('Error adding Poll: ' + poll.id + '\n', e);
+      console.error('Error adding message for Poll: ' + poll.id + '\n', e);
     }
   }
 
