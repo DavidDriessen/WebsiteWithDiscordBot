@@ -85,6 +85,7 @@ export class ScheduleController {
   private async setRoomCode(req: ISecureRequest, res: Response) {
     const event = await Event.findOne({
       where: {id: req.body.event, streamerId: req.payload.user.id},
+      include: ['series', 'streamer', 'attendees'],
     });
     if (event) {
       event.roomcode = req.body.code;
