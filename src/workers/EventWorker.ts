@@ -15,7 +15,7 @@ export class EventWorker {
     return client.channels.cache.get(discordConfig.channel.notify) as TextChannel;
   }
 
-  private static getAttendees(attendees: User[], decision: number) {
+  public static getAttendees(attendees: User[], decision: number) {
     if (attendees.length === 0) {
       return '';
     }
@@ -35,6 +35,9 @@ export class EventWorker {
     }
     if (decision === 2) {
       return '\nUndecided: ' + parsed;
+    }
+    if (decision === 0) {
+      return '\nNot attending: ' + parsed;
     }
     return '';
   }
