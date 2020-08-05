@@ -49,13 +49,13 @@ export class AttendanceDiscord {
         where: {discordId: message.author.id},
       }],
     });
-    if (events) {
+    if (events.length > 0) {
       message.channel.send(events.map((event) =>
         event.title +
         EventWorker.getAttendees(event.attendees, 1) +
         EventWorker.getAttendees(event.attendees, 2)).join('\n\n'));
     } else {
-      message.channel.send('No events this week');
+      message.channel.send('No events for you this week');
     }
   }
 
