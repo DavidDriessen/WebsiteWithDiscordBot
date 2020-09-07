@@ -1,12 +1,15 @@
-import {ArgsOf, Discord, On} from '@typeit/discord';
+import {Command, CommandMessage, Discord, Guard, On} from '@typeit/discord';
 import {MessageReaction} from 'discord.js';
 import Event from '../models/Event';
 import User, {IUser} from '../models/User';
 import Attendee from '../models/Attendee';
 import {EventDiscord} from './EventDiscord';
 import {Op} from 'sequelize';
+import {CheckRole} from './Guards';
+import {EventWorker} from '../workers/EventWorker';
+import * as moment from 'moment';
 
-@Discord()
+@Discord('!')
 export class AttendanceDiscord {
 
   public static readonly options = ['❌', '✅', '❔'];
@@ -24,15 +27,40 @@ export class AttendanceDiscord {
         if (msg) {
           for (const messageReaction of msg.reactions.cache.array()) {
             await messageReaction.users.fetch();
-            await this.attending([messageReaction, msg.author]);
+            await this.attending([messageReaction]);
           }
         }
       }
     }
   }
 
+  @Command('attending')
+  @Guard(CheckRole('Admin'))
+  public async getAttending(message: CommandMessage) {
+    const events: Event[] = await Event.findAll({
+      where: {
+        start: {[Op.lte]: moment().add(1, 'week').add(12, 'hours').toDate()},
+        end: {[Op.gt]: moment().toDate()},
+      },
+      order: ['start'],
+      include: ['attendees', {
+        model: User,
+        as: 'streamer',
+        where: {discordId: message.author.id},
+      }],
+    });
+    if (events.length > 0) {
+      message.channel.send(events.map((event) =>
+        event.title +
+        EventWorker.getAttendees(event.attendees, 1) +
+        EventWorker.getAttendees(event.attendees, 2)).join('\n\n'));
+    } else {
+      message.channel.send('No events for you this week');
+    }
+  }
+
   @On('messageReactionAdd')
-  public async attending([messageReaction]: ArgsOf<'messageReactionAdd'>) {
+  public async attending([messageReaction]: MessageReaction[]) {
     if (messageReaction.count == null || messageReaction.count <= 1) {
       return;
     }

@@ -18,19 +18,9 @@ export class MainDiscord {
   @Command('ping')
   public ping(message: CommandMessage) {
     message.channel.send('Pong!').then(async (r) => {
-      await r.delete({timeout: 1000});
+      await message.delete({timeout: 2000});
+      await r.delete();
     });
-  }
-
-  @Command('say :say')
-  public say(message: CommandMessage) {
-    if (message.args.say) {
-      message.channel.send(message.args.say).then(async (r) => {
-        await r.delete({timeout: 1000});
-      });
-    } else {
-      message.channel.send('Not enough arguments.');
-    }
   }
 
   @Command('help')

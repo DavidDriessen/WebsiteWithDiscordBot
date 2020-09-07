@@ -17,6 +17,9 @@
             <v-btn :value="0" icon>
               <v-icon color="red">fas fa-times-circle</v-icon>
             </v-btn>
+            <v-btn :value="0" icon>
+              <v-icon color="gray">fas fa-question-circle</v-icon>
+            </v-btn>
           </v-btn-toggle>
         </div>
       </template>
