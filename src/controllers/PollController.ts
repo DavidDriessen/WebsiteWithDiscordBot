@@ -49,10 +49,10 @@ export class PollController {
     if (option) {
       const user = await User.findByPk(req.payload.user.id);
       if (user) {
-        if (option.$has('users', user)) {
-          option.$remove('users', user);
+        if (await option.$has('users', user)) {
+          await option.$remove('users', user);
         } else {
-          option.$add('users', user);
+          await option.$add('users', user);
         }
         return res.status(200).json({message: 'ok'});
       }
