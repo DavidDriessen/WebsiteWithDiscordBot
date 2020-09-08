@@ -85,11 +85,11 @@ export default class Schedule extends Vue {
     this.events = [];
     axios
       .get("/api/schedule", {
-        headers: {
-          Authorization: localStorage.token
-            ? `Bearer ${localStorage.token}`
-            : undefined
-        },
+        headers: localStorage.token
+          ? {
+              Authorization: `Bearer ${localStorage.token}`
+            }
+          : {},
         params: { history: this.history ? "true" : undefined }
       })
       .then(async response => {

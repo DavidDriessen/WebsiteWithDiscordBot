@@ -94,11 +94,11 @@ export default class Polls extends Vue {
     this.polls = [];
     axios
       .get("/api/polls", {
-        headers: {
-          Authorization: localStorage.token
-            ? `Bearer ${localStorage.token}`
-            : undefined
-        },
+        headers: localStorage.token
+          ? {
+              Authorization: `Bearer ${localStorage.token}`
+            }
+          : {},
         params: { history: this.history ? "true" : undefined }
       })
       .then(async response => {
