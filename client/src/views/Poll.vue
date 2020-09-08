@@ -8,7 +8,12 @@
     <v-row style="padding-right: 100px">
       <v-spacer />
       <!--      <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />-->
-      <!--      <v-switch v-model="history" label="History" @change="getPolls" />-->
+      <v-switch
+        v-model="history"
+        label="History"
+        @change="getPolls"
+        v-if="isAdmin"
+      />
     </v-row>
     <v-divider />
     <v-row
@@ -88,16 +93,14 @@ export default class Polls extends Vue {
     this.loading = true;
     this.polls = [];
     axios
-      .get(
-        "/api/polls" + (this.history ? "?history=true" : ""),
-        localStorage.token
-          ? {
-              headers: {
-                Authorization: `Bearer ${localStorage.token}`
-              }
-            }
-          : {}
-      )
+      .get("/api/polls", {
+        headers: {
+          Authorization: localStorage.token
+            ? `Bearer ${localStorage.token}`
+            : undefined
+        },
+        params: { history: this.history ? "true" : undefined }
+      })
       .then(async response => {
         const polls: Poll[] = response.data;
         for (const poll of polls) {

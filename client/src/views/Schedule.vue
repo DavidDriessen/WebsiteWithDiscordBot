@@ -84,16 +84,14 @@ export default class Schedule extends Vue {
     this.loading = true;
     this.events = [];
     axios
-      .get(
-        "/api/schedule" + (this.history ? "?history=true" : ""),
-        localStorage.token
-          ? {
-              headers: {
-                Authorization: `Bearer ${localStorage.token}`
-              }
-            }
-          : {}
-      )
+      .get("/api/schedule", {
+        headers: {
+          Authorization: localStorage.token
+            ? `Bearer ${localStorage.token}`
+            : undefined
+        },
+        params: { history: this.history ? "true" : undefined }
+      })
       .then(async response => {
         const events: Event[] = response.data;
         for (const event of events) {

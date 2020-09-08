@@ -8,7 +8,7 @@ import {AttendanceDiscord} from './AttendanceDiscord';
 import {Op} from 'sequelize';
 import Attendee from '../models/Attendee';
 import SeriesEvent from '../models/SeriesEvent';
-import {Command, Description, Discord, Guard} from '@typeit/discord';
+import {Command, Description, Discord, Guard, On} from '@typeit/discord';
 import {CheckRole} from './Guards';
 import {Order} from 'sequelize/types/lib/model';
 import {DiscordHelper} from '../helpers/Discord';
@@ -23,6 +23,7 @@ export class EventDiscord {
     EventDiscord.updateChannel();
   }
 
+  @On('ready')
   public static async updateChannel() {
     const channel = await EventDiscord.getChannel();
     const msgs = await channel.messages.fetch();
