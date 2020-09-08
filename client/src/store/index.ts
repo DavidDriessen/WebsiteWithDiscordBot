@@ -57,17 +57,15 @@ const store = new Vuex.Store({
     setAttending(_context, payload) {
       if (
         !payload.event.attending ||
-        payload.state !== payload.event.attending.decision
+        payload.state !== payload.event.attending
       ) {
-        if (payload.event.attending)
-          payload.event.attending.decision = payload.state;
-        else payload.event.attending = { decision: payload.state };
+        payload.event.attending = payload.state;
         // noinspection JSIgnoredPromiseFromCall
         axios.post(
           "/api/schedule/attending",
           {
             id: payload.event.id,
-            decision: payload.event.attending.decision
+            decision: payload.event.attending
           },
           {
             headers: {
