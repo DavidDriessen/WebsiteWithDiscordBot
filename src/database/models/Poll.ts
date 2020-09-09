@@ -13,6 +13,7 @@ import {SeriesController} from '../../controllers';
 import * as Serializer from 'sequelize-to-json/index.js';
 import User from './User';
 import {PollDiscord} from '../../discord/PollDiscord';
+import {Order} from 'sequelize/types/lib/model';
 
 @Table
 export class Poll extends Model<Poll> {
@@ -91,7 +92,8 @@ export class Poll extends Model<Poll> {
 
   @BeforeUpdate
   public static async updateMessage(poll: Poll) {
-    const options = await PollOption.findAll({where: {pollId: poll.id}});
+    const order: Order = [['order', 'asc']];
+    const options = await PollOption.findAll({where: {pollId: poll.id}, order});
     if (poll.options === undefined) {
       poll.options = options;
     }
