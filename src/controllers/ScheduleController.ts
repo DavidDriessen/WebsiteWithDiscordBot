@@ -2,13 +2,13 @@ import {Controller, Delete, Get, Middleware, Post, Put} from '@overnightjs/core'
 import {ISecureRequest, JwtManager} from '@overnightjs/jwt';
 import {Order, WhereOptions} from 'sequelize/types/lib/model';
 import * as expressJwt from 'express-jwt';
-import Attendee from '../models/Attendee';
-import Event from '../models/Event';
+import Attendee from '../database/models/Attendee';
+import Event from '../database/models/Event';
 import {Response} from 'express';
 import * as moment from 'moment';
 import {Op} from 'sequelize';
-import SeriesEvent from '../models/SeriesEvent';
-import User from '../models/User';
+import SeriesEvent from '../database/models/SeriesEvent';
+import User from '../database/models/User';
 import {EventWorker} from '../workers/EventWorker';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {

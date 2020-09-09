@@ -9,8 +9,8 @@ import {
 import User from './User';
 import Attendee from './Attendee';
 import SeriesEvent from './SeriesEvent';
-import {EventDiscord} from '../discord/EventDiscord';
-import {SeriesController} from '../controllers';
+import {EventDiscord} from '../../discord/EventDiscord';
+import {SeriesController} from '../../controllers';
 
 @Table
 export class Event extends Model<Event> {

@@ -5,9 +5,9 @@ import * as expressJwt from 'express-jwt';
 import {Response} from 'express';
 import * as moment from 'moment';
 import {Op} from 'sequelize';
-import Poll from '../models/Poll';
-import PollOption from '../models/PollOption';
-import User from '../models/User';
+import Poll from '../database/models/Poll';
+import PollOption from '../database/models/PollOption';
+import User from '../database/models/User';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;

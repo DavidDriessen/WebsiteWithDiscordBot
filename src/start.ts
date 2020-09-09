@@ -5,6 +5,7 @@ import {Sequelize} from 'sequelize-typescript';
 import WebServer from './WebServer';
 import {Client} from '@typeit/discord';
 import {registerController} from 'cron-decorators/lib';
+import { migrate } from './database/migrate';
 
 const sequelize = process.env.NODE_ENV === 'production' ?
     // @ts-ignore
@@ -12,8 +13,10 @@ const sequelize = process.env.NODE_ENV === 'production' ?
 const webServer = new WebServer();
 export const client = new Client();
 
-registerController([__dirname + '/workers/**/*Worker.*']);
-sequelize.addModels([__dirname + '/models']);
-client.silent = true;
-client.login(discordConfig.token, `${__dirname}/discord/*Discord.*`).then();
-webServer.start(3000);
+migrate(sequelize).then(() => {
+  registerController([__dirname + '/workers/**/*Worker.*']);
+  sequelize.addModels([__dirname + '/database/models']);
+  client.silent = true;
+  client.login(discordConfig.token, `${__dirname}/discord/*Discord.*`).then();
+  webServer.start(3000);
+});

@@ -5,7 +5,7 @@
  */
 
 import {Response} from 'express';
-import User from '../models/User';
+import User from '../database/models/User';
 import {ISecureRequest, JwtManager} from '@overnightjs/jwt';
 import {Controller, Get, Middleware, Post} from '@overnightjs/core';
 

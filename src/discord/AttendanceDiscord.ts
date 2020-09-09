@@ -1,8 +1,8 @@
 import {Command, CommandMessage, Discord, Guard, On} from '@typeit/discord';
 import {MessageReaction} from 'discord.js';
-import Event from '../models/Event';
-import User, {IUser} from '../models/User';
-import Attendee from '../models/Attendee';
+import Event from '../database/models/Event';
+import User, {IUser} from '../database/models/User';
+import Attendee from '../database/models/Attendee';
 import {EventDiscord} from './EventDiscord';
 import {Op} from 'sequelize';
 import {CheckRole} from './Guards';

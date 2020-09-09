@@ -1,11 +1,11 @@
 import {Cron, CronController} from 'cron-decorators/lib';
 import {TextChannel} from 'discord.js';
 import moment = require('moment');
-import Event from '../models/Event';
+import Event from '../database/models/Event';
 import {Op} from 'sequelize';
 import {client} from '../start';
 import * as discordConfig from '../config/discord.json';
-import User from '../models/User';
+import User from '../database/models/User';
 import {EventDiscord} from '../discord/EventDiscord';
 
 @CronController('jobs')

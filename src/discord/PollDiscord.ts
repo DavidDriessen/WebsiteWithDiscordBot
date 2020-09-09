@@ -1,19 +1,27 @@
-import {Discord, On} from '@typeit/discord';
+import {Command, Description, Discord, Guard, On} from '@typeit/discord';
 import {MessageEmbed, TextChannel} from 'discord.js';
 import {Op} from 'sequelize';
-import Poll from '../models/Poll';
+import Poll from '../database/models/Poll';
 import * as discordConfig from '../config/discord.json';
 import * as moment from 'moment';
 import {client} from '../start';
 import {Order} from 'sequelize/types/lib/model';
 import {DiscordHelper} from '../helpers/Discord';
 import {VoteDiscord} from './VoteDiscord';
+import {CheckRole} from './Guards';
 
-@Discord()
+@Discord('!')
 export class PollDiscord {
 
   public static getChannel() {
     return client.channels.cache.get(discordConfig.channel.poll) as TextChannel;
+  }
+
+  @Command('forceupdate')
+  @Description('Force update bot channels')
+  @Guard(CheckRole('Admin'))
+  private forceupdate() {
+    PollDiscord.updateChannel();
   }
 
   @On('ready')

@@ -1,13 +1,13 @@
 import {MessageAttachment, Message, MessageEmbed, TextChannel} from 'discord.js';
-import Event from '../models/Event';
+import Event from '../database/models/Event';
 import {client} from '../start';
 import * as discordConfig from '../config/discord.json';
 import * as Jimp from 'jimp';
 import * as moment from 'moment';
 import {AttendanceDiscord} from './AttendanceDiscord';
 import {Op} from 'sequelize';
-import Attendee from '../models/Attendee';
-import SeriesEvent from '../models/SeriesEvent';
+import Attendee from '../database/models/Attendee';
+import SeriesEvent from '../database/models/SeriesEvent';
 import {Command, Description, Discord, Guard, On} from '@typeit/discord';
 import {CheckRole} from './Guards';
 import {Order} from 'sequelize/types/lib/model';

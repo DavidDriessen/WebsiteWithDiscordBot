@@ -1,10 +1,10 @@
 import {ArgsOf, Discord, On} from '@typeit/discord';
 import {Message, TextChannel, User as DiscordUser} from 'discord.js';
 import {Op} from 'sequelize';
-import Poll from '../models/Poll';
+import Poll from '../database/models/Poll';
 import * as discordConfig from '../config/discord.json';
 import {client} from '../start';
-import User, {IUser} from '../models/User';
+import User, {IUser} from '../database/models/User';
 import {PollDiscord} from './PollDiscord';
 
 @Discord()
@@ -30,7 +30,7 @@ export class VoteDiscord {
           for (const messageReaction of msg.reactions.cache.array()) {
             const users = await messageReaction.users.fetch();
             for (const [, user] of users) {
-              await VoteDiscord.addVote([messageReaction, user]);
+              await this.addVote([messageReaction, user]);
             }
             // -- Not practical
             // const option = this.options.indexOf(messageReaction.emoji.name);
@@ -49,13 +49,13 @@ export class VoteDiscord {
   }
 
   @On('messageReactionAdd')
-  public static async addVote([messageReaction, user]: ArgsOf<'messageReactionAdd'>) {
+  public async addVote([messageReaction, user]: ArgsOf<'messageReactionAdd'>) {
     if (user.bot) {
       return;
     }
-    const option = this.options.indexOf(messageReaction.emoji.name);
+    const option = VoteDiscord.options.indexOf(messageReaction.emoji.name);
     if (option > -1) {
-      await this.changeVote(messageReaction.message.id, option, user as DiscordUser);
+      await VoteDiscord.changeVote(messageReaction.message.id, option, user as DiscordUser);
     }
   }
 

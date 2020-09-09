@@ -8,11 +8,11 @@ import {
   Table,
 } from 'sequelize-typescript';
 import PollOption from './PollOption';
-import {SeriesController} from '../controllers';
+import {SeriesController} from '../../controllers';
 // @ts-ignore
 import * as Serializer from 'sequelize-to-json/index.js';
 import User from './User';
-import {PollDiscord} from '../discord/PollDiscord';
+import {PollDiscord} from '../../discord/PollDiscord';
 
 @Table
 export class Poll extends Model<Poll> {
