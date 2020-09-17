@@ -5,35 +5,58 @@
         <h1>Loading</h1>
       </v-progress-circular>
     </v-overlay>
-    <v-row style="padding-right: 100px">
-      <v-spacer />
-      <!--      <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />-->
-      <v-switch
-        v-model="history"
-        label="History"
-        @change="getPolls"
-        v-if="isAdmin"
-      />
-    </v-row>
-    <v-divider />
-    <v-row
-      v-for="(chunkEvent, chunkIndex) of chunkedEvents"
-      :key="chunkIndex"
-      justify="space-around"
-      style="padding: 20px"
-    >
-      <poll-card
-        v-for="(poll, index) of chunkEvent"
-        :key="index"
-        :cols="chunkEvent / 12"
-        :poll.sync="poll"
-        :width="400"
-        :history="history"
-        :ampm.sync="ampm"
-        @save="getPolls"
-        @notLoggedin="loginNotice = true"
-      />
-    </v-row>
+    <v-data-iterator :items="polls" disable-pagination hide-default-footer>
+      <template v-slot:header>
+        <v-toolbar flat>
+          <v-spacer />
+          <!--      <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />-->
+          <v-switch
+            v-model="history"
+            label="History"
+            @change="getPolls"
+            v-if="isAdmin"
+          />
+        </v-toolbar>
+        <v-divider />
+      </template>
+      <template v-slot:default="{ items }">
+        <v-row justify="space-around" style="padding: 20px">
+          <poll-card
+            v-for="(poll, index) of items"
+            :key="index"
+            :cols="3 / 12"
+            :poll.sync="poll"
+            :width="400"
+            :history="history"
+            :ampm.sync="ampm"
+            @save="getPolls"
+            @notLoggedin="loginNotice = true"
+          />
+        </v-row>
+      </template>
+      <template v-slot:no-data>
+        <v-row justify="space-around" style="padding: 20px">
+          <v-card width="400" style="margin-bottom: 40px" hover>
+            <v-card-title
+              class="text-truncate text-no-wrap"
+              :style="'display: block; font-size: 16px;'"
+            >
+              No polls available
+            </v-card-title>
+            <v-card-text>
+              There are currently no polls going on.
+              <br />
+              Check back later.
+            </v-card-text>
+            <v-card-subtitle>
+              <small>
+                Polls happen around the beginning of an anime season.
+              </small>
+            </v-card-subtitle>
+          </v-card>
+        </v-row>
+      </template>
+    </v-data-iterator>
     <poll-modal v-if="isAdmin" @save="getPolls" />
     <v-snackbar v-model="loginNotice" :timeout="3000">
       <p class="text-center" style="width: 100%">
