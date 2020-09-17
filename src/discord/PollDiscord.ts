@@ -42,13 +42,12 @@ export class PollDiscord {
   }
 
   private static async renderMessage(poll: Poll) {
+    const pollRole = this.getChannel().guild.roles.cache.find((role) => role.name === 'Polls');
     await poll.fetchSeries();
     const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/polls');
     embed.setTitle(poll.title);
-    if (poll.description) {
-      embed.setDescription(poll.description);
-    }
+    let description = '<@&' + pollRole?.id + '> ' + poll.description || '';
 
     let limit = Math.ceil((6000 - poll.title.length - poll.description?.length)
       / poll.options.length);
@@ -57,38 +56,37 @@ export class PollDiscord {
     }
 
     for (const [i, option] of poll.options.entries()) {
-      let content = '-';
       switch (option.type) {
         case 'Series':
           if (option.details) {
             const title = '**[' + (option.details.title.english ?
               option.details.title.english : option.details.title.romaji) +
-              '](' + option.details.siteUrl + ')**\n';
+              '](' + option.details.siteUrl + ')** ';
             // const description = DiscordHelper.wrapText(option.details.description,
             //   limit - title.length);
             const genres = '(' + option.details.genres.join(', ') + ')';
-            content = title + genres;
+            description += '\n\n' + VoteDiscord.options[i] + ' ' + title + genres;
           }
           break;
         case 'Time':
-          content = '```md\n' + moment(option.content).utc().format('< HH:mm >') + ' UTC \n```';
+          embed.addField(VoteDiscord.options[i], '```md\n' + moment(option.content).utc().format('< HH:mm >') + ' UTC \n```');
           break;
         case 'WeekTime':
-          content = '```md\n' + moment(option.content).utc().format('< ddd [at] HH:mm >') + ' UTC \n```';
+          embed.addField(VoteDiscord.options[i], '```md\n' + moment(option.content).utc().format('< ddd [at] HH:mm >') + ' UTC \n```');
           break;
         case 'DateTime':
-          content = '```md\n' + moment(option.content).utc()
-            .format('< ddd DD of MMM [at] HH:mm >') + ' UTC \n```';
+          embed.addField(VoteDiscord.options[i], '```md\n' + moment(option.content).utc()
+            .format('< ddd DD of MMM [at] HH:mm >') + ' UTC \n```');
           break;
         case 'Date':
-          content = '```md\n' + moment(option.content).utc().format('< ddd DD of MMM >') + ' UTC \n```';
+          embed.addField(VoteDiscord.options[i], '```md\n' + moment(option.content).utc().format('< ddd DD of MMM >') + ' UTC \n```');
           break;
         case 'General':
         default:
-          content = DiscordHelper.wrapText(option.content, limit);
+          embed.addField(VoteDiscord.options[i], DiscordHelper.wrapText(option.content, limit));
       }
-      embed.addField(VoteDiscord.options[i], content);
     }
+    embed.setDescription(description);
     return embed;
   }
 
