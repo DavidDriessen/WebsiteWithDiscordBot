@@ -200,6 +200,174 @@ export default class EventCardImage extends Vue {
       }
     }
   }
+
+  .img-wrap-5 {
+    $wrap-4-width: $img-width * 0.8;
+    $wrap-4-height: $img-height * 0.8;
+    $wrap-4-width-offset: ($wrap-4-width - $wrap-width / 2) / 2;
+    $wrap-4-height-offset: ($wrap-4-height - $wrap-heigth / 2) / 2;
+
+    img {
+      clip-path: inset(
+        $wrap-4-height-offset $wrap-4-width-offset $wrap-4-height-offset
+          $wrap-4-width-offset
+      );
+      width: $wrap-4-width;
+      height: $wrap-4-height;
+
+      &:nth-of-type(1) {
+        left: -$wrap-4-width-offset;
+        top: -$wrap-4-height-offset;
+      }
+
+      &:nth-of-type(2) {
+        left: $wrap-width / 2 - $wrap-4-width-offset;
+        top: -$wrap-4-height-offset;
+      }
+
+      &:nth-of-type(3) {
+        left: -$wrap-4-width-offset;
+        top: $wrap-heigth / 2 - $wrap-4-height-offset;
+      }
+
+      &:nth-of-type(4) {
+        left: $wrap-width / 2 - $wrap-4-width-offset;
+        top: $wrap-heigth / 2 - $wrap-4-height-offset;
+      }
+
+      &:nth-of-type(5) {
+        clip-path: polygon(
+          25% $wrap-4-height-offset,
+          75% $wrap-4-height-offset,
+          100% 50%,
+          75% ($wrap-heigth - $wrap-4-height-offset * 2.5),
+          25% ($wrap-heigth - $wrap-4-height-offset * 2.5),
+          0% 50%
+        );
+        left: $wrap-width / 4 - $wrap-4-width-offset;
+        top: $wrap-heigth / 4 - $wrap-4-height-offset;
+      }
+
+      &:hover {
+        clip-path: inset(0 0 0 0);
+        z-index: 1;
+      }
+
+      &:nth-of-type(1):hover {
+        top: 0;
+        left: 0;
+      }
+
+      &:nth-of-type(2):hover {
+        top: 0;
+        left: $wrap-width - $wrap-4-width;
+      }
+
+      &:nth-of-type(3):hover {
+        top: $wrap-heigth - $wrap-4-height;
+        left: 0;
+      }
+
+      &:nth-of-type(4):hover {
+        top: $wrap-heigth - $wrap-4-height;
+        left: $wrap-width - $wrap-4-width;
+      }
+
+      &:nth-of-type(5):hover {
+        clip-path: polygon(
+                0% 0%,
+                100% 0%,
+                100% 50%,
+                100% 100%,
+                0% 100%,
+                0% 50%
+        );
+        top: $wrap-heigth / 2 - $wrap-4-height / 2;
+        left: $wrap-width / 2 - $wrap-4-width / 2;
+      }
+    }
+  }
+
+  .img-wrap-6 {
+    $wrap-4-width: $img-width * 0.8;
+    $wrap-4-height: $img-height * 0.8;
+    $wrap-4-width-offset: ($wrap-4-width - $wrap-width / 2) / 2;
+    $wrap-4-height-offset: ($wrap-4-height - $wrap-heigth / 3) / 2;
+
+    img {
+      clip-path: inset(
+              $wrap-4-height-offset $wrap-4-width-offset $wrap-4-height-offset
+              $wrap-4-width-offset
+      );
+      width: $wrap-4-width;
+      height: $wrap-4-height;
+
+      &:nth-of-type(1) {
+        left: -$wrap-4-width-offset;
+        top: -$wrap-4-height-offset;
+      }
+
+      &:nth-of-type(2) {
+        left: $wrap-width / 2 - $wrap-4-width-offset;
+        top: -$wrap-4-height-offset;
+      }
+
+      &:nth-of-type(3) {
+        left: -$wrap-4-width-offset;
+        top: $wrap-heigth / 3 - $wrap-4-height-offset;
+      }
+
+      &:nth-of-type(4) {
+        left: $wrap-width / 2 - $wrap-4-width-offset;
+        top: $wrap-heigth / 3 - $wrap-4-height-offset;
+      }
+
+      &:nth-of-type(5) {
+        left: -$wrap-4-width-offset;
+        top: $wrap-heigth / 3 * 2 - $wrap-4-height-offset;
+      }
+
+      &:nth-of-type(6) {
+        left: $wrap-width / 2 - $wrap-4-width-offset;
+        top: $wrap-heigth / 3 * 2 - $wrap-4-height-offset;
+      }
+
+      &:hover {
+        clip-path: inset(0 0 0 0);
+        z-index: 1;
+      }
+
+      &:nth-of-type(1):hover {
+        top: 0;
+        left: 0;
+      }
+
+      &:nth-of-type(2):hover {
+        top: 0;
+        left: $wrap-width - $wrap-4-width;
+      }
+
+      &:nth-of-type(3):hover {
+        top: ($wrap-heigth - $wrap-4-height) / 2;
+        left: 0;
+      }
+
+      &:nth-of-type(4):hover {
+        top: ($wrap-heigth - $wrap-4-height) / 2;
+        left: $wrap-width - $wrap-4-width;
+      }
+
+      &:nth-of-type(5):hover {
+        top: $wrap-heigth - $wrap-4-height;
+        left: 0;
+      }
+
+      &:nth-of-type(6):hover {
+        top: $wrap-heigth - $wrap-4-height;
+        left: $wrap-width - $wrap-4-width;
+      }
+    }
+  }
 }
 
 @include image_mix();
