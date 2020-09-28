@@ -48,6 +48,10 @@ class AnimeCache {
   }
 
   search(search: string) {
+    if(!isNaN(parseInt(search))) {
+      this.getSeries(parseInt(search));
+      return this.fetch();
+    }
     return axios
       .get("/api/series/search/" + encodeURIComponent(search))
       .then((response: { data: { media: Series[] } }) => {

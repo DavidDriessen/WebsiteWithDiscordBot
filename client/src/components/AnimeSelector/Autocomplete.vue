@@ -8,13 +8,13 @@
       :loading="loading"
       :search-input.sync="search"
       label="Series"
-      :item-text="seriesItemText"
       :item-value="seriesItemValue"
       auto-select-first
       hide-selected
       hide-details
       hide-no-data
       multiple
+      :filter="customFilter"
     >
       <template v-slot:selection="{}" />
       <template v-slot:item="{ item }">
@@ -76,23 +76,22 @@ export default class Autocomplete extends Vue {
     }
   }
 
-  seriesItemText(v: Series) {
-    if (v.title) {
-      return (
-        v.title.english +
-        " " +
-        v.title.romaji +
-        " " +
-        v.title.userPreferred +
-        " " +
-        v.description
-      );
-    }
-    return "";
-  }
-
   seriesItemValue(v: Series) {
     return v;
+  }
+
+  customFilter(series: Series, search: string) {
+    if (series.id == 114340) {
+      console.log(series.title.romaji.toLowerCase());
+    }
+    return (
+      series.id.toString() === search ||
+      series.idMal.toString() === search ||
+      (series.title.english &&
+        series.title.english.toLowerCase().search(search.toLowerCase()) >= 0) ||
+      (series.title.romaji &&
+        series.title.romaji.toLowerCase().search(search.toLowerCase()) >= 0)
+    );
   }
 }
 </script>
