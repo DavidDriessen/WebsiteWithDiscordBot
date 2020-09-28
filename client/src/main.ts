@@ -19,3 +19,5 @@ const app = new Vue({
 
 // noinspection JSIgnoredPromiseFromCall
 app.$store.dispatch("getUser");
+
+app.$vuetify.theme.dark = localStorage.dark;

@@ -17,7 +17,19 @@
         </router-link>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <div v-if="!mobile">
+
+      <v-tooltip bottom v-if="mobile">
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" small fab @click="darkMode" icon>
+            <v-icon :color="!$vuetify.theme.dark ? 'black' : 'white'">
+              fas fa-adjust
+            </v-icon>
+          </v-btn>
+        </template>
+        <span v-if="!$vuetify.theme.dark">Dark Mode On</span>
+        <span v-else>Dark Mode Off</span>
+      </v-tooltip>
+      <v-toolbar-items v-if="!mobile">
         <v-btn to="/polls" text>
           <span class="mr-2">Polls</span>
         </v-btn>
@@ -30,7 +42,18 @@
         <v-btn v-if="isLoggedIn" to="/profile" text>
           Profile
         </v-btn>
-      </div>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" small fab @click="darkMode" icon>
+              <v-icon :color="!$vuetify.theme.dark ? 'black' : 'white'">
+                fas fa-adjust
+              </v-icon>
+            </v-btn>
+          </template>
+          <span v-if="!$vuetify.theme.dark">Dark Mode On</span>
+          <span v-else>Dark Mode Off</span>
+        </v-tooltip>
+      </v-toolbar-items>
       <v-app-bar-nav-icon v-if="mobile" @click="drawer = !drawer" />
     </v-app-bar>
     {{ mobile }}
@@ -124,6 +147,9 @@ export default Vue.extend({
   methods: {
     logout() {
       this.$store.dispatch("Logout");
+    },
+    darkMode() {
+      localStorage.dark = this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
     }
   }
 });
