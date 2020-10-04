@@ -14,6 +14,7 @@ import * as Serializer from 'sequelize-to-json/index.js';
 import User from './User';
 import {PollDiscord} from '../../discord/PollDiscord';
 import {Order} from 'sequelize/types/lib/model';
+import PollTicket from './PollTicket';
 
 @Table
 export class Poll extends Model<Poll> {
@@ -32,6 +33,9 @@ export class Poll extends Model<Poll> {
 
   @HasMany(() => PollOption, 'pollId')
   public options!: PollOption[];
+
+  @HasMany(() => PollTicket)
+  public tickets!: PollTicket[];
 
   public async fetchSeries() {
     const series = await SeriesController
@@ -62,8 +66,8 @@ export class Poll extends Model<Poll> {
               if (user.role === 'Admin') {
                 serialized.id = original.id;
               }
-              if (original.users) {
-                serialized.voted = original.users.some((u) => u.id === user.id);
+              if (original.tickets) {
+                serialized.voted = original.tickets.some((t) => t.user === user.id);
               }
             }
             return serialized;

@@ -7,9 +7,9 @@ import {
   Table,
 } from 'sequelize-typescript';
 import Poll from './Poll';
-import User from './User';
 import PollVote from './PollVote';
 import {DataTypes} from 'sequelize';
+import PollTicket from './PollTicket';
 
 export type PollOptionTypes = 'Series' | 'Time' | 'Date' | 'DateTime' | 'WeekTime' | 'General';
 
@@ -29,8 +29,8 @@ export class PollOption extends Model<PollOption> {
   @Column
   public order!: number;
 
-  @BelongsToMany(() => User, () => PollVote)
-  public users!: User[];
+  @BelongsToMany(() => PollTicket, () => PollVote)
+  public tickets!: PollTicket[];
 
   public voted?: boolean;
 
