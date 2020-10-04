@@ -38,33 +38,18 @@ export class ScheduleController {
       where = {end: {[Op.lte]: moment().toISOString()}};
       order = [['start', 'desc'], ['series', 'order', 'asc']];
     }
-    if (req.payload) {
-      const events: Event[] = await Event.findAll({
-        include: [
-          {association: 'series', attributes: ['seriesId', 'episode', 'episodes']},
-          {association: 'streamer', attributes: ['id', 'name', 'avatar']},
-          {
-            association: 'attendees', attributes: ['name', 'avatar'],
-            through: {attributes: ['decision']},
-          },
-          {
-            association: 'attending', attributes: ['decision'], required: false,
-            where: {user: req.payload.user.id},
-          },
-        ], where, order,
-        attributes: ['id', 'title', 'description', 'image', 'start', 'end', 'roomcode'],
-      });
-      res.status(200).json(events.map((event) =>
-        ScheduleController.renderResponse(event, req.payload.user)));
-    } else {
-      res.status(200).json(await Event.findAll({
-        include: [
-          {association: 'series', attributes: ['seriesId', 'episode', 'episodes']},
-          {association: 'streamer', attributes: ['name', 'avatar']},
-        ], where, order,
-        attributes: ['title', 'description', 'image', 'start', 'end', 'roomcode'],
-      }));
-    }
+    const user = req.payload ? req.payload.user : null;
+    const userId = user ? user.id : null;
+
+    const events2: Event[] = await Event.findAll({
+      include: ['series', 'streamer',
+        {association: 'attendees', through: {attributes: ['decision']}},
+        {
+          association: 'attending', attributes: ['decision'], required: false,
+          where: {user: userId},
+        }], where, order,
+    });
+    res.status(200).json(events2.map((event) => event.serialize(user)));
   }
 
   @Post('attending')
@@ -127,7 +112,7 @@ export class ScheduleController {
       include: ['series', 'streamer', 'attendees'],
     });
     event.streamer = streamer;
-    return res.status(200).json(ScheduleController.renderResponse(event, req.payload.user));
+    return res.status(200).json(event.serialize(req.payload.user));
   }
 
   @Post('')
@@ -165,7 +150,7 @@ export class ScheduleController {
     }
     await event.$set('streamer', streamer);
     return res.status(200)
-      .json(ScheduleController.renderResponse(await event.save(), req.payload.user));
+      .json((await event.save()).serialize(req.payload.user));
   }
 
   @Delete(':id')
@@ -179,49 +164,5 @@ export class ScheduleController {
     } else {
       return res.status(404).json({msg: 'Event not found!'});
     }
-  }
-
-  private static renderResponse(event: Event, user: User) {
-    const admin = user.role === 'Admin';
-    const response: Event = {
-      title: event.title,
-      description: event.description,
-      image: event.image,
-      start: event.start,
-      end: event.end,
-      roomcode: event.roomcode,
-      // @ts-ignore
-      attending: event.attending?.decision,
-      streaming: event.streamer.id === user.id,
-      series: [] as SeriesEvent[],
-      attendees: [] as User[],
-      streamer: {name: event.streamer.name, avatar: event.streamer.avatar} as User,
-    };
-    // Format series
-    if (event.series) {
-      response.series = event.series.map((series) => {
-        return {
-          seriesId: series.seriesId,
-          episode: series.episode,
-          episodes: series.episodes,
-        } as SeriesEvent;
-      });
-    }
-    // Format attendees
-    if (event.attendees) {
-      // @ts-ignore
-      if (response.streaming || admin) {
-        response.attendees = event.attendees.map((attendee) => {
-          return {name: attendee.name, avatar: attendee.avatar} as User;
-        });
-      } else {
-        delete response.attendees;
-      }
-    }
-    if (admin) {
-      response.id = event.id;
-      response.streamer.id = event.streamer.id;
-    }
-    return response;
   }
 }

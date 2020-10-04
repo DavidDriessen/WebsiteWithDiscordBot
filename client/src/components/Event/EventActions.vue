@@ -40,7 +40,7 @@
                       (v && v.length === 13) ||
                       'Roomcode must be 13 characters long.'
                   ]"
-                  :disabled="!event.streaming"
+                  :readonly="!event.streaming"
                 />
               </v-col>
             </v-row>
@@ -99,8 +99,8 @@ export default class EventActions extends Vue {
     }
   }
 
-  decisionColor(attendee: { Attendee: number | undefined }) {
-    switch (attendee.Attendee) {
+  decisionColor(attendee: { attending: number | undefined }) {
+    switch (attendee.attending) {
       case 1:
         return "success";
       case 2:
