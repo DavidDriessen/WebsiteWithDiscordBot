@@ -81,12 +81,9 @@ export default class Autocomplete extends Vue {
   }
 
   customFilter(series: Series, search: string) {
-    if (series.id == 114340) {
-      console.log(series.title.romaji.toLowerCase());
-    }
     return (
-      series.id.toString() === search ||
-      series.idMal.toString() === search ||
+      (series.id && series.id.toString() === search) ||
+      (series.idMal && series.idMal.toString() === search) ||
       (series.title.english &&
         series.title.english.toLowerCase().search(search.toLowerCase()) >= 0) ||
       (series.title.romaji &&
