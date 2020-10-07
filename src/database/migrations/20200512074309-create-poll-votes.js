@@ -2,11 +2,11 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('PollVotes', {
-      ticket: {
+      user: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "PollTickets",
+          model: "Users",
           key: "id",
         },
         primaryKey: true,
