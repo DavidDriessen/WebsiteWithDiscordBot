@@ -28,7 +28,7 @@
     "body-parser": "^1.18.3",
     "cron-decorators": "^0.1.2",
     "discord-oauth2": "2.0.2",
-    "discord.js": "^12.2.0",
+    "discord.js": "^12.3.1",
     "express": "^4.16.4",
     "jimp": "^0.10.3",
     "moment": "^2.27.0",

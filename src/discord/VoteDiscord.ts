@@ -1,9 +1,8 @@
 import {ArgsOf, Discord, On} from '@typeit/discord';
-import {Message, TextChannel, User as DiscordUser} from 'discord.js';
+import {Message, User as DiscordUser} from 'discord.js';
 import {Op} from 'sequelize';
 import Poll from '../database/models/Poll';
 import * as discordConfig from '../config/discord.json';
-import {client} from '../start';
 import User, {IUser} from '../database/models/User';
 import {PollDiscord} from './PollDiscord';
 
@@ -11,10 +10,6 @@ import {PollDiscord} from './PollDiscord';
 export class VoteDiscord {
 
   public static readonly options = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🇦', '🇧', '🇨', '🇩', '🇪', '🇫', '🇬'];
-
-  public static getChannel() {
-    return client.channels.cache.get(discordConfig.channel.poll) as TextChannel;
-  }
 
   @On('ready')
   public async init() {
@@ -45,6 +40,47 @@ export class VoteDiscord {
           }
         }
       }
+    }
+  }
+
+  @On('message')
+  private voteCommand([message]: ArgsOf<'message'>) {
+    if (message.content.toLowerCase().startsWith('vote ')) {
+      const options = message.content.split(' ');
+      options.splice(0, 1);
+      if (options.length > 0) {
+        for (const option of options) {
+          if (isNaN(Number(option))) {
+            message.reply('Invalid option: ' + option)
+              .then((d) => d.delete({timeout: 5000})
+                .catch(() => {
+                  return;
+                }));
+            return;
+          }
+        }
+        message.delete().catch(() => {
+          return;
+        });
+        message.reply('Voting for options: ' + options.join(', ')).then((m) => {
+          m.react('😆');
+          m.awaitReactions((r, u) => {
+            return u.id === message.author.id;
+          }, {max: 1, time: 20000, errors: ['time']}).then(() => {
+            m.delete().catch(() => {
+              return;
+            });
+            // tslint:disable-next-line:no-console
+            console.log(options);
+          }).catch(() => {
+            m.delete().catch(() => {
+              return;
+            });
+          });
+        });
+      }
+    } else if (message.channel.id === discordConfig.channel.poll && !message.author.bot) {
+      message.delete();
     }
   }
 
