@@ -1,7 +1,6 @@
 import {Controller, Delete, Get, Middleware, Post, Put} from '@overnightjs/core';
-import {ISecureRequest, JwtManager} from '@overnightjs/jwt';
+import {ISecureRequest} from '@overnightjs/jwt';
 import {Order, WhereOptions} from 'sequelize/types/lib/model';
-import * as expressJwt from 'express-jwt';
 import Attendee from '../database/models/Attendee';
 import Event from '../database/models/Event';
 import {Response} from 'express';
@@ -10,6 +9,7 @@ import {Op} from 'sequelize';
 import SeriesEvent from '../database/models/SeriesEvent';
 import User from '../database/models/User';
 import {EventWorker} from '../workers/EventWorker';
+import {JWT} from '../helpers/Website';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
@@ -25,12 +25,7 @@ function isAdmin(target: object, propertyKey: string | symbol, descriptor: Prope
 export class ScheduleController {
 
   @Get('')
-  @Middleware(expressJwt({
-    // @ts-ignore
-    secret: JwtManager.SECRET,
-    userProperty: 'payload',
-    credentialsRequired: false,
-  }))
+  @Middleware(JWT(false))
   private async getEvents(req: ISecureRequest, res: Response) {
     let where: WhereOptions = {end: {[Op.gte]: moment().toISOString()}};
     let order: Order = ['start', ['series', 'order', 'asc']];
@@ -68,7 +63,7 @@ export class ScheduleController {
   }
 
   @Post('attending')
-  @Middleware(JwtManager.middleware)
+  @Middleware(JWT())
   private async setAttending(req: ISecureRequest, res: Response) {
     const attendee = await Attendee.findOrBuild({
       where: {user: req.payload.user.id, event: req.body.id},
@@ -81,7 +76,7 @@ export class ScheduleController {
   }
 
   @Post('streaming')
-  @Middleware(JwtManager.middleware)
+  @Middleware(JWT())
   private async setRoomCode(req: ISecureRequest, res: Response) {
     const event = await Event.findOne({
       where: {id: req.body.event, streamerId: req.payload.user.id},
@@ -98,7 +93,7 @@ export class ScheduleController {
   }
 
   @Put('')
-  @Middleware(JwtManager.middleware)
+  @Middleware(JWT())
   @isAdmin
   private async addEvent(req: ISecureRequest, res: Response) {
     const streamer = await User.findByPk(req.body.streamer.id);
@@ -131,7 +126,7 @@ export class ScheduleController {
   }
 
   @Post('')
-  @Middleware(JwtManager.middleware)
+  @Middleware(JWT())
   @isAdmin
   private async editEvent(req: ISecureRequest, res: Response) {
     // tslint:disable-next-line:max-line-length
@@ -169,7 +164,7 @@ export class ScheduleController {
   }
 
   @Delete(':id')
-  @Middleware(JwtManager.middleware)
+  @Middleware(JWT())
   @isAdmin
   private async removeEvent(req: ISecureRequest, res: Response) {
     const event = await Event.findByPk(req.params.id);

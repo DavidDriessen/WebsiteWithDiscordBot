@@ -1,15 +1,14 @@
 import {Controller, Delete, Get, Middleware, Post, Put} from '@overnightjs/core';
-import {ISecureRequest, JwtManager} from '@overnightjs/jwt';
+import {ISecureRequest} from '@overnightjs/jwt';
 import {Order, WhereOptions} from 'sequelize/types/lib/model';
-import * as expressJwt from 'express-jwt';
 import {Response} from 'express';
 import * as moment from 'moment';
 import {Op} from 'sequelize';
 import Poll from '../database/models/Poll';
 import PollOption from '../database/models/PollOption';
 import Ballot from '../database/models/Ballot';
-import PollVote from '../database/models/PollVote';
 import {BallotDiscord} from '../discord/BallotDiscord';
+import {JWT} from '../helpers/Website';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
@@ -45,7 +44,7 @@ export class PollController {
   }
 
     @Post('vote')
-    @Middleware(JwtManager.middleware)
+    @Middleware(JWT())
     private async vote(req: ISecureRequest, res: Response) {
         const option = await PollOption.findByPk(req.body.id, {include: ['poll']});
         if (option) {

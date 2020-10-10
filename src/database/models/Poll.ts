@@ -63,10 +63,12 @@ export class Poll extends Model<Poll> {
           exclude: ['@fk', '@auto'],
           postSerialize:
             (serialized: { id: number, votes: number, voted: boolean }, original: PollOption) => {
-              serialized.votes = original.ballots.length;
               if (user) {
                 if (user.role === 'Admin') {
                   serialized.id = original.id;
+                  if (original.ballots) {
+                    serialized.votes = original.ballots.length;
+                  }
                 }
                 if (original.ballots) {
                   serialized.voted = original.ballots.some((t) => t.user === user.id);
