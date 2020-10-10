@@ -11,6 +11,8 @@ import Attendee from './Attendee';
 import SeriesEvent from './SeriesEvent';
 import {EventDiscord} from '../../discord/EventDiscord';
 import {SeriesController} from '../../controllers';
+// @ts-ignore
+import * as Serializer from 'sequelize-to-json/index.js';
 
 @Table
 export class Event extends Model<Event> {
@@ -58,6 +60,42 @@ export class Event extends Model<Event> {
     }).sort((a, b) => {
       return a.order - b.order;
     });
+  }
+
+  public serialize(user: User | null) {
+    const scheme = {
+      include: ['@pk', 'title', 'description', 'start', 'end', 'image', 'roomcode', 'series', 'streamer', 'attending', 'attendees'],
+      assoc: {
+        series: {
+          include: ['seriesId', 'episode', 'episodes'],
+          exclude: ['@fk', '@auto'],
+        },
+        streamer: {
+          include: ['@pk', 'name', 'avatar'],
+        },
+        attending: {
+          postSerialize: (serialized: Attendee, original: Attendee) => {
+            return original.decision;
+          },
+        },
+        attendees: {
+          include: ['name', 'avatar'],
+          exclude: ['@fk', '@auto'],
+          postSerialize: (serialized: { attending: number }, original: { Attendee: Attendee }) => {
+            serialized.attending = original.Attendee.decision;
+            return serialized;
+          },
+        },
+      },
+      postSerialize: (serialized: { streaming: boolean }, original: { streamer: User }) => {
+        if (user) {
+          serialized.streaming = original.streamer.id === user.id;
+        }
+        return serialized;
+      },
+    };
+    const options = {};
+    return (new Serializer(Event, scheme, options)).serialize(this);
   }
 
   @BeforeCreate
