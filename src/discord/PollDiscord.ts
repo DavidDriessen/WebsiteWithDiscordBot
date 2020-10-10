@@ -1,4 +1,4 @@
-import {Command, Description, Discord, Guard, On} from '@typeit/discord';
+import {ArgsOf, Command, Description, Discord, Guard, On} from '@typeit/discord';
 import {MessageEmbed, TextChannel} from 'discord.js';
 import {Op} from 'sequelize';
 import Poll from '../database/models/Poll';
@@ -7,8 +7,10 @@ import * as moment from 'moment';
 import {client} from '../start';
 import {Order} from 'sequelize/types/lib/model';
 import {DiscordHelper} from '../helpers/Discord';
-import {VoteDiscord} from './VoteDiscord';
+import {BallotDiscord} from './BallotDiscord';
 import {CheckRole} from './Guards';
+import Ballot from '../database/models/Ballot';
+import User from '../database/models/User';
 
 @Discord('!')
 export class PollDiscord {
@@ -41,6 +43,34 @@ export class PollDiscord {
     }
   }
 
+  @On('messageReactionAdd')
+  public async getBallot([messageReaction, user]: ArgsOf<'messageReactionAdd'>) {
+    if (user.bot) {
+      return;
+    }
+    const dbUser = (await User.get(user))[0];
+    const poll = await Poll.findOne({
+      where: {messageID: messageReaction.message.id},
+      include: ['options'],
+    });
+    if (dbUser && poll) {
+      const ballot = (await Ballot.findOrCreate({
+        where: {user: dbUser.id, poll: poll.id},
+      }))[0];
+      messageReaction.users.remove(user.id).then();
+      if (messageReaction.emoji.name === '📝') {
+        BallotDiscord.updateBallot(ballot, true);
+        PollDiscord.updatePoll(poll);
+      } else {
+        const option = BallotDiscord.options.indexOf(messageReaction.emoji.name);
+        if (option > -1) {
+          await BallotDiscord.changeVote(option, ballot);
+          BallotDiscord.updateBallot(ballot);
+        }
+      }
+    }
+  }
+
   private static async renderMessage(poll: Poll) {
     const pollRole = this.getChannel().guild.roles.cache.find((role) => role.name === 'Polls');
     await poll.fetchSeries();
@@ -65,28 +95,29 @@ export class PollDiscord {
             // const description = DiscordHelper.wrapText(option.details.description,
             //   limit - title.length);
             const genres = '(' + option.details.genres.join(', ') + ')';
-            description += '\n\n' + VoteDiscord.options[i] + ' ' + title + genres;
+            description += '\n' + BallotDiscord.options[i] + ' ' + title + genres;
           }
           break;
         case 'Time':
-          embed.addField(VoteDiscord.options[i], '```md\n' + moment(option.content).utc().format('< HH:mm >') + ' UTC \n```');
+          embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc().format('< HH:mm >') + ' UTC \n```');
           break;
         case 'WeekTime':
-          embed.addField(VoteDiscord.options[i], '```md\n' + moment(option.content).utc().format('< ddd [at] HH:mm >') + ' UTC \n```');
+          embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc().format('< ddd [at] HH:mm >') + ' UTC \n```');
           break;
         case 'DateTime':
-          embed.addField(VoteDiscord.options[i], '```md\n' + moment(option.content).utc()
+          embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc()
             .format('< ddd DD of MMM [at] HH:mm >') + ' UTC \n```');
           break;
         case 'Date':
-          embed.addField(VoteDiscord.options[i], '```md\n' + moment(option.content).utc().format('< ddd DD of MMM >') + ' UTC \n```');
+          embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc().format('< ddd DD of MMM >') + ' UTC \n```');
           break;
         case 'General':
         default:
-          embed.addField(VoteDiscord.options[i], DiscordHelper.wrapText(option.content, limit));
+          embed.addField(BallotDiscord.options[i], DiscordHelper.wrapText(option.content, limit));
       }
     }
     embed.setDescription(description);
+    embed.addField('Voters', (await poll.$get('ballots')).length);
     return embed;
   }
 
@@ -115,7 +146,8 @@ export class PollDiscord {
       const msg = await PollDiscord.getChannel()
         .send(await PollDiscord.renderMessage(poll));
       poll.messageID = msg.id;
-      VoteDiscord.addReactions(msg, poll.options.length);
+      await msg.react('📝');
+      BallotDiscord.addReactions(msg, poll.options.length);
     } catch (e) {
       // tslint:disable-next-line:no-console
       console.error('Error adding message for Poll: ' + poll.id + '\n', e);

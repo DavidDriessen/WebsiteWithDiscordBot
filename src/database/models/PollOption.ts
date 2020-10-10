@@ -7,7 +7,6 @@ import {
   Table,
 } from 'sequelize-typescript';
 import Poll from './Poll';
-import User from './User';
 import PollVote from './PollVote';
 import {DataTypes} from 'sequelize';
 import Ballot from './Ballot';

@@ -2,7 +2,6 @@ import {ForeignKey, Model, Table} from 'sequelize-typescript';
 import PollOption from './PollOption';
 import Ballot from './Ballot';
 import User from './User';
-import PollOption from './PollOption';
 
 @Table
 export class PollVote extends Model<PollVote> {
