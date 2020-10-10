@@ -1,4 +1,6 @@
 import {ForeignKey, Model, Table} from 'sequelize-typescript';
+import PollOption from './PollOption';
+import Ballot from './Ballot';
 import User from './User';
 import PollOption from './PollOption';
 
@@ -6,8 +8,12 @@ import PollOption from './PollOption';
 export class PollVote extends Model<PollVote> {
 
     // @ts-ignore
-    @ForeignKey(() => User)
+    @ForeignKey(() => User, () => Ballot)
     public user!: User;
+
+    // @ts-ignore
+    @ForeignKey(() => Ballot)
+    public ballot!: Ballot;
 
     // @ts-ignore
     @ForeignKey(() => PollOption)

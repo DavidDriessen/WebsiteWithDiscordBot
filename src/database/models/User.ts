@@ -1,4 +1,5 @@
 import {BelongsToMany, Column, HasMany, Model, Table} from 'sequelize-typescript';
+import {PartialUser, User as DiscordUser} from 'discord.js';
 import Attendee from './Attendee';
 import Event from './Event';
 
@@ -41,18 +42,18 @@ export class User extends Model<User> {
   @BelongsToMany(() => Event, () => Attendee)
   public events!: Event[];
 
-  public static async get(discordUser: IUser) {
+  public static async get(discordUser: IUser | DiscordUser | PartialUser) {
     const res = await User.findOrCreate({
       where: {discordId: discordUser.id}, defaults: {
         name: discordUser.username,
-        email: discordUser.email,
         avatar: 'https://cdn.discordapp.com/avatars/' + discordUser.id +
           '/' + discordUser.avatar + '.jpg',
       },
     });
 
-    if (!res[0].email && discordUser.email) {
-      res[0].email = discordUser.email;
+    const email = (discordUser as IUser).email;
+    if (!res[0].email && email) {
+      res[0].email = email;
       res[0].save();
     }
 

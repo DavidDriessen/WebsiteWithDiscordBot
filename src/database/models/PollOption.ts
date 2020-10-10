@@ -10,6 +10,7 @@ import Poll from './Poll';
 import User from './User';
 import PollVote from './PollVote';
 import {DataTypes} from 'sequelize';
+import Ballot from './Ballot';
 
 export type PollOptionTypes = 'Series' | 'Time' | 'Date' | 'DateTime' | 'WeekTime' | 'General';
 
@@ -29,8 +30,8 @@ export class PollOption extends Model<PollOption> {
   @Column
   public order!: number;
 
-  @BelongsToMany(() => User, () => PollVote)
-  public users!: User[];
+  @BelongsToMany(() => Ballot, () => PollVote)
+  public ballots!: Ballot[];
 
   public voted?: boolean;
 

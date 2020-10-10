@@ -7,7 +7,9 @@ import * as moment from 'moment';
 import {Op} from 'sequelize';
 import Poll from '../database/models/Poll';
 import PollOption from '../database/models/PollOption';
-import User from '../database/models/User';
+import Ballot from '../database/models/Ballot';
+import PollVote from '../database/models/PollVote';
+import {BallotDiscord} from '../discord/BallotDiscord';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
@@ -42,23 +44,26 @@ export class PollController {
     res.status(200).json(polls.map((poll) => poll.serialize(req.payload?.user)));
   }
 
-  @Post('vote')
-  @Middleware(JwtManager.middleware)
-  private async setAttending(req: ISecureRequest, res: Response) {
-    const option = await PollOption.findByPk(req.body.id);
-    if (option) {
-      const user = await User.findByPk(req.payload.user.id);
-      if (user) {
-        if (await option.$has('users', user)) {
-          await option.$remove('users', user);
-        } else {
-          await option.$add('users', user);
+    @Post('vote')
+    @Middleware(JwtManager.middleware)
+    private async vote(req: ISecureRequest, res: Response) {
+        const option = await PollOption.findByPk(req.body.id, {include: ['poll']});
+        if (option) {
+            const ballot = (await Ballot.findOrCreate({
+                where: {user: req.payload.user.id, poll: option.poll.id},
+            }))[0];
+            if (ballot) {
+                if (await option.$has('ballots', ballot)) {
+                    await option.$remove('ballots', ballot);
+                } else {
+                    await option.$add('ballots', ballot);
+                }
+                BallotDiscord.updateBallot(ballot);
+                return res.status(200).json({message: 'ok'});
+            }
         }
-        return res.status(200).json({message: 'ok'});
-      }
+        return res.status(404).json({message: 'Option of user not found.'});
     }
-    return res.status(404).json({message: 'Option of user not found.'});
-  }
 
   @Put('')
   @Middleware(JwtManager.middleware)

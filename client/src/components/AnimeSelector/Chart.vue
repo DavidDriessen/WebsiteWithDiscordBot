@@ -11,19 +11,110 @@ export default {
     values: {
       type: Array,
       default: null
+    },
+    data: {
+      type: Array,
+      default: null
+    },
+    mode: {
+      type: Number,
+      default: 0
     }
   },
   mounted() {
+    let datasets;
+    let stacked = false;
+    if (this.values) {
+      datasets = [
+        {
+          label: "Yes",
+          backgroundColor: "#b4f879",
+          data: this.values
+        }
+      ];
+    } else {
+      switch (this.mode) {
+        case 4:
+          stacked = true;
+        // eslint-disable-next-line no-fallthrough
+        case 3:
+          datasets = [
+            {
+              label: "OK",
+              backgroundColor: "#f8d879",
+              data: this.data[2]
+            },
+            {
+              label: "Must",
+              backgroundColor: "#65f532",
+              data: this.data[3]
+            }
+          ];
+          break;
+        case 2:
+          datasets = [
+            {
+              label: "Yes",
+              backgroundColor: "#29ff25",
+              data: this.data[0].map((v, k) => v + this.data[1][k])
+            }
+          ];
+          break;
+        case 1:
+          datasets = [
+            {
+              label: "Nope",
+              backgroundColor: "#f87979",
+              data: this.data[0]
+            },
+            {
+              label: "Has to be",
+              backgroundColor: "#fd722b",
+              data: this.data[1]
+            },
+            {
+              label: "OK",
+              backgroundColor: "#f8d879",
+              data: this.data[2]
+            },
+            {
+              label: "Must",
+              backgroundColor: "#65f532",
+              data: this.data[3]
+            }
+          ];
+          break;
+        default:
+          stacked = true;
+          datasets = [
+            {
+              label: "Nope",
+              backgroundColor: "#f87979",
+              data: this.data[0]
+            },
+            {
+              label: "Has to be",
+              backgroundColor: "#fd722b",
+              data: this.data[1].map(v => v / 2)
+            },
+            {
+              label: "OK",
+              backgroundColor: "#f8d879",
+              data: this.data[2]
+            },
+            {
+              label: "Must",
+              backgroundColor: "#65f532",
+              data: this.data[3].map(v => v * 2)
+            }
+          ];
+      }
+    }
+
     this.renderChart(
       {
         labels: this.labels,
-        datasets: [
-          {
-            label: "Data One",
-            backgroundColor: "#f87979",
-            data: this.values
-          }
-        ]
+        datasets
       },
       {
         scales: {
@@ -34,7 +125,8 @@ export default {
               },
               gridLines: {
                 display: true
-              }
+              },
+              stacked
             }
           ],
           xAxes: [
@@ -44,12 +136,13 @@ export default {
               },
               gridLines: {
                 display: false
-              }
+              },
+              stacked
             }
           ]
         },
         legend: {
-          display: false
+          display: true
         },
         tooltips: {
           enabled: true,

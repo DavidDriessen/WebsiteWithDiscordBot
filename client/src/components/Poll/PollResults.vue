@@ -53,7 +53,7 @@ export default class PollResults extends Vue {
 
   get values() {
     if (this.poll) {
-      return this.poll.options.map(option => option.users?.length);
+      return this.poll.options.map(option => option.votes);
     }
     return [];
   }

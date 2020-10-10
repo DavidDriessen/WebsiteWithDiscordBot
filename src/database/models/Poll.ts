@@ -14,6 +14,7 @@ import * as Serializer from 'sequelize-to-json/index.js';
 import User from './User';
 import {PollDiscord} from '../../discord/PollDiscord';
 import {Order} from 'sequelize/types/lib/model';
+import Ballot from './Ballot';
 
 @Table
 export class Poll extends Model<Poll> {
@@ -32,6 +33,9 @@ export class Poll extends Model<Poll> {
 
   @HasMany(() => PollOption, 'pollId')
   public options!: PollOption[];
+
+  @HasMany(() => Ballot)
+  public ballots!: Ballot[];
 
   public async fetchSeries() {
     const series = await SeriesController
@@ -57,17 +61,19 @@ export class Poll extends Model<Poll> {
         options: {
           include: ['@all'],
           exclude: ['@fk', '@auto'],
-          postSerialize: (serialized: PollOption, original: PollOption) => {
-            if (user) {
-              if (user.role === 'Admin') {
-                serialized.id = original.id;
+          postSerialize:
+            (serialized: { id: number, votes: number, voted: boolean }, original: PollOption) => {
+              serialized.votes = original.ballots.length;
+              if (user) {
+                if (user.role === 'Admin') {
+                  serialized.id = original.id;
+                }
+                if (original.ballots) {
+                  serialized.voted = original.ballots.some((t) => t.user === user.id);
+                }
               }
-              if (original.users) {
-                serialized.voted = original.users.some((u) => u.id === user.id);
-              }
-            }
-            return serialized;
-          },
+              return serialized;
+            },
         },
       },
       postSerialize: (serialized: PollOption, original: PollOption) => {

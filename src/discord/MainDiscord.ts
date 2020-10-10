@@ -1,7 +1,7 @@
 import {Client, Command, CommandMessage, Discord, Guard} from '@typeit/discord';
 import {ReminderWorker} from '../workers/ReminderWorker';
 import moment = require('moment');
-import {CheckRole} from './Guards';
+import {AllowDM, CheckRole} from './Guards';
 
 @Discord('!')
 export class MainDiscord {
@@ -33,9 +33,9 @@ export class MainDiscord {
   }
 
   @Command('clear')
-  @Guard(CheckRole('Admin'))
+  @Guard(AllowDM(), CheckRole('Admin'))
   public clear(message: CommandMessage) {
     message.channel.messages.fetch().then((msgs) =>
-      msgs.forEach((msg) => msg.delete()));
+      msgs.filter((msg) => msg.deletable).forEach((msg) => msg.delete()));
   }
 }
