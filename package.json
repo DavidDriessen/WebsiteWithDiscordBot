@@ -8,7 +8,7 @@
     "start-dev": "nodemon --config \"./util/nodemon.json\"/",
     "build-server": "rimraf ./build && tsc",
     "build": "node rimraf ./build && tsc && npm run build --prefix client -- --dest ../build/public",
-    "start": "node build/start.js",
+    "start": "forever --minUptime 1 --spinSleepTime 60000 start build/start.js",
     "migrate": "node src/database/migrate.js",
     "addmodel": "npx sequelize-cli model:generate --config src/config/database.json --migrations-path src/database/migrations --models-path src/database/models --name "
   },
@@ -30,6 +30,7 @@
     "discord-oauth2": "2.0.2",
     "discord.js": "^12.2.0",
     "express": "^4.16.4",
+    "forever": "^3.0.2",
     "jimp": "^0.10.3",
     "moment": "^2.27.0",
     "mysql2": "^2.1.0",
