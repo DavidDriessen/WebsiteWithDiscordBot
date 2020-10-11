@@ -106,7 +106,11 @@ export class PollController {
                     }
                 });
         }
-        return res.status(200).json((await poll.save()).serialize(req.payload?.user));
+        await poll.save();
+        for (const ballot of await poll.$get('ballots')) {
+          BallotDiscord.updateBallot(ballot, true);
+        }
+        return res.status(200).json(poll.serialize(req.payload?.user));
     }
 
     @Delete(':id')
