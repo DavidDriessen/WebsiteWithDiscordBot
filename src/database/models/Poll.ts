@@ -15,6 +15,7 @@ import User from './User';
 import {PollDiscord} from '../../discord/PollDiscord';
 import {Order} from 'sequelize/types/lib/model';
 import Ballot from './Ballot';
+import {BallotDiscord} from '../../discord/BallotDiscord';
 
 @Table
 export class Poll extends Model<Poll> {
@@ -118,6 +119,9 @@ export class Poll extends Model<Poll> {
         option.save();
       }
       await PollDiscord.updatePoll(poll, true);
+    }
+    for (const ballot of await poll.$get('ballots')) {
+      BallotDiscord.updateBallot(ballot, true);
     }
   }
 

@@ -114,8 +114,8 @@ export class BallotDiscord {
               // const description = DiscordHelper.wrapText(option.details.description,
               //   limit - title.length);
               const genres = '(' + option.details.genres.join(', ') + ')';
-              description += '\n' + BallotDiscord.options[i] + ' ' + title + genres
-                + ((ballot.options.some((o) => o.id === option.id)) ? ' **Voted**' : '');
+              description += '\n' + BallotDiscord.options[i] + ' ' + title
+                + '```CSS\n' + genres + ((ballot.options.some((o) => o.id === option.id)) ? ' [Voted]' : '') + '```';
             }
             break;
           case 'Time':
@@ -216,12 +216,12 @@ export class BallotDiscord {
       }
       ballot.options = await ballot.$get('options');
       msg = await dm.send(await BallotDiscord.renderMessage(ballot));
-      const poll = await Poll.findByPk(ballot.poll, {include: ['options']});
-      if (poll) {
-        this.addReactions(msg, poll.options.length);
-      }
       ballot.discordMessageID = msg.id;
       ballot.save();
+      const poll = await Poll.findByPk(ballot.poll, {include: ['options']});
+      if (poll) {
+        await this.addReactions(msg, poll.options.length);
+      }
     }
   }
 }

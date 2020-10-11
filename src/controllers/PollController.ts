@@ -87,7 +87,7 @@ export class PollController {
         if (!req.body.title || !req.body.end || !req.body.options) {
             return res.status(401).send('');
         }
-        const poll = await Poll.findByPk(req.body.id, {include: [{association: 'options', include: ['users']}]});
+        const poll = await Poll.findByPk(req.body.id, {include: [{association: 'options', include: ['ballots']}]});
         if (!poll) {
             return res.status(200).json({message: 'Event not found'});
         }
