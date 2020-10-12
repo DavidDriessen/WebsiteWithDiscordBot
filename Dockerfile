@@ -36,5 +36,4 @@ COPY --from=web-interface /app/client/dist ./public
 EXPOSE 3000
 ENV NODE_ENV production
 
-ENTRYPOINT ["node"]
-CMD ["./start.js"]
+CMD ["forever --minUptime 1 --spinSleepTime 60000 ./start.js"]

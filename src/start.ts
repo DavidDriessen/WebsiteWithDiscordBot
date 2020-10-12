@@ -5,11 +5,12 @@ import {Sequelize} from 'sequelize-typescript';
 import WebServer from './WebServer';
 import {Client} from '@typeit/discord';
 import {registerController} from 'cron-decorators/lib';
-import { migrate } from './database/migrate';
+import {migrate} from './database/migrate';
 
 const sequelize = process.env.NODE_ENV === 'production' ?
-    // @ts-ignore
-    new Sequelize(dbConfig.production) : new Sequelize(dbConfig.development);
+  // @ts-ignore
+  new Sequelize(dbConfig.production) : new Sequelize(dbConfig.development);
+
 const webServer = new WebServer();
 export const client = new Client();
 
