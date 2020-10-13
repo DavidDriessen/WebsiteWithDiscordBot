@@ -99,8 +99,8 @@ export class Poll extends Model<Poll> {
 
 
   @BeforeCreate
-  public static postMessage(poll: Poll) {
-    PollDiscord.addPoll(poll);
+  public static async postMessage(poll: Poll) {
+    await PollDiscord.addPoll(poll);
   }
 
   @BeforeUpdate

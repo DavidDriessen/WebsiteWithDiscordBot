@@ -48,32 +48,6 @@ export class BallotDiscord {
     }
   }
 
-  @On('message')
-  private voteCommand([message]: ArgsOf<'message'>) {
-    if (message.content.toLowerCase().startsWith('vote ')) {
-      const options = message.content.split(' ');
-      options.splice(0, 1);
-      if (options.length > 0) {
-        for (const option of options) {
-          if (isNaN(Number(option))) {
-            message.reply('Invalid option: ' + option)
-              .then((d) => d.delete({timeout: 5000})
-                .catch(() => {
-                  return;
-                }));
-            return;
-          }
-        }
-        message.delete().catch(() => {
-          return;
-        });
-      }
-    }
-    // else if (message.channel.id === discordConfig.channel.poll && !message.author.bot) {
-    //   message.delete();
-    // }
-  }
-
   public static async voteChoice(user: DiscordUser | PartialUser, option: PollOption) {
     const choices = ['💖', '❤️', '🤷', '🚫'];
     let content;
@@ -116,7 +90,7 @@ export class BallotDiscord {
       case 2:
         return '[Is ok]';
       case 1:
-        return '[Don\'t mind]';
+        return '[Interested]';
       case 0:
         return '[No interest]';
       default:
@@ -198,8 +172,9 @@ export class BallotDiscord {
       const ballot = await Ballot.findOne({
         where: {discordMessageID: messageReaction.message.id},
         include: ['user', {
-          association: 'poll', include: ['options'], order: [['options', 'order', 'asc']],
+          association: 'poll', include: ['options'],
         }],
+        order: [['poll', 'options', 'order', 'asc']],
       });
       if (ballot) {
         await BallotDiscord.changeVote(user, option, ballot);
