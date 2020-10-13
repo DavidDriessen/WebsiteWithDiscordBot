@@ -57,6 +57,6 @@ export interface PollOption {
   id: number;
   content: number | string | Series | undefined;
   type: PollOptionType;
-  votes: number;
+  votes: number[];
   voted?: boolean;
 }

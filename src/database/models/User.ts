@@ -2,6 +2,7 @@ import {BelongsToMany, Column, HasMany, Model, Table} from 'sequelize-typescript
 import {PartialUser, User as DiscordUser} from 'discord.js';
 import Attendee from './Attendee';
 import Event from './Event';
+import Ballot from './Ballot';
 
 export interface IUser {
   id: string;
@@ -35,6 +36,9 @@ export class User extends Model<User> {
 
   @Column
   public role!: string;
+
+  @HasMany(() => Ballot, 'userId')
+  public ballots!: Ballot[];
 
   @HasMany(() => Event, 'streamerId')
   public streams!: Event[];

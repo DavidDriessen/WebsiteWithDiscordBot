@@ -1,5 +1,5 @@
 import {ArgsOf, Discord, On} from '@typeit/discord';
-import {Message, MessageEmbed} from 'discord.js';
+import {User as DiscordUser, Message, MessageEmbed, PartialUser} from 'discord.js';
 import * as discordConfig from '../config/discord.json';
 import {client} from '../start';
 import Ballot from '../database/models/Ballot';
@@ -7,6 +7,9 @@ import * as moment from 'moment';
 import {DiscordHelper} from '../helpers/Discord';
 import User from '../database/models/User';
 import Poll from '../database/models/Poll';
+import PollOption from '../database/models/PollOption';
+import {SeriesController} from '../controllers';
+import PollVote from '../database/models/PollVote';
 
 @Discord()
 export class BallotDiscord {
@@ -16,11 +19,11 @@ export class BallotDiscord {
   @On('ready')
   public async init() {
     const ballots = await Ballot.findAll({
-      include: [{association: 'options', include: ['poll']}],
+      include: ['user'],
     });
     for (const ballot of ballots) {
       if (ballot.discordMessageID) {
-        const dbUser = await User.findByPk(ballot.user as number);
+        const dbUser = await User.findByPk(ballot.user.id);
         if (dbUser) {
           const user = await client.users.fetch(dbUser.discordId);
           const dm = user.dmChannel || await user.createDM();
@@ -64,22 +67,6 @@ export class BallotDiscord {
         message.delete().catch(() => {
           return;
         });
-        message.reply('Voting for options: ' + options.join(', ')).then((m) => {
-          m.react('😆');
-          m.awaitReactions((r, u) => {
-            return u.id === message.author.id;
-          }, {max: 1, time: 20000, errors: ['time']}).then(() => {
-            m.delete().catch(() => {
-              return;
-            });
-            // tslint:disable-next-line:no-console
-            console.log(options);
-          }).catch(() => {
-            m.delete().catch(() => {
-              return;
-            });
-          });
-        });
       }
     }
     // else if (message.channel.id === discordConfig.channel.poll && !message.author.bot) {
@@ -87,8 +74,58 @@ export class BallotDiscord {
     // }
   }
 
+  public static async voteChoice(user: DiscordUser | PartialUser, option: PollOption) {
+    const choices = ['💖', '❤️', '🤷', '🚫'];
+    let content;
+    if (option.type === 'Series') {
+      // @ts-ignore
+      content = (await SeriesController.getSeriesById([option.content]))[0].title.userPreferred;
+    } else {
+      content = option.content;
+    }
+    const dm = user.dmChannel || await user.createDM();
+    const m = await dm.send('Voting for option: ' + content);
+    for (const choice of choices) {
+      await m.react(choice);
+    }
+    try {
+      const reactions = await m.awaitReactions((r, u) => {
+        return !u.bot;
+      }, {max: 1, time: 20000, errors: ['time']});
+      m.delete().catch(() => {
+        return;
+      });
+      const reaction = reactions.first();
+      if (reaction) {
+        return choices.length - choices.indexOf(reaction.emoji.name) - 1;
+      }
+    } catch (e) {
+      m.delete().catch(() => {
+        return;
+      });
+    }
+  }
+
+  private static getVoteText(option: PollOption | undefined) {
+    if (!option || !option.PollVote) {
+      return '';
+    }
+    switch (option.PollVote.choice) {
+      case 3:
+        return '[Must watch]';
+      case 2:
+        return '[Is ok]';
+      case 1:
+        return '[Don\'t mind]';
+      case 0:
+        return '[No interest]';
+      default:
+        return '';
+    }
+  }
+
   private static async renderMessage(ballot: Ballot) {
-    const poll = await Poll.findByPk(ballot.poll, {
+    const poll = await Poll.findByPk(ballot.poll.id, {
       include: ['options'], order: [['options', 'order', 'asc']],
     });
     if (poll) {
@@ -115,7 +152,8 @@ export class BallotDiscord {
               //   limit - title.length);
               const genres = '(' + option.details.genres.join(', ') + ')';
               description += '\n' + BallotDiscord.options[i] + ' ' + title
-                + '```CSS\n' + genres + ((ballot.options.some((o) => o.id === option.id)) ? ' [Voted]' : '') + '```';
+                + '```CSS\n' + genres
+                + this.getVoteText(ballot.options.find((o) => o.id === option.id)) + '```';
             }
             break;
           case 'Time':
@@ -159,25 +197,33 @@ export class BallotDiscord {
     if (option > -1) {
       const ballot = await Ballot.findOne({
         where: {discordMessageID: messageReaction.message.id},
+        include: ['user', {
+          association: 'poll', include: ['options'], order: [['options', 'order', 'asc']],
+        }],
       });
       if (ballot) {
-        await BallotDiscord.changeVote(option, ballot);
+        await BallotDiscord.changeVote(user, option, ballot);
         BallotDiscord.updateBallot(ballot, true);
       }
     }
   }
 
-  public static async changeVote(option: number, ballot: Ballot) {
-    const poll = await Poll.findByPk(ballot.poll, {
-      include: ['options'], order: [['options', 'order', 'asc']],
-    });
-    if (poll && poll.options.length > option) {
-      if (await poll.options[option].$has('ballots', ballot)) {
-        await poll.options[option].$remove('ballots', ballot);
-      } else {
-        await poll.options[option].$add('ballots', ballot);
+  public static async changeVote(user: DiscordUser | PartialUser, option: number, ballot: Ballot) {
+    if (ballot.poll && ballot.poll.options.length > option) {
+      const choice = await this.voteChoice(user, ballot.poll.options[option]);
+      if (typeof choice !== 'undefined') {
+        const vote = await PollVote.findOrCreate({
+          where: {ballot: ballot.id, option: ballot.poll.options[option].id},
+          defaults: {choice},
+        });
+        if (!vote[1]) {
+          vote[0].choice = choice;
+          vote[0].save();
+        }
+        return true;
       }
     }
+    return false;
   }
 
   public static async addReactions(msg: Message, count: number) {
@@ -187,41 +233,38 @@ export class BallotDiscord {
   }
 
   public static async updateBallot(ballot: Ballot, force = false) {
-    const u = await User.findByPk(ballot.user);
     let msg;
-    if (u) {
-      const user = await client.users.fetch(u.discordId);
-      const dm = user.dmChannel || await user.createDM();
-      if (ballot.discordMessageID) {
-        try {
-          msg = await dm.messages.fetch(ballot.discordMessageID);
-          if (msg) {
-            if (force) {
-              await msg.delete();
-            } else {
-              try {
-                ballot.options = await ballot.$get('options');
-                await msg.edit(await BallotDiscord.renderMessage(ballot));
-              } catch (e) {
-                // tslint:disable-next-line:no-console
-                console.error('Error editing message for Ballot: ' + ballot.id + '\n', e);
-              }
-              return;
+    const user = await client.users.fetch(ballot.user.discordId);
+    const dm = user.dmChannel || await user.createDM();
+    if (ballot.discordMessageID) {
+      try {
+        msg = await dm.messages.fetch(ballot.discordMessageID);
+        if (msg) {
+          if (force) {
+            await msg.delete();
+          } else {
+            try {
+              ballot.options = await ballot.$get('options');
+              await msg.edit(await BallotDiscord.renderMessage(ballot));
+            } catch (e) {
+              // tslint:disable-next-line:no-console
+              console.error('Error editing message for Ballot: ' + ballot.id + '\n', e);
             }
+            return;
           }
-        } catch (e) {
-          // tslint:disable-next-line:no-console
-          console.log('DM message \'' + ballot.discordMessageID + '\' not found');
         }
+      } catch (e) {
+        // tslint:disable-next-line:no-console
+        console.log('DM message \'' + ballot.discordMessageID + '\' not found');
       }
-      ballot.options = await ballot.$get('options');
-      msg = await dm.send(await BallotDiscord.renderMessage(ballot));
-      ballot.discordMessageID = msg.id;
-      ballot.save();
-      const poll = await Poll.findByPk(ballot.poll, {include: ['options']});
-      if (poll) {
-        await this.addReactions(msg, poll.options.length);
-      }
+    }
+    ballot.options = await ballot.$get('options');
+    msg = await dm.send(await BallotDiscord.renderMessage(ballot));
+    ballot.discordMessageID = msg.id;
+    ballot.save();
+    const poll = await Poll.findByPk(ballot.poll.id, {include: ['options']});
+    if (poll) {
+      await this.addReactions(msg, poll.options.length);
     }
   }
 }

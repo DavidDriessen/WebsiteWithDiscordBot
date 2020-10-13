@@ -7,8 +7,8 @@ export function AllowDM() {
     async ([message]: any, client: any, next: () => any, guardDatas: any) => {
         if (message.channel.type === 'dm') {
           guardDatas.DM = true;
-          await next();
         }
+        await next();
     };
   return check;
 }

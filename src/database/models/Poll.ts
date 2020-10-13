@@ -34,7 +34,7 @@ export class Poll extends Model<Poll> {
   @HasMany(() => PollOption, 'pollId')
   public options!: PollOption[];
 
-  @HasMany(() => Ballot)
+  @HasMany(() => Ballot, 'pollId')
   public ballots!: Ballot[];
 
   public async fetchSeries() {
@@ -62,16 +62,21 @@ export class Poll extends Model<Poll> {
           include: ['@all'],
           exclude: ['@fk', '@auto'],
           postSerialize:
-            (serialized: { id: number, votes: number, voted: boolean }, original: PollOption) => {
+            (serialized: { id: number, votes: number[], voted: boolean }, original: PollOption) => {
               if (user) {
                 if (user.role === 'Admin') {
                   serialized.id = original.id;
                   if (original.ballots) {
-                    serialized.votes = original.ballots.length;
+                    serialized.votes = [
+                      original.ballots.filter((b) => b.PollVote && b.PollVote.choice === 0).length,
+                      original.ballots.filter((b) => b.PollVote && b.PollVote.choice === 1).length,
+                      original.ballots.filter((b) => b.PollVote && b.PollVote.choice === 2).length,
+                      original.ballots.filter((b) => b.PollVote && b.PollVote.choice === 3).length];
                   }
                 }
                 if (original.ballots) {
-                  serialized.voted = original.ballots.some((t) => t.user === user.id);
+                  const ballot = original.ballots.find((b) => b.user.id === user.id);
+                  serialized.voted = !!ballot && !!ballot.PollVote && ballot.PollVote.choice > 0;
                 }
               }
               return serialized;

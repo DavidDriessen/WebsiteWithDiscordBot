@@ -12,9 +12,11 @@
     <v-card>
       <v-card-title>
         <span class="headline">Poll results</span>
+        <v-spacer />
+        <v-select v-model="mode" :items="modes" />
       </v-card-title>
       <v-card-text>
-        <chart :labels="labels" :values="values" />
+        <chart :labels="labels" :data="values" :mode="mode" />
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -34,6 +36,14 @@ import Chart from "@/components/AnimeSelector/Chart.vue";
 export default class PollResults extends Vue {
   @Prop() poll!: Poll;
   dialog = false;
+  mode = 0;
+  modes = [
+    { value: 0, text: "default" },
+    { value: 1, text: "1" },
+    { value: 2, text: "2" },
+    { value: 3, text: "3" },
+    { value: 4, text: "4" }
+  ];
 
   get labels() {
     if (this.poll) {
@@ -53,7 +63,12 @@ export default class PollResults extends Vue {
 
   get values() {
     if (this.poll) {
-      return this.poll.options.map(option => option.votes);
+      return [
+        this.poll.options.map(option => option.votes[0]),
+        this.poll.options.map(option => option.votes[1]),
+        this.poll.options.map(option => option.votes[2]),
+        this.poll.options.map(option => option.votes[3])
+      ];
     }
     return [];
   }

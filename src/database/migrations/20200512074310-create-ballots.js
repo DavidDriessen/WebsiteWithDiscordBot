@@ -2,25 +2,28 @@
 module.exports = {
     up: (queryInterface, Sequelize) => {
         return queryInterface.createTable('Ballots', {
-            user: {
+            id: {
+                type: Sequelize.INTEGER,
+                primaryKey: true,
+                autoIncrement: true
+            },
+            userId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
                     model: "Users",
                     key: "id",
                 },
-                primaryKey: true,
                 onUpdate: "cascade",
                 onDelete: "cascade",
             },
-            poll: {
+            pollId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
                     model: "Polls",
                     key: "id",
                 },
-                primaryKey: true,
                 onUpdate: "cascade",
                 onDelete: "cascade",
             },

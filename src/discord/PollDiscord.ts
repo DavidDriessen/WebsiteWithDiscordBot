@@ -55,8 +55,10 @@ export class PollDiscord {
     });
     if (dbUser && poll) {
       const ballot = (await Ballot.findOrCreate({
-        where: {user: dbUser.id, poll: poll.id},
+        where: {userId: dbUser.id, pollId: poll.id},
       }))[0];
+      ballot.user = dbUser;
+      ballot.poll = poll;
       messageReaction.users.remove(user.id).then();
       if (messageReaction.emoji.name === '📝') {
         BallotDiscord.updateBallot(ballot, true);
@@ -64,8 +66,9 @@ export class PollDiscord {
       } else {
         const option = BallotDiscord.options.indexOf(messageReaction.emoji.name);
         if (option > -1) {
-          await BallotDiscord.changeVote(option, ballot);
-          BallotDiscord.updateBallot(ballot);
+          if (await BallotDiscord.changeVote(user, option, ballot)) {
+            BallotDiscord.updateBallot(ballot);
+          }
         }
       }
     }
@@ -147,7 +150,7 @@ export class PollDiscord {
         .send(await PollDiscord.renderMessage(poll));
       poll.messageID = msg.id;
       await msg.react('📝');
-      BallotDiscord.addReactions(msg, poll.options.length);
+      // BallotDiscord.addReactions(msg, poll.options.length);
     } catch (e) {
       // tslint:disable-next-line:no-console
       console.error('Error adding message for Poll: ' + poll.id + '\n', e);

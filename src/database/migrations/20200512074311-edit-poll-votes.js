@@ -3,6 +3,16 @@ module.exports = {
   up: (queryInterface, Sequelize) => {
     return Promise.all([
       queryInterface.renameColumn('PollVotes', 'user', 'ballot'),
+      queryInterface.changeColumn('PollVotes', 'ballot', {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Ballots",
+          key: "id",
+        },
+        onUpdate: "cascade",
+        onDelete: "cascade",
+      }),
       queryInterface.addColumn('PollVotes', 'choice', {
         type: Sequelize.INTEGER
       })

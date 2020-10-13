@@ -42,6 +42,9 @@ export class PollOption extends Model<PollOption> {
     genres: string[];
   };
 
+  // tslint:disable-next-line:variable-name
+  public PollVote?: PollVote;
+
 }
 
 export default PollOption;
