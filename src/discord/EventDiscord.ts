@@ -61,8 +61,15 @@ export class EventDiscord {
 
   private static async renderMessage(event: Event) {
     const series = await event.getSeries();
-    const image = await DiscordHelper.renderImage(series.map((media: SeriesEvent) =>
-      media.details ? media.details.image : ''));
+    let path;
+    if (process.env.NODE_ENV === 'production') {
+      path = './public/images/';
+    } else {
+      path = './client/public/images/';
+    }
+    const image = await DiscordHelper.renderImage(
+      event.image ? [path + event.image] : series.map((media: SeriesEvent) =>
+        media.details ? media.details.image : ''));
 
     const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/schedule');
@@ -70,7 +77,7 @@ export class EventDiscord {
     embed.attachFiles([
       new MessageAttachment(await image.getBufferAsync(Jimp.MIME_PNG), 'image.png')]);
     embed.addField('Time', '```md\n' + moment(event.start).utc()
-      .format('< ddd DD of MMM [at] HH:mm')
+        .format('< ddd DD of MMM [at] HH:mm')
       + moment(event.end).utc().format(' — HH:mm > UTC') + '\n```');
     const streamer = await event.$get('streamer');
     if (streamer) {

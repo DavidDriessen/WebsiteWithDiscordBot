@@ -26,6 +26,8 @@ export class Event extends Model<Event> {
   @Column
   public image!: string;
 
+  public streamerId!: number;
+
   @BelongsTo(() => User, 'streamerId')
   public streamer!: User;
 

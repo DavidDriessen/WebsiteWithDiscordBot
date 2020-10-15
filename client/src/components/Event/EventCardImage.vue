@@ -6,9 +6,7 @@
       v-if="image"
       :src="image"
       alt="event"
-      class="white--text align-end"
-      max-width="300"
-      max-height="350"
+      class="white--text align-end event-image"
     />
     <div v-if="!image" :class="'img-wrap img-wrap-' + seriesImages.length">
       <img
@@ -370,8 +368,17 @@ export default class EventCardImage extends Vue {
   }
 }
 
+.event-image {
+  max-width: 350px;
+  max-height: 350px * 1.125;
+}
+
 @include image_mix();
 @media (max-width: 816px) {
   @include image_mix($wrap-width: 150px);
+  .event-image {
+    max-width: 150px;
+    max-height: 150px * 1.125;
+  }
 }
 </style>

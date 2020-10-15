@@ -44,6 +44,7 @@
       <v-form ref="form" lazy-validation @submit="save()">
         <v-tabs v-model="tab">
           <v-tab>Details</v-tab>
+          <v-tab>Image</v-tab>
           <v-tab>Streamer</v-tab>
           <v-tab>Series</v-tab>
         </v-tabs>
@@ -110,6 +111,23 @@
           <v-tab-item>
             <v-card-text>
               <v-row>
+                <v-col>
+                  <v-file-input v-model="image" />
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col>
+                  <EventCardImage
+                    :series="event.series"
+                    :image="imagePreview"
+                  />
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-tab-item>
+          <v-tab-item>
+            <v-card-text>
+              <v-row>
                 <v-col cols="12" sm="12">
                   <v-autocomplete
                     v-model="event.streamer"
@@ -169,12 +187,14 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import axios from "../../plugins/axios";
 import { Event, Series, EventSeries, User } from "@/types";
 import draggable from "vuedraggable";
-import moment from "moment";
+import moment, { Moment } from "moment";
 import { cloneDeep } from "lodash";
 import AnimeSelector from "@/components/AnimeSelector/Event.vue";
+import EventCardImage from "@/components/Event/EventCardImage.vue";
+import { serialize } from "object-to-formdata";
 
 @Component({
-  components: { AnimeSelector, draggable }
+  components: { EventCardImage, AnimeSelector, draggable }
 })
 export default class EventModal extends Vue {
   @Prop() eventToEdit?: Event;
@@ -192,6 +212,14 @@ export default class EventModal extends Vue {
   streamers: User[] = [];
   tab = "details";
   error = "";
+  image: File | null = null;
+
+  get imagePreview() {
+    if (this.image) {
+      return URL.createObjectURL(this.image);
+    }
+    return this.event.image;
+  }
 
   mounted() {
     this.getStreamers();
@@ -298,9 +326,13 @@ export default class EventModal extends Vue {
   save() {
     if (this.form.validate()) {
       this.loading = true;
+      const data: { json: string; image: File | null } = {
+        json: JSON.stringify(this.event),
+        image: this.image
+      };
       if (this.eventToEdit) {
         axios
-          .post("/api/schedule", this.event, {
+          .post("/api/schedule", serialize(data), {
             headers: {
               Authorization: `Bearer ${localStorage.token}`
             }
@@ -314,13 +346,13 @@ export default class EventModal extends Vue {
             if (e.response && e.response.data && e.response.data.message) {
               this.error = e.response.data.message;
             } else {
-              this.error = 'Something went wrong. Please try again later.'
+              this.error = "Something went wrong. Please try again later.";
             }
             this.loading = false;
           });
       } else {
         axios
-          .put("/api/schedule", this.event, {
+          .put("/api/schedule", serialize(data), {
             headers: {
               Authorization: `Bearer ${localStorage.token}`
             }

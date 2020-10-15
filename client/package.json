@@ -21,6 +21,7 @@
     "core-js": "^3.6.4",
     "moment": "^2.25.3",
     "moment-timezone": "^0.5.28",
+    "object-to-formdata": "^4.1.0",
     "register-service-worker": "^1.6.2",
     "roboto-fontface": "*",
     "vue": "^2.6.11",
