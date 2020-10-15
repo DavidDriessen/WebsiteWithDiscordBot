@@ -63,9 +63,9 @@ export class EventDiscord {
     const series = await event.getSeries();
     let path;
     if (process.env.NODE_ENV === 'production') {
-      path = './public/images/';
+      path = './public';
     } else {
-      path = './client/public/images/';
+      path = './client/public';
     }
     const image = await DiscordHelper.renderImage(
       event.image ? [path + event.image] : series.map((media: SeriesEvent) =>

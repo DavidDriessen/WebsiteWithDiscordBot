@@ -106,7 +106,6 @@ export default class AnimeSelectorEvent extends Vue {
       }
       events.push(event);
     }
-    console.log(series);
     this.$emit("input", events);
   }
 

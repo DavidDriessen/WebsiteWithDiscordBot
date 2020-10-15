@@ -57,7 +57,7 @@ export class Media extends Model<Media> {
     return Media.build({
       aniId: media.id,
       malId: media.idMal,
-      title: media.title.userPreferred,
+      title: media.title.english || media.title.romaji || media.title.userPreferred,
       description: media.description,
       image: media.coverImage.extraLarge,
       siteUrl: media.siteUrl,
