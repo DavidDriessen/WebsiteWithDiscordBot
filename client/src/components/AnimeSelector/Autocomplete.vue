@@ -20,11 +20,9 @@
       <template v-slot:item="{ item }">
         <div v-if="item.title">
           <v-avatar>
-            <img :src="item.coverImage.medium" :alt="item.title.english" />
+            <img :src="item.image" :alt="item.title" />
           </v-avatar>
-          <span>
-            {{ item.title.english ? item.title.english : item.title.romaji }}
-          </span>
+          <span>{{ item.title }}</span>
         </div>
       </template>
     </v-autocomplete>
@@ -82,12 +80,9 @@ export default class Autocomplete extends Vue {
 
   customFilter(series: Series, search: string) {
     return (
-      (series.id && series.id.toString() === search) ||
-      (series.idMal && series.idMal.toString() === search) ||
-      (series.title.english &&
-        series.title.english.toLowerCase().search(search.toLowerCase()) >= 0) ||
-      (series.title.romaji &&
-        series.title.romaji.toLowerCase().search(search.toLowerCase()) >= 0)
+      (series.aniId && series.aniId.toString() === search) ||
+      (series.malId && series.malId.toString() === search) ||
+      series.title.toLowerCase().search(search.toLowerCase()) >= 0
     );
   }
 }

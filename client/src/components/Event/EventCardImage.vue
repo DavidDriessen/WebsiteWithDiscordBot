@@ -36,7 +36,7 @@ export default class EventCardImage extends Vue {
       if (!series.details) {
         return "";
       }
-      return series.details.coverImage.extraLarge;
+      return series.details.image;
     });
   }
 

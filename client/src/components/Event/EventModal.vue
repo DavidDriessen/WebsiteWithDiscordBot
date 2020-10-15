@@ -149,6 +149,9 @@
         </v-tabs-items>
       </v-form>
       <v-card-actions>
+        <v-alert v-if="error" elevation="12" prominent type="error">
+          {{ error }}
+        </v-alert>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="close()" :loading="loading"
           >Close
@@ -188,6 +191,7 @@ export default class EventModal extends Vue {
   loading = false;
   streamers: User[] = [];
   tab = "details";
+  error = "";
 
   mounted() {
     this.getStreamers();
@@ -240,7 +244,10 @@ export default class EventModal extends Vue {
         for (const series of this.event.series) {
           series.episode = series.episode + series.episodes;
           if (series.details && series.details.episodes) {
-            if (series.episode + series.episodes - 1 > series.details.episodes) {
+            if (
+              series.episode + series.episodes - 1 >
+              series.details.episodes
+            ) {
               series.episodes = series.details.episodes - series.episode + 1;
             }
           }
@@ -302,6 +309,14 @@ export default class EventModal extends Vue {
             this.close();
             this.loading = false;
             this.$emit("save");
+          })
+          .catch(e => {
+            if (e.response && e.response.data && e.response.data.message) {
+              this.error = e.response.data.message;
+            } else {
+              this.error = 'Something went wrong. Please try again later.'
+            }
+            this.loading = false;
           });
       } else {
         axios

@@ -86,33 +86,37 @@ export class ScheduleController {
   @Middleware(JwtManager.middleware)
   @isAdmin
   private async addEvent(req: ISecureRequest, res: Response) {
-    const streamer = await User.findByPk(req.body.streamer.id);
-    if (!streamer) {
-      return res.status(404).json({msg: 'Streamer not found!'});
-    }
-    const data = {
-      title: req.body.title,
-      description: req.body.description,
-      streamerId: streamer.id,
-      start: req.body.start,
-      end: req.body.end,
-    };
-    if (req.body.series) {
-      // @ts-ignore
-      data.series = req.body.series.map((series, index) => {
-        return {
-          seriesId: series.details.id,
-          episode: series.episode,
-          episodes: series.episodes,
-          order: index,
-        };
+    try {
+      const streamer = await User.findByPk(req.body.streamer.id);
+      if (!streamer) {
+        return res.status(404).json({msg: 'Streamer not found!'});
+      }
+      const data = {
+        title: req.body.title,
+        description: req.body.description,
+        streamerId: streamer.id,
+        start: req.body.start,
+        end: req.body.end,
+      };
+      if (req.body.series) {
+        // @ts-ignore
+        data.series = req.body.series.map((series, index) => {
+          return {
+            seriesId: series.details.id,
+            episode: series.episode,
+            episodes: series.episodes,
+            order: index,
+          };
+        });
+      }
+      const event = await Event.create(data, {
+        include: ['series', 'streamer', 'attendees'],
       });
+      event.streamer = streamer;
+      return res.status(200).json(event.serialize(req.payload.user));
+    } catch (e) {
+      return res.status(500).json({error: 'error', message: 'Please try again later.'});
     }
-    const event = await Event.create(data, {
-      include: ['series', 'streamer', 'attendees'],
-    });
-    event.streamer = streamer;
-    return res.status(200).json(event.serialize(req.payload.user));
   }
 
   @Post('')
@@ -138,10 +142,10 @@ export class ScheduleController {
     event.streamer = streamer;
     if (req.body.series) {
       event.series = req.body.series
-        .map((s: { details: { id: any; }; episode: any; episodes: any; }, i: number) => {
+        .map((s: { details: { aniId: any; }; episode: any; episodes: any; }, i: number) => {
           const ss = event.series.find(
-            (m) => m.event === event.id && m.seriesId === s.details.id) ||
-            new SeriesEvent({event: event.id, seriesId: s.details.id});
+            (m) => m.event === event.id && m.seriesId === s.details.aniId) ||
+            new SeriesEvent({event: event.id, seriesId: s.details.aniId});
           ss.order = i;
           ss.episode = req.body.series[i].episode;
           ss.episodes = req.body.series[i].episodes;

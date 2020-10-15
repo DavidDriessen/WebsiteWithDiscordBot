@@ -159,7 +159,7 @@ export default class PollModal extends Vue {
           option.type == PollOptionType.Series &&
           typeof option.content == "object"
         ) {
-          option.content = option.content.id;
+          option.content = option.content.aniId;
         }
       }
       this.loading = true;

@@ -33,7 +33,7 @@
     "forever": "^3.0.2",
     "jimp": "^0.10.3",
     "moment": "^2.27.0",
-    "mysql2": "^2.1.0",
+    "mariadb": "^2.4.2",
     "reflect-metadata": "^0.1.13",
     "sequelize": "^5.22.2",
     "sequelize-to-json": "^0.10.4",

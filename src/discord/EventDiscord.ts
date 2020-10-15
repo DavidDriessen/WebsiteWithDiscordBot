@@ -62,7 +62,7 @@ export class EventDiscord {
   private static async renderMessage(event: Event) {
     const series = await event.getSeries();
     const image = await DiscordHelper.renderImage(series.map((media: SeriesEvent) =>
-      media.details ? media.details.coverImage.extraLarge : ''));
+      media.details ? media.details.image : ''));
 
     const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/schedule');
@@ -87,7 +87,7 @@ export class EventDiscord {
 
     for (const media of series) {
       if (media.details) {
-        const title = '**[' + media.details.title.userPreferred + '](' + media.details.siteUrl + '): Ep ' +
+        const title = '**[' + media.details.title + '](' + media.details.siteUrl + '): Ep ' +
           media.episode + (media.episodes > 1 ? '-' + (media.episode + media.episodes - 1) : '') + '**\n';
         const description = DiscordHelper.wrapText(media.details.description, limit - title.length);
         embed.addField('-', title + description);

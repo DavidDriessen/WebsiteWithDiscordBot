@@ -174,7 +174,7 @@ export default class EventCard extends Vue {
         return "";
       }
       return (
-        series.details.title.english +
+        series.details.title +
         " #" +
         series.episode +
         (series.episodes > 1

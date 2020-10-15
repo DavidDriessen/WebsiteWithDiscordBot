@@ -59,9 +59,7 @@ export class PollDiscord {
       switch (option.type) {
         case 'Series':
           if (option.details) {
-            const title = '**[' + (option.details.title.english ?
-              option.details.title.english : option.details.title.romaji) +
-              '](' + option.details.siteUrl + ')** ';
+            const title = '**[' + option.details.title + '](' + option.details.siteUrl + ')** ';
             // const description = DiscordHelper.wrapText(option.details.description,
             //   limit - title.length);
             const genres = '(' + option.details.genres.join(', ') + ')';
