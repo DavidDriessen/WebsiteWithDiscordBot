@@ -30,13 +30,7 @@ export class Media extends Model<Media> {
   public title!: string;
 
   @Column(DataType.TEXT)
-  public get description() {
-    return this.getDataValue('description');
-  }
-
-  public set description(description: string) {
-    this.setDataValue('description', this.sequelize.escape(description));
-  }
+  public description!: string;
 
   @Column
   public image!: string;
