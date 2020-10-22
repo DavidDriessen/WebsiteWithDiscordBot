@@ -5,29 +5,61 @@
         <h1>Loading</h1>
       </v-progress-circular>
     </v-overlay>
-    <v-row style="padding-right: 100px">
-      <v-spacer />
-      <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />
-      <v-switch v-model="history" label="History" @change="getSchedule" />
-    </v-row>
-    <v-divider />
-    <v-row
-      v-for="(chunkEvent, chunkIndex) of chunkedEvents"
-      :key="chunkIndex"
-      justify="space-around"
-      style="padding: 20px"
+
+    <v-data-iterator
+      :items="events"
+      :disable-pagination="events.length < 6"
+      :hide-default-footer="events.length < 6"
     >
-      <event-card
-        v-for="(event, index) of chunkEvent"
-        :key="index"
-        :cols="chunkEvent / 12"
-        :event.sync="event"
-        :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
-        :history="history"
-        :ampm.sync="ampm"
-        @save="getSchedule"
-      />
-    </v-row>
+      <template v-slot:header>
+        <v-toolbar
+          flat
+          style="padding-right: 50px; padding-top: 10px; border-radius: 10px; background: transparent"
+        >
+          <v-spacer />
+          <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />
+          <v-switch v-model="history" label="History" @change="getSchedule" />
+        </v-toolbar>
+        <v-divider />
+      </template>
+      <template v-slot:default="{ items }">
+        <v-row justify="space-around" style="padding: 20px">
+          <event-card
+            v-for="(event, index) of items"
+            :key="index"
+            :cols="chunkEvent / 12"
+            :event.sync="event"
+            :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
+            :history="history"
+            :ampm.sync="ampm"
+            @save="getSchedule"
+          />
+        </v-row>
+      </template>
+      <template v-slot:no-data>
+        <v-row justify="space-around" style="padding: 20px">
+          <v-card width="400" style="margin-bottom: 40px" hover>
+            <v-card-title
+              class="text-truncate text-no-wrap"
+              :style="'display: block; font-size: 16px;'"
+            >
+              No event are currently planned
+            </v-card-title>
+            <v-card-text>
+              Check back later.
+              <br />
+              Or check the <router-link to="/polls">polls</router-link> page for
+              possible polls for next season.
+            </v-card-text>
+            <v-card-subtitle>
+              <small>
+                Polls happen around the beginning of an anime season.
+              </small>
+            </v-card-subtitle>
+          </v-card>
+        </v-row>
+      </template>
+    </v-data-iterator>
     <EventModal v-if="isAdmin" @save="getSchedule" />
   </v-container>
 </template>

@@ -7,7 +7,10 @@
     </v-overlay>
     <v-data-iterator :items="polls" disable-pagination hide-default-footer>
       <template v-slot:header>
-        <v-toolbar flat>
+        <v-toolbar
+          flat
+          style="padding-right: 50px; padding-top: 10px; border-radius: 10px; background: transparent"
+        >
           <v-spacer />
           <!--      <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />-->
           <v-switch

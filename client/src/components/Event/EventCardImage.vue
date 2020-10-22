@@ -273,12 +273,12 @@ export default class EventCardImage extends Vue {
 
       &:nth-of-type(5):hover {
         clip-path: polygon(
-                0% 0%,
-                100% 0%,
-                100% 50%,
-                100% 100%,
-                0% 100%,
-                0% 50%
+          0% 0%,
+          100% 0%,
+          100% 50%,
+          100% 100%,
+          0% 100%,
+          0% 50%
         );
         top: $wrap-heigth / 2 - $wrap-4-height / 2;
         left: $wrap-width / 2 - $wrap-4-width / 2;
@@ -294,8 +294,8 @@ export default class EventCardImage extends Vue {
 
     img {
       clip-path: inset(
-              $wrap-4-height-offset $wrap-4-width-offset $wrap-4-height-offset
-              $wrap-4-width-offset
+        $wrap-4-height-offset $wrap-4-width-offset $wrap-4-height-offset
+          $wrap-4-width-offset
       );
       width: $wrap-4-width;
       height: $wrap-4-height;

@@ -16,7 +16,7 @@ export interface Series {
   title: string;
   description: string;
   siteUrl: string;
-  image: string
+  image: string;
   episodes: number;
 }
 

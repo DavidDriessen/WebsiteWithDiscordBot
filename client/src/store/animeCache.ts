@@ -48,7 +48,7 @@ class AnimeCache {
   }
 
   search(search: string) {
-    if(!isNaN(parseInt(search))) {
+    if (!isNaN(parseInt(search))) {
       this.getSeries(parseInt(search));
       return this.fetch();
     }

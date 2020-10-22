@@ -129,13 +129,6 @@ export default class EventCard extends Vue {
     } else if (
       this.event.start.isBetween(
         this.intervals.now,
-        this.intervals.now.clone().add(3, "hour")
-      )
-    ) {
-      return this.event.start.fromNow();
-    } else if (
-      this.event.start.isBetween(
-        this.intervals.now,
         this.intervals.now.clone().add(1, "day")
       )
     ) {
