@@ -1,6 +1,6 @@
 <!--suppress ALL -->
 <template>
-  <v-dialog v-model="dialog" max-width="600px">
+  <v-dialog v-model="dialog" max-width="1000px">
     <template v-slot:activator="{ on }">
       <v-list-item v-on="on" v-if="isAdmin">
         <v-list-item-icon>

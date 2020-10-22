@@ -53,7 +53,7 @@ export class BallotDiscord {
     let content;
     if (option.type === 'Series') {
       // @ts-ignore
-      content = (await SeriesController.getSeriesById([option.content]))[0].title.userPreferred;
+      content = (await SeriesController.getSeriesById([option.content]))[0].title;
     } else {
       content = option.content;
     }
@@ -119,11 +119,7 @@ export class BallotDiscord {
         switch (option.type) {
           case 'Series':
             if (option.details) {
-              const title = '**[' + (option.details.title.english ?
-                option.details.title.english : option.details.title.romaji) +
-                '](' + option.details.siteUrl + ')** ';
-              // const description = DiscordHelper.wrapText(option.details.description,
-              //   limit - title.length);
+              const title = '**[' + option.details.title + '](' + option.details.siteUrl + ')** ';
               const genres = '(' + option.details.genres.join(', ') + ')';
               description += '\n' + BallotDiscord.options[i] + ' ' + title
                 + '```CSS\n' + genres
