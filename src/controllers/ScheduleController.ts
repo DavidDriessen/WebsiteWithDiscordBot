@@ -10,6 +10,7 @@ import SeriesEvent from '../database/models/SeriesEvent';
 import User from '../database/models/User';
 import {EventWorker} from '../workers/EventWorker';
 import {JWT} from '../helpers/Website';
+import * as multer from 'multer';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
@@ -20,6 +21,23 @@ function isAdmin(target: object, propertyKey: string | symbol, descriptor: Prope
     return method(req, res);
   };
 }
+
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    let path;
+    if (process.env.NODE_ENV === 'production') {
+      path = 'public/images/';
+    } else {
+      path = 'client/public/images/';
+    }
+    cb(null, path);
+  },
+  filename(req, file, cb) {
+    const f = file.originalname.split('.');
+    cb(null, Math.round(Math.random() * 1E9) + '.' + f[f.length - 1]);
+  },
+});
+const upload = multer({storage});
 
 @Controller('api/schedule')
 export class ScheduleController {
@@ -80,40 +98,55 @@ export class ScheduleController {
   @Put('')
   @Middleware(JWT())
   @isAdmin
+  @Middleware(upload.single('image'))
   private async addEvent(req: ISecureRequest, res: Response) {
-    const streamer = await User.findByPk(req.body.streamer.id);
-    if (!streamer) {
-      return res.status(404).json({msg: 'Streamer not found!'});
+    if (req.body.json) {
+      req.body = JSON.parse(req.body.json);
     }
-    const data = {
-      title: req.body.title,
-      description: req.body.description,
-      streamerId: streamer.id,
-      start: req.body.start,
-      end: req.body.end,
-    };
-    if (req.body.series) {
-      // @ts-ignore
-      data.series = req.body.series.map((series, index) => {
-        return {
-          seriesId: series.details.id,
-          episode: series.episode,
-          episodes: series.episodes,
-          order: index,
-        };
+    try {
+      const streamer = await User.findByPk(req.body.streamer.id);
+      if (!streamer) {
+        return res.status(404).json({msg: 'Streamer not found!'});
+      }
+      const data: Event = {
+        title: req.body.title,
+        description: req.body.description,
+        streamerId: streamer.id,
+        start: req.body.start,
+        end: req.body.end,
+        image: req.body.image,
+      } as Event;
+      if (req.file) {
+        data.image = '/images/' + req.file.filename;
+      }
+      if (req.body.series) {
+        data.series = req.body.series.map((series: SeriesEvent, index: number) => {
+          return {
+            seriesId: series.details?.aniId,
+            episode: series.episode,
+            episodes: series.episodes,
+            order: index,
+          };
+        });
+      }
+      const event = await Event.create(data, {
+        include: ['series', 'streamer', 'attendees'],
       });
+      event.streamer = streamer;
+      return res.status(200).json(event.serialize(req.payload.user));
+    } catch (e) {
+      return res.status(500).json({error: 'error', message: 'Please try again later.'});
     }
-    const event = await Event.create(data, {
-      include: ['series', 'streamer', 'attendees'],
-    });
-    event.streamer = streamer;
-    return res.status(200).json(event.serialize(req.payload.user));
   }
 
   @Post('')
   @Middleware(JWT())
   @isAdmin
+  @Middleware(upload.single('image'))
   private async editEvent(req: ISecureRequest, res: Response) {
+    if (req.body.json) {
+      req.body = JSON.parse(req.body.json);
+    }
     // tslint:disable-next-line:max-line-length
     if (!req.body.title || !req.body.start || !req.body.end) {
       return res.status(401).send('');
@@ -126,6 +159,7 @@ export class ScheduleController {
     if (!event) {
       return res.status(200).json({message: 'Event not found'});
     }
+    event.image = req.body.image;
     event.title = req.body.title;
     event.start = req.body.start;
     event.end = req.body.end;
@@ -133,15 +167,18 @@ export class ScheduleController {
     event.streamer = streamer;
     if (req.body.series) {
       event.series = req.body.series
-        .map((s: { details: { id: any; }; episode: any; episodes: any; }, i: number) => {
+        .map((s: { details: { aniId: any; }; episode: any; episodes: any; }, i: number) => {
           const ss = event.series.find(
-            (m) => m.event === event.id && m.seriesId === s.details.id) ||
-            new SeriesEvent({event: event.id, seriesId: s.details.id});
+            (m) => m.event === event.id && m.seriesId === s.details.aniId) ||
+            new SeriesEvent({event: event.id, seriesId: s.details.aniId});
           ss.order = i;
           ss.episode = req.body.series[i].episode;
           ss.episodes = req.body.series[i].episodes;
           return ss;
         });
+    }
+    if (req.file) {
+      event.image = '/images/' + req.file.filename;
     }
     await event.$set('streamer', streamer);
     return res.status(200)

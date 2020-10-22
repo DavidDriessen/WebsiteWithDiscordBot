@@ -15,6 +15,7 @@ import User from './User';
 import {PollDiscord} from '../../discord/PollDiscord';
 import {Order} from 'sequelize/types/lib/model';
 import Ballot from './Ballot';
+import Media from './Media';
 
 @Table
 export class Poll extends Model<Poll> {
@@ -47,7 +48,7 @@ export class Poll extends Model<Poll> {
     for (const option of this.options) {
       if (option.type === 'Series') {
         option.details = series
-          .find((m: { id: number; }) => m.id === Number(option.content));
+          .find((m: Media) => m.aniId === Number(option.content));
       }
     }
     return true;

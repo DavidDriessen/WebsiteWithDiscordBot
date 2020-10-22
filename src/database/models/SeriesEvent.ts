@@ -1,5 +1,6 @@
 import {Column, ForeignKey, Model, Table} from 'sequelize-typescript';
 import Event from './Event';
+import Media from './Media';
 
 @Table
 export class SeriesEvent extends Model<SeriesEvent> {
@@ -23,12 +24,7 @@ export class SeriesEvent extends Model<SeriesEvent> {
   @Column
   public episodes!: number;
 
-  public details?: {
-    title: { english: string; romaji: string; userPreferred: string };
-    coverImage: { extraLarge: string; };
-    description: string;
-    siteUrl: string;
-  };
+  public details?: Media;
 }
 
 export default SeriesEvent;

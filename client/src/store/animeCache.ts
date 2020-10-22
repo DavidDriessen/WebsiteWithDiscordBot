@@ -15,10 +15,10 @@ class AnimeCache {
   }
 
   private add(series: Series) {
-    if (this.cache[series.id]) {
-      Object.assign(this.cache[series.id], series);
+    if (this.cache[series.aniId]) {
+      Object.assign(this.cache[series.aniId], series);
     } else {
-      this.cache[series.id] = series;
+      this.cache[series.aniId] = series;
     }
   }
 
@@ -54,8 +54,8 @@ class AnimeCache {
     }
     return axios
       .get("/api/series/search/" + encodeURIComponent(search))
-      .then((response: { data: { media: Series[] } }) => {
-        for (const series of response.data.media) {
+      .then((response: { data: Series[] }) => {
+        for (const series of response.data) {
           this.add(series);
         }
         return this.getList();

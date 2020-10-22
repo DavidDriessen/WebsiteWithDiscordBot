@@ -51,6 +51,7 @@ const store = new Vuex.Store({
           })
           .catch(() => {
             localStorage.removeItem("token");
+            window.location.href = "/api/auth/discord";
           });
       }
     },

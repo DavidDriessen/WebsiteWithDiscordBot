@@ -44,6 +44,7 @@
       <v-form ref="form" lazy-validation @submit="save()">
         <v-tabs v-model="tab">
           <v-tab>Details</v-tab>
+          <v-tab>Image</v-tab>
           <v-tab>Streamer</v-tab>
           <v-tab>Series</v-tab>
         </v-tabs>
@@ -110,6 +111,23 @@
           <v-tab-item>
             <v-card-text>
               <v-row>
+                <v-col>
+                  <v-file-input v-model="image" />
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col>
+                  <EventCardImage
+                    :series="event.series"
+                    :image="imagePreview"
+                  />
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-tab-item>
+          <v-tab-item>
+            <v-card-text>
+              <v-row>
                 <v-col cols="12" sm="12">
                   <v-autocomplete
                     v-model="event.streamer"
@@ -149,6 +167,9 @@
         </v-tabs-items>
       </v-form>
       <v-card-actions>
+        <v-alert v-if="error" elevation="12" prominent type="error">
+          {{ error }}
+        </v-alert>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="close()" :loading="loading"
           >Close
@@ -166,12 +187,14 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import axios from "../../plugins/axios";
 import { Event, Series, EventSeries, User } from "@/types";
 import draggable from "vuedraggable";
-import moment from "moment";
+import moment, { Moment } from "moment";
 import { cloneDeep } from "lodash";
 import AnimeSelector from "@/components/AnimeSelector/Event.vue";
+import EventCardImage from "@/components/Event/EventCardImage.vue";
+import { serialize } from "object-to-formdata";
 
 @Component({
-  components: { AnimeSelector, draggable }
+  components: { EventCardImage, AnimeSelector, draggable }
 })
 export default class EventModal extends Vue {
   @Prop() eventToEdit?: Event;
@@ -188,6 +211,15 @@ export default class EventModal extends Vue {
   loading = false;
   streamers: User[] = [];
   tab = "details";
+  error = "";
+  image: File | null = null;
+
+  get imagePreview() {
+    if (this.image) {
+      return URL.createObjectURL(this.image);
+    }
+    return this.event.image;
+  }
 
   mounted() {
     this.getStreamers();
@@ -240,7 +272,10 @@ export default class EventModal extends Vue {
         for (const series of this.event.series) {
           series.episode = series.episode + series.episodes;
           if (series.details && series.details.episodes) {
-            if (series.episode + series.episodes - 1 > series.details.episodes) {
+            if (
+              series.episode + series.episodes - 1 >
+              series.details.episodes
+            ) {
               series.episodes = series.details.episodes - series.episode + 1;
             }
           }
@@ -291,9 +326,13 @@ export default class EventModal extends Vue {
   save() {
     if (this.form.validate()) {
       this.loading = true;
+      const data: { json: string; image: File | null } = {
+        json: JSON.stringify(this.event),
+        image: this.image
+      };
       if (this.eventToEdit) {
         axios
-          .post("/api/schedule", this.event, {
+          .post("/api/schedule", serialize(data), {
             headers: {
               Authorization: `Bearer ${localStorage.token}`
             }
@@ -302,10 +341,18 @@ export default class EventModal extends Vue {
             this.close();
             this.loading = false;
             this.$emit("save");
+          })
+          .catch(e => {
+            if (e.response && e.response.data && e.response.data.message) {
+              this.error = e.response.data.message;
+            } else {
+              this.error = "Something went wrong. Please try again later.";
+            }
+            this.loading = false;
           });
       } else {
         axios
-          .put("/api/schedule", this.event, {
+          .put("/api/schedule", serialize(data), {
             headers: {
               Authorization: `Bearer ${localStorage.token}`
             }

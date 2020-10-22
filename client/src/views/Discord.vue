@@ -33,6 +33,10 @@ export default class Discord extends Vue {
         ] = `Bearer ${localStorage.token}`;
         this.$store.state.newUser = true;
         this.$router.replace("/");
+      })
+      .catch(() => {
+        this.$store.dispatch("Logout");
+        this.$router.replace("/");
       });
   }
 }

@@ -13,6 +13,7 @@ import {EventDiscord} from '../../discord/EventDiscord';
 import {SeriesController} from '../../controllers';
 // @ts-ignore
 import * as Serializer from 'sequelize-to-json/index.js';
+import Media from './Media';
 
 @Table
 export class Event extends Model<Event> {
@@ -24,6 +25,8 @@ export class Event extends Model<Event> {
 
   @Column
   public image!: string;
+
+  public streamerId!: number;
 
   @BelongsTo(() => User, 'streamerId')
   public streamer!: User;
@@ -55,7 +58,7 @@ export class Event extends Model<Event> {
     const series = await SeriesController
       .getSeriesById(this.series.map((seriesEvent) => seriesEvent.seriesId)) || [];
     return this.series.map((s) => {
-      s.details = series.find((m: { id: number; }) => m.id === s.seriesId);
+      s.details = series.find((m: Media) => m.aniId === s.seriesId);
       return s;
     }).sort((a, b) => {
       return a.order - b.order;

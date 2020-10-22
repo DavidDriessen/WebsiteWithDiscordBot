@@ -10,6 +10,7 @@ import Poll from './Poll';
 import PollVote from './PollVote';
 import {DataTypes} from 'sequelize';
 import Ballot from './Ballot';
+import Media from './Media';
 
 export type PollOptionTypes = 'Series' | 'Time' | 'Date' | 'DateTime' | 'WeekTime' | 'General';
 
@@ -34,13 +35,7 @@ export class PollOption extends Model<PollOption> {
 
   public voted?: boolean;
 
-  public details?: {
-    title: { english: string; romaji: string; userPreferred: string };
-    coverImage: { extraLarge: string; };
-    description: string;
-    siteUrl: string;
-    genres: string[];
-  };
+  public details?: Media;
 
   // tslint:disable-next-line:variable-name
   public PollVote?: PollVote;

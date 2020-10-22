@@ -11,16 +11,9 @@
           <v-row>
             <v-chip>
               <v-avatar left>
-                <img
-                  :src="series.details.coverImage.medium"
-                  :alt="series.details.title.english"
-                />
+                <img :src="series.details.image" :alt="series.details.title" />
               </v-avatar>
-              {{
-                series.details.title.english
-                  ? series.details.title.english
-                  : series.details.title.romaji
-              }}
+              {{ series.details.title }}
               <v-btn @click="eventseries.splice(index, 1)" icon>
                 <v-icon>fas fa-times-circle</v-icon>
               </v-btn>
@@ -113,7 +106,6 @@ export default class AnimeSelectorEvent extends Vue {
       }
       events.push(event);
     }
-    console.log(series);
     this.$emit("input", events);
   }
 

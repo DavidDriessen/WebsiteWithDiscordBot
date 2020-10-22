@@ -28,11 +28,7 @@
           <v-expansion-panel-header>
             <v-row>
               <v-col cols="8" sm="10">
-                {{
-                  eventSeries.details.title.english
-                    ? eventSeries.details.title.english
-                    : eventSeries.details.title.romaji
-                }}
+                {{ eventSeries.details.title }}
               </v-col>
               <v-col cols="4" sm="2">
                 <b>
@@ -49,7 +45,7 @@
           <v-expansion-panel-content>
             <v-row>
               <v-col cols="3">
-                <v-img :src="eventSeries.details.coverImage.extraLarge" />
+                <v-img :src="eventSeries.details.image" />
               </v-col>
               <v-col cols="9">
                 <v-card-subtitle v-html="eventSeries.details.description" />

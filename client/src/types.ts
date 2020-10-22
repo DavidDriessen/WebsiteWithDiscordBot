@@ -1,12 +1,22 @@
 import { Moment } from "moment";
 
+// export interface Series {
+//   id: number;
+//   idMal: number;
+//   title: { english: string; romaji: string; userPreferred: string };
+//   description: string;
+//   siteUrl: string;
+//   coverImage: { extraLarge: string; medium: string };
+//   episodes: number;
+// }
 export interface Series {
   id: number;
-  idMal: number;
-  title: { english: string; romaji: string; userPreferred: string };
+  aniId: number;
+  malId: number;
+  title: string;
   description: string;
   siteUrl: string;
-  coverImage: { extraLarge: string; medium: string };
+  image: string
   episodes: number;
 }
 

@@ -61,8 +61,15 @@ export class EventDiscord {
 
   private static async renderMessage(event: Event) {
     const series = await event.getSeries();
-    const image = await DiscordHelper.renderImage(series.map((media: SeriesEvent) =>
-      media.details ? media.details.coverImage.extraLarge : ''));
+    let path;
+    if (process.env.NODE_ENV === 'production') {
+      path = './public';
+    } else {
+      path = './client/public';
+    }
+    const image = await DiscordHelper.renderImage(
+      event.image ? [path + event.image] : series.map((media: SeriesEvent) =>
+        media.details ? media.details.image : ''));
 
     const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/schedule');
@@ -70,7 +77,7 @@ export class EventDiscord {
     embed.attachFiles([
       new MessageAttachment(await image.getBufferAsync(Jimp.MIME_PNG), 'image.png')]);
     embed.addField('Time', '```md\n' + moment(event.start).utc()
-      .format('< ddd DD of MMM [at] HH:mm')
+        .format('< ddd DD of MMM [at] HH:mm')
       + moment(event.end).utc().format(' — HH:mm > UTC') + '\n```');
     const streamer = await event.$get('streamer');
     if (streamer) {
@@ -87,7 +94,7 @@ export class EventDiscord {
 
     for (const media of series) {
       if (media.details) {
-        const title = '**[' + media.details.title.userPreferred + '](' + media.details.siteUrl + '): Ep ' +
+        const title = '**[' + media.details.title + '](' + media.details.siteUrl + '): Ep ' +
           media.episode + (media.episodes > 1 ? '-' + (media.episode + media.episodes - 1) : '') + '**\n';
         const description = DiscordHelper.wrapText(media.details.description, limit - title.length);
         embed.addField('-', title + description);

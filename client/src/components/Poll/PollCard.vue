@@ -132,7 +132,7 @@ export default class PollCard extends Vue {
         if (option.content) {
           const title = (option.content as Series).title;
           if (title) {
-            return title.english || title.romaji;
+            return title;
           }
           return "";
         }

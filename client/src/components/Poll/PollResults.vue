@@ -52,7 +52,7 @@ export default class PollResults extends Vue {
         switch (option.type) {
           case PollOptionType.Series:
             series = option.content as Series;
-            return series.title.english || series.title.romaji;
+            return series.title;
           default:
             return option.content;
         }

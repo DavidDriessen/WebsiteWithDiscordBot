@@ -9,9 +9,9 @@
           <v-row>
             <v-chip>
               <v-avatar left>
-                <img :src="item.coverImage.medium" :alt="item.title.english" />
+                <img :src="item.image" :alt="item.title" />
               </v-avatar>
-              {{ item.title.english ? item.title.english : item.title.romaji }}
+              {{ item.title }}
               <v-btn @click="value.splice(index, 1)" icon>
                 <v-icon>fas fa-times-circle</v-icon>
               </v-btn>
