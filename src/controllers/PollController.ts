@@ -47,7 +47,7 @@ export class PollController {
   @Post('vote')
   @Middleware(JWT())
   private async vote(req: ISecureRequest, res: Response) {
-    const option = await PollOption.findByPk(req.body.id, {include: ['poll']});
+    const option = await PollOption.findByPk(req.body.option, {include: ['poll']});
     if (option) {
       const ballot = (await Ballot.findOrCreate({
         where: {userId: req.payload.user.id, pollId: option.poll.id},
@@ -55,10 +55,10 @@ export class PollController {
       if (ballot) {
         const vote = await PollVote.findOrCreate({
           where: {ballot: ballot.id, option: option.id},
-          defaults: {choice: 1},
+          defaults: {choice: req.body.choice},
         });
         if (!vote[1]) {
-          vote[0].choice = vote[0].choice > 0 ? 0 : 2;
+          vote[0].choice = req.body.choice;
           vote[0].save();
         }
         if (ballot.discordMessageID) {

@@ -63,7 +63,7 @@ export class Poll extends Model<Poll> {
           include: ['@all'],
           exclude: ['@fk', '@auto'],
           postSerialize:
-            (serialized: { id: number, votes: number[], voted: boolean }, original: PollOption) => {
+            (serialized: { id: number, votes: number[], voted: number }, original: PollOption) => {
               if (user) {
                 if (user.role === 'Admin') {
                   serialized.id = original.id;
@@ -77,7 +77,9 @@ export class Poll extends Model<Poll> {
                 }
                 if (original.ballots) {
                   const ballot = original.ballots.find((b) => b.user.id === user.id);
-                  serialized.voted = !!ballot && !!ballot.PollVote && ballot.PollVote.choice > 0;
+                  if (ballot && ballot.PollVote) {
+                    serialized.voted = ballot.PollVote.choice;
+                  }
                 }
               }
               return serialized;
