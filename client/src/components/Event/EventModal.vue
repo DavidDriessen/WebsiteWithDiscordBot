@@ -183,11 +183,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import axios from "../../plugins/axios";
-import { Event, Series, EventSeries, User } from "@/types";
+import { Event, User } from "@/types";
 import draggable from "vuedraggable";
-import moment, { Moment } from "moment";
+import moment from "moment";
 import { cloneDeep } from "lodash";
 import AnimeSelector from "@/components/AnimeSelector/Event.vue";
 import EventCardImage from "@/components/Event/EventCardImage.vue";

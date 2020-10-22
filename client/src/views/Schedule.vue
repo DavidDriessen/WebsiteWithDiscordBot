@@ -27,7 +27,6 @@
           <event-card
             v-for="(event, index) of items"
             :key="index"
-            :cols="chunkEvent / 12"
             :event.sync="event"
             :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
             :history="history"

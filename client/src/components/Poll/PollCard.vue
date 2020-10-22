@@ -26,8 +26,11 @@
             <v-list>
               <v-list-item v-for="option in poll.options" :key="option.id">
                 <v-menu>
-                  <template v-slot:activator="{ on }">
-                    <v-chip :color="voteToColor(option.voted)" v-on="on">
+                  <template v-slot:activator="{ onInterest }">
+                    <v-chip
+                      :color="voteToColor(option.voted)"
+                      v-on="onInterest"
+                    >
                       {{ getContent(option) }}
                     </v-chip>
                   </template>
