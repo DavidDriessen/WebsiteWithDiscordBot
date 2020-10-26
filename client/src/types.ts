@@ -68,5 +68,5 @@ export interface PollOption {
   content: number | string | Series | undefined;
   type: PollOptionType;
   votes: number[];
-  voted?: boolean;
+  voted?: number;
 }

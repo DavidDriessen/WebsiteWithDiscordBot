@@ -9,7 +9,6 @@
     "build-server": "rimraf ./build && tsc",
     "build": "node rimraf ./build && tsc && npm run build --prefix client -- --dest ../build/public",
     "start": "forever --minUptime 600000 --spinSleepTime 60000 ./start.js",
-    "migrate": "node src/database/migrate.js",
     "addmodel": "npx sequelize-cli model:generate --config src/config/database.json --migrations-path src/database/migrations --models-path src/database/models --name "
   },
   "author": "DavidDual",
