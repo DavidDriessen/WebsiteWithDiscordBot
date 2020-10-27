@@ -40,6 +40,7 @@ export interface Event {
   title: string;
   description?: string;
   image?: string;
+  discordImage?: string;
   start: Moment;
   end: Moment;
   series: EventSeries[];

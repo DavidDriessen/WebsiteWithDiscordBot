@@ -24,7 +24,10 @@ export class Event extends Model<Event> {
   public description!: string;
 
   @Column
-  public image!: string;
+  public image?: string;
+
+  @Column
+  public discordImage?: string;
 
   public streamerId!: number;
 
@@ -67,7 +70,7 @@ export class Event extends Model<Event> {
 
   public serialize(user: User | null) {
     const scheme = {
-      include: ['@pk', 'title', 'description', 'start', 'end', 'image', 'roomcode', 'series', 'streamer', 'attending', 'attendees'],
+      include: ['@pk', 'title', 'description', 'start', 'end', 'image', 'discordImage', 'roomcode', 'series', 'streamer', 'attending', 'attendees'],
       assoc: {
         series: {
           include: ['seriesId', 'episode', 'episodes'],

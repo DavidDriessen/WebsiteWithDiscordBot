@@ -68,7 +68,7 @@ export class EventDiscord {
       path = './client/public';
     }
     const image = await DiscordHelper.renderImage(
-      event.image ? [path + event.image] : series.map((media: SeriesEvent) =>
+      event.discordImage ? [path + event.discordImage] : series.map((media: SeriesEvent) =>
         media.details ? media.details.image : ''));
 
     const embed = new MessageEmbed();

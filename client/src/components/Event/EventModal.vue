@@ -45,6 +45,7 @@
         <v-tabs v-model="tab">
           <v-tab>Details</v-tab>
           <v-tab>Image</v-tab>
+          <v-tab>Discord image</v-tab>
           <v-tab>Streamer</v-tab>
           <v-tab>Series</v-tab>
         </v-tabs>
@@ -121,6 +122,30 @@
                     :series="event.series"
                     :image="imagePreview"
                   />
+                </v-col>
+                <v-col>
+                  <v-btn @click="resetImage">
+                    Reset default
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-tab-item>
+          <v-tab-item>
+            <v-card-text>
+              <v-row>
+                <v-col>
+                  <v-file-input v-model="discordImage" />
+                </v-col>
+              </v-row>
+              <v-row v-if="discordImagePreview">
+                <v-col>
+                  <v-img :src="discordImagePreview" width="350" />
+                </v-col>
+                <v-col>
+                  <v-btn @click="resetdiscordImage">
+                    Reset default
+                  </v-btn>
                 </v-col>
               </v-row>
             </v-card-text>
@@ -213,12 +238,30 @@ export default class EventModal extends Vue {
   tab = "details";
   error = "";
   image: File | null = null;
+  discordImage: File | null = null;
 
   get imagePreview() {
     if (this.image) {
       return URL.createObjectURL(this.image);
     }
     return this.event.image;
+  }
+
+  resetImage(){
+    this.image = null;
+    this.event.image = '';
+  }
+
+  get discordImagePreview() {
+    if (this.discordImage) {
+      return URL.createObjectURL(this.discordImage);
+    }
+    return this.event.discordImage;
+  }
+
+  resetdiscordImage(){
+    this.discordImage = null;
+    this.event.discordImage = '';
   }
 
   mounted() {
@@ -326,9 +369,10 @@ export default class EventModal extends Vue {
   save() {
     if (this.form.validate()) {
       this.loading = true;
-      const data: { json: string; image: File | null } = {
+      const data: { json: string; image: File | null; test: File | null; } = {
         json: JSON.stringify(this.event),
-        image: this.image
+        image: this.image,
+        discordImage: this.discordImage
       };
       if (this.eventToEdit) {
         axios

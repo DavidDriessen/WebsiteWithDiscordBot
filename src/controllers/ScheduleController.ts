@@ -98,7 +98,7 @@ export class ScheduleController {
   @Put('')
   @Middleware(JWT())
   @isAdmin
-  @Middleware(upload.single('image'))
+  @Middleware(upload.fields([{name: 'image', maxCount: 1}, {name: 'discordImage', maxCount: 1}]))
   private async addEvent(req: ISecureRequest, res: Response) {
     if (req.body.json) {
       req.body = JSON.parse(req.body.json);
@@ -115,9 +115,14 @@ export class ScheduleController {
         start: req.body.start,
         end: req.body.end,
         image: req.body.image,
+        discordImage: req.body.discordImage,
       } as Event;
-      if (req.file) {
-        data.image = '/images/' + req.file.filename;
+      const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
+      if (files.image && files.image.length > 0) {
+        data.image = '/images/' + files.image[0].filename;
+      }
+      if (files.discordImage && files.discordImage.length > 0) {
+        data.discordImage = '/images/' + files.discordImage[0].filename;
       }
       if (req.body.series) {
         data.series = req.body.series.map((series: SeriesEvent, index: number) => {
@@ -142,7 +147,7 @@ export class ScheduleController {
   @Post('')
   @Middleware(JWT())
   @isAdmin
-  @Middleware(upload.single('image'))
+  @Middleware(upload.fields([{name: 'image', maxCount: 1}, {name: 'discordImage', maxCount: 1}]))
   private async editEvent(req: ISecureRequest, res: Response) {
     if (req.body.json) {
       req.body = JSON.parse(req.body.json);
@@ -160,6 +165,7 @@ export class ScheduleController {
       return res.status(200).json({message: 'Event not found'});
     }
     event.image = req.body.image;
+    event.discordImage = req.body.discordImage;
     event.title = req.body.title;
     event.start = req.body.start;
     event.end = req.body.end;
@@ -177,8 +183,12 @@ export class ScheduleController {
           return ss;
         });
     }
-    if (req.file) {
-      event.image = '/images/' + req.file.filename;
+    const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
+    if (files.image && files.image.length > 0) {
+      event.image = '/images/' + files.image[0].filename;
+    }
+    if (files.discordImage && files.discordImage.length > 0) {
+      event.discordImage = '/images/' + files.discordImage[0].filename;
     }
     await event.$set('streamer', streamer);
     return res.status(200)
