@@ -369,7 +369,7 @@ export default class EventModal extends Vue {
   save() {
     if (this.form.validate()) {
       this.loading = true;
-      const data: { json: string; image: File | null; test: File | null; } = {
+      const data: { json: string; image: File | null; discordImage: File | null; } = {
         json: JSON.stringify(this.event),
         image: this.image,
         discordImage: this.discordImage
