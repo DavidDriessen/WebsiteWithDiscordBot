@@ -247,9 +247,9 @@ export default class EventModal extends Vue {
     return this.event.image;
   }
 
-  resetImage(){
+  resetImage() {
     this.image = null;
-    this.event.image = '';
+    this.event.image = "";
   }
 
   get discordImagePreview() {
@@ -259,9 +259,9 @@ export default class EventModal extends Vue {
     return this.event.discordImage;
   }
 
-  resetdiscordImage(){
+  resetdiscordImage() {
     this.discordImage = null;
-    this.event.discordImage = '';
+    this.event.discordImage = "";
   }
 
   mounted() {
@@ -369,7 +369,11 @@ export default class EventModal extends Vue {
   save() {
     if (this.form.validate()) {
       this.loading = true;
-      const data: { json: string; image: File | null; discordImage: File | null; } = {
+      const data: {
+        json: string;
+        image: File | null;
+        discordImage: File | null;
+      } = {
         json: JSON.stringify(this.event),
         image: this.image,
         discordImage: this.discordImage
