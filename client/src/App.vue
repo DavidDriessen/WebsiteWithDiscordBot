@@ -30,6 +30,9 @@
         <span v-else>Dark Mode Off</span>
       </v-tooltip>
       <v-toolbar-items v-if="!mobile">
+        <v-btn to="/media" text v-if="isAdmin">
+          <span class="mr-2">Medias</span>
+        </v-btn>
         <v-btn to="/polls" text>
           <span class="mr-2">Polls</span>
         </v-btn>

@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid v-resize="onResize">
+  <v-container v-resize="onResize">
     <v-overlay :value="loading" absolute>
       <v-progress-circular indeterminate size="128">
         <h1>Loading</h1>

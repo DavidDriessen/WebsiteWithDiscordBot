@@ -39,6 +39,11 @@ const routes = [
     path: "/polls",
     name: "polls",
     component: () => import("../views/Poll.vue")
+  },
+  {
+    path: "/media",
+    name: "polls",
+    component: () => import("../views/Media.vue")
   }
 ];
 

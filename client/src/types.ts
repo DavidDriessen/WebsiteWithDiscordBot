@@ -1,14 +1,5 @@
 import { Moment } from "moment";
 
-// export interface Series {
-//   id: number;
-//   idMal: number;
-//   title: { english: string; romaji: string; userPreferred: string };
-//   description: string;
-//   siteUrl: string;
-//   coverImage: { extraLarge: string; medium: string };
-//   episodes: number;
-// }
 export interface Series {
   id: number;
   aniId: number;
@@ -57,6 +48,17 @@ export interface Poll {
   description?: string;
   end: Moment;
   options: PollOption[];
+}
+
+export interface Media {
+  id: number;
+  aniId: number;
+  malId: number;
+  title: string;
+  description: string;
+  siteUrl: string;
+  image: string;
+  episodes: number;
 }
 
 export enum PollOptionType {
