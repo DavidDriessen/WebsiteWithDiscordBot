@@ -46,9 +46,9 @@ export class AuthController {
         }).then((token) => {
             oauth.getUser(token.access_token).then(async (discordUser) => {
                 try {
-                    const [user, newUser] = await User.get(discordUser);
+                    const user = await User.get(discordUser);
                     const jwtStr = JwtManager.jwt({
-                        user,
+                        user: user[0],
                         discord: {
                             token,
                             user: discordUser,
@@ -56,8 +56,8 @@ export class AuthController {
                     });
                     res.status(200).json({
                         jwt: jwtStr,
-                        user,
-                        newUser,
+                        user: user[0],
+                        newUser: user[1],
                     });
                 } catch (e) {
                     res.status(500).send('Database error');
