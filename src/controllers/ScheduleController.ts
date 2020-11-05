@@ -39,12 +39,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({storage});
 
-// tslint:disable-next-line:no-var-requires
-const guard = require('express-jwt-permissions')({
-  requestProperty: 'payload.user',
-  permissionsProperty: 'permissions',
-});
-
 @Controller('api/schedule')
 export class ScheduleController {
 
@@ -152,8 +146,7 @@ export class ScheduleController {
 
   @Post('')
   @Middleware(JWT())
-  @Middleware(guard.check('admin'))
-  // @isAdmin
+  @isAdmin
   @Middleware(upload.fields([{name: 'image', maxCount: 1}, {name: 'discordImage', maxCount: 1}]))
   private async editEvent(req: ISecureRequest, res: Response) {
     if (req.body.json) {

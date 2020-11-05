@@ -1,4 +1,4 @@
-import {BelongsToMany, Column, DataType, HasMany, Model, Table} from 'sequelize-typescript';
+import {BelongsToMany, Column, HasMany, Model, Table} from 'sequelize-typescript';
 import {PartialUser, User as DiscordUser} from 'discord.js';
 import Attendee from './Attendee';
 import Event from './Event';
@@ -45,9 +45,6 @@ export class User extends Model<User> {
 
   @BelongsToMany(() => Event, () => Attendee)
   public events!: Event[];
-
-  @Column(DataType.JSON)
-  public permissions!: string[];
 
   public static async get(discordUser: IUser | DiscordUser | PartialUser) {
     const res = await User.findOrCreate({
