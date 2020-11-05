@@ -69,15 +69,15 @@
             <v-card-actions>
               <v-spacer />
               <v-btn color="blue" text @click="deleteDialog = false"
-                >No, don't</v-btn
-              >
+                >No, don't
+              </v-btn>
               <v-btn
                 color="red"
                 text
                 @click="deleteEvent()"
                 :loading="deleteLoading"
-                >Yes, please</v-btn
-              >
+                >Yes, please
+              </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -128,23 +128,26 @@ export default class EventCard extends Vue {
       return "Now";
     } else if (
       this.event.start.isBetween(
-        this.intervals.now,
-        this.intervals.now.clone().add(1, "day")
+        this.intervals.now.clone().startOf("day"),
+        this.intervals.now.clone().endOf("day")
       )
     ) {
       return "Today at " + this.event.start.format(timeFormat);
     } else if (
       this.event.start.isBetween(
-        this.intervals.now,
-        this.intervals.now.clone().add(2, "day")
+        this.intervals.now.clone().startOf("day"),
+        this.intervals.now
+          .clone()
+          .add(1, "day")
+          .endOf("day")
       ) &&
       (!this.small || !this.ampm)
     ) {
       return "Tomorrow at " + this.event.start.format(timeFormat);
     } else if (
       this.event.start.isBetween(
-        this.intervals.now,
-        this.intervals.now.clone().add(1, "week")
+        this.intervals.now.clone().startOf("day"),
+        this.intervals.now.clone().add(1, "week").startOf("day")
       )
     ) {
       if (this.small) {
