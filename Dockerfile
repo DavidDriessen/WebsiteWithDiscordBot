@@ -37,4 +37,4 @@ RUN mkdir ./public/images
 EXPOSE 3000
 ENV NODE_ENV production
 
-CMD ["forever --minUptime 1 --spinSleepTime 60000 ./start.js"]
+CMD ["npm run start"]
