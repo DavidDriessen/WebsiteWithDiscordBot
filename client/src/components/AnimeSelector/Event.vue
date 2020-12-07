@@ -97,19 +97,21 @@ export default class AnimeSelectorEvent extends Vue {
     } else if (!media.episodes && event[0] > 30) {
       event[0] = 30;
     }
-    if (media.EventMedia.episode !== event[0]) {
-      if (media.EventMedia.episodes !== event[1] - media.EventMedia.episode) {
+    if (media.EventMedia) {
+      if (media.EventMedia.episode !== event[0]) {
+        if (media.EventMedia.episodes !== event[1] - media.EventMedia.episode) {
+          media.EventMedia.episodes = event[1] - event[0];
+        }
+        media.EventMedia.episode = event[0];
+      } else {
         media.EventMedia.episodes = event[1] - event[0];
+        if (media.EventMedia.episodes <= 0) {
+          media.EventMedia.episodes = 1;
+        }
       }
-      media.EventMedia.episode = event[0];
-    } else {
-      media.EventMedia.episodes = event[1] - event[0];
-      if (media.EventMedia.episodes <= 0) {
-        media.EventMedia.episodes = 1;
-      }
+      event[0] = media.EventMedia.episode;
+      event[1] = media.EventMedia.episode + media.EventMedia.episodes;
     }
-    event[0] = media.EventMedia.episode;
-    event[1] = media.EventMedia.episode + media.EventMedia.episodes;
   }
 }
 </script>

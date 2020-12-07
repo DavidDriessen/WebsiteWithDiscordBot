@@ -18,7 +18,7 @@ export default {
     }
   },
   mounted() {
-    this.render();
+    setTimeout(() => this.render(), 200);
   },
   watch: {
     mode() {

@@ -65,7 +65,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { Event, EventSeries, Series } from "@/types";
+import { Event } from "@/types";
 import EventModal from "@/components/Event/EventModal.vue";
 import EventCard from "@/components/Event/EventCard.vue";
 import { mapPreferences } from "vue-preferences";
@@ -83,9 +83,6 @@ import { mapGetters } from "vuex";
 export default class Schedule extends Vue {
   ampm!: boolean;
   events: Event[] = [];
-  seriesCache: {
-    [k: number]: Series;
-  } = [];
   loading = false;
   chunkSize = 3;
   width = 350;

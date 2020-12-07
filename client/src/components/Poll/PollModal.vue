@@ -95,7 +95,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { Poll, PollOption } from "@/types";
+import { Poll } from "@/types";
 import AnimeSelector from "../AnimeSelector/Poll.vue";
 import axios from "@/plugins/axios";
 import { cloneDeep } from "lodash";

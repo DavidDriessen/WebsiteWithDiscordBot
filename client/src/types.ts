@@ -66,7 +66,7 @@ export interface Media {
   trailer: string;
   episodes: number;
   references: MediaReference[];
-  EventMedia: { episode: number; episodes: number; order: number };
+  EventMedia?: { episode: number; episodes: number; order: number };
 }
 
 export interface PollOption {

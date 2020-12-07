@@ -116,7 +116,8 @@ export default class MediaList extends Vue {
   }
 
   mounted() {
-    if (this.$route.params.id > 0) this.getMedia(Number(this.$route.params.id));
+    if (Number(this.$route.params.id) > 0)
+      this.getMedia(Number(this.$route.params.id));
   }
 
   getMedia(id: number) {
