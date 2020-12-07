@@ -8,8 +8,9 @@ import Poll from '../database/models/Poll';
 import PollOption from '../database/models/PollOption';
 import Ballot from '../database/models/Ballot';
 import {BallotDiscord} from '../discord/BallotDiscord';
-import {JWT} from '../helpers/Website';
+import {JWT, upload} from '../helpers/Website';
 import PollVote from '../database/models/PollVote';
+import Media from "../database/models/Media";
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
@@ -36,12 +37,12 @@ export class PollController {
     const polls = await Poll.findAll({
       include: [{
         association: 'options',
-        include: [{association: 'ballots', include: ['user']}],
+        include: [{association: 'ballots', include: ['user']}, 'media'],
       }],
       where, order,
     });
-    // res.status(200).json(polls);
-    res.status(200).json(polls.map((poll) => poll.serialize(req.payload?.user)));
+    res.status(200).json(polls);
+    // res.status(200).json(polls.map((poll) => poll.serialize(req.payload?.user)));
   }
 
   @Post('vote')
@@ -73,9 +74,16 @@ export class PollController {
   @Put('')
   @Middleware(JWT())
   @isAdmin
+  @Middleware(upload.fields([{name: 'image', maxCount: 1}]))
   private async addPoll(req: ISecureRequest, res: Response) {
+    if (req.body.json) {
+      req.body = JSON.parse(req.body.json);
+    }
+    const medias: Array<Media | undefined> = [];
     if (req.body.options) {
       req.body.options = req.body.options.map((option: PollOption, index: number) => {
+        medias.push(option.media);
+        option.media = undefined;
         option.order = index;
         return option;
       });
@@ -83,6 +91,12 @@ export class PollController {
     const poll = await Poll.create(req.body, {
       include: [{association: 'options', include: ['ballots']}],
     });
+    for (let i = 0; i < poll.options.length; i++) {
+      const m = medias[i];
+      if (m) {
+        poll.options[i].$set('media', m.id);
+      }
+    }
     return res.status(200).json(poll.serialize(req.payload?.user));
   }
 

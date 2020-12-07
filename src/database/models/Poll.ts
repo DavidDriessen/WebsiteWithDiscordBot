@@ -15,13 +15,15 @@ import User from './User';
 import {PollDiscord} from '../../discord/PollDiscord';
 import {Order} from 'sequelize/types/lib/model';
 import Ballot from './Ballot';
-import Media from './Media';
 
 @Table
 export class Poll extends Model<Poll> {
 
   @Column
   public title!: string;
+
+  @Column
+  public image!: string;
 
   @Column
   public description!: string;
@@ -37,22 +39,6 @@ export class Poll extends Model<Poll> {
 
   @HasMany(() => Ballot, 'pollId')
   public ballots!: Ballot[];
-
-  public async fetchSeries() {
-    const series = await SeriesController
-      .getSeriesById(this.options.filter((o) => o.type === 'Series')
-        .map((o) => Number(o.content)) || []);
-    if (series.length === 0) {
-      return false;
-    }
-    for (const option of this.options) {
-      if (option.type === 'Series') {
-        option.media = series
-          .find((m: Media) => m.id === Number(option.content));
-      }
-    }
-    return true;
-  }
 
   public serialize(user: User | undefined) {
     const scheme = {
@@ -103,7 +89,7 @@ export class Poll extends Model<Poll> {
 
   @BeforeCreate
   public static async postMessage(poll: Poll) {
-    await PollDiscord.addPoll(poll);
+    // await PollDiscord.addPoll(poll);
   }
 
   @BeforeUpdate

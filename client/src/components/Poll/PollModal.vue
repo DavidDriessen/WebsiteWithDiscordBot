@@ -31,7 +31,7 @@
       <v-form ref="form" lazy-validation @submit="save()">
         <v-tabs v-model="tab">
           <v-tab>Details</v-tab>
-          <v-tab>Series options</v-tab>
+          <v-tab>Options</v-tab>
         </v-tabs>
         <v-tabs-items v-model="tab">
           <v-tab-item>
@@ -95,11 +95,12 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { Poll, PollOption, PollOptionType } from "@/types";
+import { Poll, PollOption } from "@/types";
 import AnimeSelector from "../AnimeSelector/Poll.vue";
 import axios from "@/plugins/axios";
 import { cloneDeep } from "lodash";
 import moment from "moment";
+import { serialize } from "object-to-formdata";
 
 @Component({
   components: { AnimeSelector }
@@ -145,27 +146,13 @@ export default class PollModal extends Vue {
     this.$emit("close");
   }
 
-  addSerieOption() {
-    this.poll.options.push({
-      type: PollOptionType.Series
-    } as PollOption);
-  }
-
   save() {
     if (this.form.validate()) {
-      const poll = cloneDeep(this.poll);
-      for (const option of poll.options) {
-        if (
-          option.type == PollOptionType.Series &&
-          typeof option.content == "object"
-        ) {
-          option.content = option.content.aniId;
-        }
-      }
+      const poll = { json: JSON.stringify(this.poll) };
       this.loading = true;
       if (this.pollToEdit) {
         axios
-          .post("/api/polls", poll, {
+          .post("/api/polls", serialize(poll), {
             headers: {
               Authorization: `Bearer ${localStorage.token}`
             }
@@ -177,7 +164,7 @@ export default class PollModal extends Vue {
           });
       } else {
         axios
-          .put("/api/polls", poll, {
+          .put("/api/polls", serialize(poll), {
             headers: {
               Authorization: `Bearer ${localStorage.token}`
             }

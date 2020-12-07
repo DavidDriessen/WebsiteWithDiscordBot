@@ -69,15 +69,10 @@ export interface Media {
   EventMedia: { episode: number; episodes: number; order: number };
 }
 
-export enum PollOptionType {
-  General = "General",
-  Series = "Series"
-}
-
 export interface PollOption {
   id: number;
-  content: number | string | Series | undefined;
-  type: PollOptionType;
+  content: string | undefined;
+  media?: Media;
   votes: number[];
   voted?: number;
 }

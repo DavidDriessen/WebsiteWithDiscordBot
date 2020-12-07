@@ -71,10 +71,9 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { Poll, PollOptionType } from "@/types";
+import { Poll } from "@/types";
 import PollCard from "@/components/Poll/PollCard.vue";
 import { mapPreferences } from "vue-preferences";
-import AnimeCache from "@/store/animeCache";
 import axios from "../plugins/axios";
 import moment from "moment";
 import PollModal from "@/components/Poll/PollModal.vue";
@@ -132,16 +131,8 @@ export default class Polls extends Vue {
         for (const poll of polls) {
           if (poll) {
             poll.end = moment(poll.end);
-            if (poll.options) {
-              for (const option of poll.options) {
-                if (option.type == PollOptionType.Series) {
-                  option.content = AnimeCache.getSeries(Number(option.content));
-                }
-              }
-            }
           }
         }
-        await AnimeCache.fetch();
         this.polls = polls;
         this.loading = false;
       });

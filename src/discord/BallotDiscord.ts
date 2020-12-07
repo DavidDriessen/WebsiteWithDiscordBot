@@ -50,13 +50,14 @@ export class BallotDiscord {
 
   public static async voteChoice(user: DiscordUser | PartialUser, option: PollOption) {
     const choices = ['💖', '❤️', '🤷', '🚫'];
-    let content;
-    if (option.type === 'Series') {
-      // @ts-ignore
-      content = (await SeriesController.getSeriesById([option.content]))[0].title;
-    } else {
-      content = option.content;
+    let content = '';
+    if (option.media) {
+      content += option.media.title;
     }
+    if (option.content) {
+      content += (option.media ? '\n' : '') + option.content;
+    }
+
     const dm = user.dmChannel || await user.createDM();
     const m = await dm.send('Voting for option: ' + content);
     for (const choice of choices) {
@@ -103,48 +104,20 @@ export class BallotDiscord {
       include: ['options'], order: [['options', 'order', 'asc']],
     });
     if (poll) {
-      await poll.fetchSeries();
       const embed = new MessageEmbed();
       embed.setURL(discordConfig.callbackHost + '/polls');
       embed.setTitle(poll.title);
       let description = poll.description || '';
-
-      let limit = Math.ceil((6000 - poll.title.length - poll.description?.length)
-        / poll.options.length);
-      if (limit > 1024) {
-        limit = 1024;
-      }
-
       for (const [i, option] of poll.options.entries()) {
-        switch (option.type) {
-          case 'Series':
-            if (option.media) {
-              const title = '**[' + option.media.title + '](' + '' + option.media.id + ')** ';
-              const genres = '(' + option.media.genres.join(', ') + ')';
-              description += '\n' + BallotDiscord.options[i] + ' ' + title
-                + '```CSS\n' + genres
-                + this.getVoteText(ballot.options.find((o) => o.id === option.id)) + '```';
-            }
-            break;
-          case 'Time':
-            embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc()
-              .format('< HH:mm >') + ' UTC \n```');
-            break;
-          case 'WeekTime':
-            embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc()
-              .format('< ddd [at] HH:mm >') + ' UTC \n```');
-            break;
-          case 'DateTime':
-            embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc()
-              .format('< ddd DD of MMM [at] HH:mm >') + ' UTC \n```');
-            break;
-          case 'Date':
-            embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc()
-              .format('< ddd DD of MMM >') + ' UTC \n```');
-            break;
-          case 'General':
-          default:
-            embed.addField(BallotDiscord.options[i], DiscordHelper.wrapText(option.content, limit));
+        if (option.media) {
+          const title = '**[' + option.media.title + '](' + '' + option.media.id + ')** ';
+          const genres = '(' + option.media.genres.join(', ') + ')';
+          description += '\n' + BallotDiscord.options[i] + ' ' + title
+            + '```CSS\n' + genres
+            + this.getVoteText(ballot.options.find((o) => o.id === option.id)) + '```';
+        }
+        if (option.content) {
+          description += (option.media ? '\n' : '') + option.content;
         }
       }
       embed.setDescription(description);

@@ -8,37 +8,9 @@ import * as moment from 'moment';
 import {Op} from 'sequelize';
 import User from '../database/models/User';
 import {EventWorker} from '../workers/EventWorker';
-import {JWT} from '../helpers/Website';
-import * as multer from 'multer';
+import {isAdmin, JWT, upload} from '../helpers/Website';
 import Media from '../database/models/Media';
 import {Sequelize} from 'sequelize-typescript';
-
-function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
-  const method = descriptor.value;
-  descriptor.value = (req: ISecureRequest, res: Response) => {
-    if (req.payload.user.role !== 'Admin') {
-      return res.status(403).json({message: 'Permission denied'});
-    }
-    return method(req, res);
-  };
-}
-
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    let path;
-    if (process.env.NODE_ENV === 'production') {
-      path = 'public/images/';
-    } else {
-      path = 'client/public/images/';
-    }
-    cb(null, path);
-  },
-  filename(req, file, cb) {
-    const f = file.originalname.split('.');
-    cb(null, Math.round(Math.random() * 1E9) + '.' + f[f.length - 1]);
-  },
-});
-const upload = multer({storage});
 
 @Controller('api/schedule')
 export class ScheduleController {

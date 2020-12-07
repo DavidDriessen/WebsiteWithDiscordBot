@@ -1,21 +1,25 @@
 <!--suppress HtmlUnknownTarget -->
 <template>
   <v-container>
-    <autocomplete v-model="series" />
-    <draggable v-model="series" handle=".handle">
-      <v-row v-for="(item, index) in series" :key="index">
-        <v-col cols="1"> <v-icon class="handle">fas fa-bars</v-icon> </v-col>
+    <autocomplete :value="media" @input="update" />
+    <v-btn @click="other">Add other</v-btn>
+    <draggable v-model="value" handle=".handle">
+      <v-row v-for="(item, index) in value" :key="index">
+        <v-col cols="1">
+          <v-icon class="handle" style="margin-top: 5px">fas fa-bars</v-icon>
+        </v-col>
         <v-col cols="11">
           <v-row>
-            <v-chip>
+            <v-chip v-if="item.media">
               <v-avatar left>
-                <img :src="item.image" :alt="item.title" />
+                <img :src="item.media.image" :alt="item.media.title" />
               </v-avatar>
-              {{ item.title }}
+              {{ item.media.title }}
               <v-btn @click="value.splice(index, 1)" icon>
                 <v-icon>fas fa-times-circle</v-icon>
               </v-btn>
             </v-chip>
+            <v-text-field v-if="!item.media" v-model="item.content" dense />
           </v-row>
         </v-col>
       </v-row>
@@ -25,7 +29,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { PollOption, PollOptionType, Series } from "@/types";
+import { Media, PollOption } from "@/types";
 import draggable from "vuedraggable";
 import Autocomplete from "@/components/AnimeSelector/Autocomplete.vue";
 
@@ -34,34 +38,19 @@ import Autocomplete from "@/components/AnimeSelector/Autocomplete.vue";
 })
 export default class AnimeSelectorPoll extends Vue {
   @Prop() value!: PollOption[];
+  media = [];
 
-  get series() {
-    return (this.value as PollOption[])
-      .filter((series: PollOption) => series.type === PollOptionType.Series)
-      .map((series: PollOption) => {
-        return series.content as Series;
-      });
+  update(media: Media[]) {
+    this.media.splice(0, this.media.length);
+    const newValue = this.value;
+    newValue.push({ content: "", media: media[0] } as PollOption);
+    this.$emit("input", newValue);
   }
 
-  set series(series: Series[]) {
-    // eslint-disable-next-line no-case-declarations
-    const polls: PollOption[] = this.value.filter(
-      v => v.type != PollOptionType.Series
-    );
-    const seriesOptions = this.value.filter(
-      v => v.type == PollOptionType.Series
-    );
-    for (const s of series) {
-      let poll = seriesOptions.find(v => (v.content as Series) == s);
-      if (!poll) {
-        poll = {
-          type: PollOptionType.Series,
-          content: s
-        } as PollOption;
-      }
-      polls.push(poll);
-    }
-    this.$emit("input", polls);
+  other() {
+    const newValue = this.value;
+    newValue.push({ content: "" } as PollOption);
+    this.$emit("input", newValue);
   }
 }
 </script>

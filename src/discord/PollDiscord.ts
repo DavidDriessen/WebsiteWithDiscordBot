@@ -76,45 +76,19 @@ export class PollDiscord {
 
   private static async renderMessage(poll: Poll) {
     const pollRole = this.getChannel().guild.roles.cache.find((role) => role.name === 'Polls');
-    await poll.fetchSeries();
     const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/polls');
     embed.setTitle(poll.title);
     let description = '<@&' + pollRole?.id + '> ' + poll.description || '';
-
-    let limit = Math.ceil((6000 - poll.title.length - poll.description?.length)
-      / poll.options.length);
-    if (limit > 1024) {
-      limit = 1024;
-    }
-
     for (const [i, option] of poll.options.entries()) {
-      switch (option.type) {
-        case 'Series':
-          if (option.media) {
-            const title = '**[' + option.media.title + '](' + '' + option.media.id + ')** ';
-            // const description = DiscordHelper.wrapText(option.details.description,
-            //   limit - title.length);
-            const genres = '(' + option.media.genres.join(', ') + ')';
-            description += '\n' + BallotDiscord.options[i] + ' ' + title + genres;
-          }
-          break;
-        case 'Time':
-          embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc().format('< HH:mm >') + ' UTC \n```');
-          break;
-        case 'WeekTime':
-          embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc().format('< ddd [at] HH:mm >') + ' UTC \n```');
-          break;
-        case 'DateTime':
-          embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc()
-            .format('< ddd DD of MMM [at] HH:mm >') + ' UTC \n```');
-          break;
-        case 'Date':
-          embed.addField(BallotDiscord.options[i], '```md\n' + moment(option.content).utc().format('< ddd DD of MMM >') + ' UTC \n```');
-          break;
-        case 'General':
-        default:
-          embed.addField(BallotDiscord.options[i], DiscordHelper.wrapText(option.content, limit));
+      description += '\n' + BallotDiscord.options[i];
+      if (option.media) {
+        const title = '**[' + option.media.title + '](' + '' + option.media.id + ')** ';
+        const genres = '(' + option.media.genres.join(', ') + ')';
+        description += ' ' + title + genres;
+      }
+      if (option.content) {
+        description += (option.media ? '\n' : '') + option.content;
       }
     }
     embed.setDescription(description);

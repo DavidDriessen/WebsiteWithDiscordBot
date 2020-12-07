@@ -1,8 +1,8 @@
 import {
+  AllowNull,
   BelongsTo,
   BelongsToMany,
-  Column,
-  Default,
+  Column, ForeignKey,
   Model,
   Table,
 } from 'sequelize-typescript';
@@ -12,17 +12,26 @@ import {DataTypes} from 'sequelize';
 import Ballot from './Ballot';
 import Media from './Media';
 
-export type PollOptionTypes = 'Series' | 'Time' | 'Date' | 'DateTime' | 'WeekTime' | 'General';
-
 @Table
 export class PollOption extends Model<PollOption> {
 
   @BelongsTo(() => Poll, 'pollId')
   public poll!: Poll;
 
-  @Default('General')
-  @Column(DataTypes.ENUM('Series', 'Time', 'Date', 'DateTime', 'WeekTime', 'General'))
-  public type!: PollOptionTypes;
+  @BelongsTo(() => Media, 'mediaId')
+  public media?: Media;
+
+  @AllowNull
+  @Column(DataTypes.TIME)
+  public time?: Date;
+
+  @AllowNull
+  @Column
+  public weekDay?: number;
+
+  @AllowNull
+  @Column(DataTypes.DATE)
+  public date?: Date;
 
   @Column
   public content!: string;
@@ -34,8 +43,6 @@ export class PollOption extends Model<PollOption> {
   public ballots!: Ballot[];
 
   public voted?: boolean;
-
-  public media?: Media;
 
   // tslint:disable-next-line:variable-name
   public PollVote?: PollVote;

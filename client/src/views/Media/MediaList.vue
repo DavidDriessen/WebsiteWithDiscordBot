@@ -28,7 +28,6 @@
 import { Component, Vue } from "vue-property-decorator";
 import { Media } from "@/types";
 import { mapPreferences } from "vue-preferences";
-import AnimeCache from "@/store/animeCache";
 import axios from "../../plugins/axios";
 import { mapGetters } from "vuex";
 import MediaCard from "@/components/Media/MediaCard.vue";
@@ -60,7 +59,6 @@ export default class MediaList extends Vue {
           : {}
       })
       .then(async response => {
-        await AnimeCache.fetch();
         this.medias = response.data;
         this.loading = false;
       });

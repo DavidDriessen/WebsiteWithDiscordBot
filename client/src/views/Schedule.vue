@@ -69,7 +69,6 @@ import { Event, EventSeries, Series } from "@/types";
 import EventModal from "@/components/Event/EventModal.vue";
 import EventCard from "@/components/Event/EventCard.vue";
 import { mapPreferences } from "vue-preferences";
-import AnimeCache from "@/store/animeCache";
 import axios from "../plugins/axios";
 import moment from "moment";
 import { mapGetters } from "vuex";
@@ -129,16 +128,8 @@ export default class Schedule extends Vue {
           if (event) {
             event.start = moment(event.start);
             event.end = moment(event.end);
-            const series: EventSeries[] | undefined = event.series;
-            if (series) {
-              for (let i = 0; i < series.length; i++) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                series[i].details = AnimeCache.getSeries(series[i].seriesId);
-              }
-            }
           }
         }
-        await AnimeCache.fetch();
         this.events = events;
         this.loading = false;
       });

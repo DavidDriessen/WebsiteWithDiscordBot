@@ -31,7 +31,7 @@
                       :color="voteToColor(option.voted)"
                       v-on="onInterest"
                     >
-                      {{ getContent(option) }}
+                      {{ option.media ? option.media.title : option.content }}
                     </v-chip>
                   </template>
                   <v-list>
@@ -103,7 +103,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import PollModal from "@/components/Poll/PollModal.vue";
-import { Poll, PollOption, PollOptionType, Series } from "@/types";
+import { Poll, PollOption } from "@/types";
 import { mapGetters } from "vuex";
 import axios from "@/plugins/axios";
 import PollResults from "@/components/Poll/PollResults.vue";
@@ -159,23 +159,6 @@ export default class PollCard extends Vue {
       .finally(() => {
         this.deleteLoading = false;
       });
-  }
-
-  getContent(option: PollOption) {
-    switch (option.type) {
-      case PollOptionType.Series:
-        if (option.content) {
-          const title = (option.content as Series).title;
-          if (title) {
-            return title;
-          }
-          return "";
-        }
-        break;
-      default:
-        return option.content;
-    }
-    return "Error loading content.";
   }
 
   vote(option: PollOption, choice: number) {

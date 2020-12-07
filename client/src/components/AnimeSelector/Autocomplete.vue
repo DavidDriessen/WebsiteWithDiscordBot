@@ -2,7 +2,7 @@
 <template>
   <v-container>
     <v-autocomplete
-      :value="value"
+      :value.sync="value"
       @input="update"
       :items.sync="items"
       :loading="loading"
@@ -71,6 +71,7 @@ export default class Autocomplete extends Vue {
 
   customFilter(media: Media, search: string) {
     return (
+      search ||
       media.title.toLowerCase().search(search.toLowerCase()) >= 0 ||
       media.description.toLowerCase().search(search.toLowerCase()) >= 0
     );
