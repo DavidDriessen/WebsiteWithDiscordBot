@@ -6,7 +6,6 @@ import * as discordConfig from '../config/discord.json';
 import * as moment from 'moment';
 import {client} from '../start';
 import {Order} from 'sequelize/types/lib/model';
-import {DiscordHelper} from '../helpers/Discord';
 import {BallotDiscord} from './BallotDiscord';
 import {CheckRole} from './Guards';
 import Ballot from '../database/models/Ballot';
@@ -81,11 +80,13 @@ export class PollDiscord {
     embed.setTitle(poll.title);
     let description = '<@&' + pollRole?.id + '> ' + poll.description || '';
     for (const [i, option] of poll.options.entries()) {
-      description += '\n' + BallotDiscord.options[i];
+      description += '\n' + BallotDiscord.options[i] + ' ';
+      option.media = await option.$get('media') || undefined;
       if (option.media) {
-        const title = '**[' + option.media.title + '](' + '' + option.media.id + ')** ';
+        const title = '**[' + option.media.title + '](' +
+          discordConfig.callbackHost + '/media/' + option.media.id + ')** ';
         const genres = '(' + option.media.genres.join(', ') + ')';
-        description += ' ' + title + genres;
+        description += title + genres;
       }
       if (option.content) {
         description += (option.media ? '\n' : '') + option.content;

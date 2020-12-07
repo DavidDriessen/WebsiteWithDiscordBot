@@ -3,12 +3,9 @@ import {User as DiscordUser, Message, MessageEmbed, PartialUser} from 'discord.j
 import * as discordConfig from '../config/discord.json';
 import {client} from '../start';
 import Ballot from '../database/models/Ballot';
-import * as moment from 'moment';
-import {DiscordHelper} from '../helpers/Discord';
 import User from '../database/models/User';
 import Poll from '../database/models/Poll';
 import PollOption from '../database/models/PollOption';
-import {SeriesController} from '../controllers';
 import PollVote from '../database/models/PollVote';
 
 @Discord()
@@ -51,6 +48,7 @@ export class BallotDiscord {
   public static async voteChoice(user: DiscordUser | PartialUser, option: PollOption) {
     const choices = ['💖', '❤️', '🤷', '🚫'];
     let content = '';
+    option.media = await option.$get('media') || undefined;
     if (option.media) {
       content += option.media.title;
     }
@@ -109,15 +107,18 @@ export class BallotDiscord {
       embed.setTitle(poll.title);
       let description = poll.description || '';
       for (const [i, option] of poll.options.entries()) {
+        description += '\n' + BallotDiscord.options[i] + ' ';
+        option.media = await option.$get('media') || undefined;
         if (option.media) {
-          const title = '**[' + option.media.title + '](' + '' + option.media.id + ')** ';
+          const title = '**[' + option.media.title + '](' +
+            discordConfig.callbackHost + '/media/' + option.media.id + ')** ';
           const genres = '(' + option.media.genres.join(', ') + ')';
-          description += '\n' + BallotDiscord.options[i] + ' ' + title
-            + '```CSS\n' + genres
+          description += title + (option.content ? '\n' + option.content : '') + '```CSS\n' + genres
             + this.getVoteText(ballot.options.find((o) => o.id === option.id)) + '```';
         }
-        if (option.content) {
-          description += (option.media ? '\n' : '') + option.content;
+        if (!option.media && option.content) {
+          description += option.content + '```CSS\n' +
+            this.getVoteText(ballot.options.find((o) => o.id === option.id)) + '```';
         }
       }
       embed.setDescription(description);

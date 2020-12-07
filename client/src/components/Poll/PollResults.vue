@@ -12,50 +12,46 @@
     <v-card>
       <v-card-title>
         <span class="headline">Poll results</span>
-        <v-spacer />
-        <v-select v-model="mode" :items="modes" />
+        <v-spacer/>
+        <v-select v-model="mode" :items="modes"/>
       </v-card-title>
       <v-card-text>
-        <chart :labels="labels" :data="values" :mode="mode" />
+        <chart :labels="labels" :data="values" :mode="mode"/>
       </v-card-text>
     </v-card>
   </v-dialog>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import {Component, Prop, Vue} from "vue-property-decorator";
 import EventActions from "@/components/Event/EventActions.vue";
-import { mapGetters } from "vuex";
-import { Poll, Series, PollOptionType } from "@/types";
+import {mapGetters} from "vuex";
+import {Poll} from "@/types";
 import Chart from "@/components/AnimeSelector/Chart.vue";
 
 @Component({
-  components: { Chart, EventActions },
-  computed: { ...mapGetters(["isLoggedIn", "isAdmin"]) }
+  components: {Chart, EventActions},
+  computed: {...mapGetters(["isLoggedIn", "isAdmin"])}
 })
 export default class PollResults extends Vue {
   @Prop() poll!: Poll;
   dialog = false;
   mode = 0;
   modes = [
-    { value: 0, text: "default" },
-    { value: 1, text: "1" },
-    { value: 2, text: "2" },
-    { value: 3, text: "3" },
-    { value: 4, text: "4" }
+    {value: 0, text: "default"},
+    {value: 1, text: "1"},
+    {value: 2, text: "2"},
+    {value: 3, text: "3"},
+    {value: 4, text: "4"}
   ];
 
   get labels() {
     if (this.poll) {
       return this.poll.options.map(option => {
-        let series;
-        switch (option.type) {
-          case PollOptionType.Series:
-            series = option.content as Series;
-            return series.title;
-          default:
-            return option.content;
+        if (option.media) {
+          return option.media.title;
         }
+        return option.content;
       });
     }
     return [];

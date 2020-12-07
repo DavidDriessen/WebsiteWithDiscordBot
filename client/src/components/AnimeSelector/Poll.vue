@@ -3,7 +3,7 @@
   <v-container>
     <autocomplete :value="media" @input="update" />
     <v-btn @click="other">Add other</v-btn>
-    <draggable v-model="value" handle=".handle">
+    <draggable v-model="options" handle=".handle">
       <v-row v-for="(item, index) in value" :key="index">
         <v-col cols="1">
           <v-icon class="handle" style="margin-top: 5px">fas fa-bars</v-icon>
@@ -19,7 +19,12 @@
                 <v-icon>fas fa-times-circle</v-icon>
               </v-btn>
             </v-chip>
-            <v-text-field v-if="!item.media" v-model="item.content" dense />
+            <v-chip v-if="!item.media">
+              <v-text-field v-model="item.content" dense />
+              <v-btn @click="value.splice(index, 1)" icon>
+                <v-icon>fas fa-times-circle</v-icon>
+              </v-btn>
+            </v-chip>
           </v-row>
         </v-col>
       </v-row>
@@ -39,6 +44,14 @@ import Autocomplete from "@/components/AnimeSelector/Autocomplete.vue";
 export default class AnimeSelectorPoll extends Vue {
   @Prop() value!: PollOption[];
   media = [];
+
+  get options() {
+    return this.value;
+  }
+
+  set options(options: PollOption[]) {
+    this.$emit("input", options);
+  }
 
   update(media: Media[]) {
     this.media.splice(0, this.media.length);

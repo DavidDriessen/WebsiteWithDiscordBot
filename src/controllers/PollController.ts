@@ -10,7 +10,7 @@ import Ballot from '../database/models/Ballot';
 import {BallotDiscord} from '../discord/BallotDiscord';
 import {JWT, upload} from '../helpers/Website';
 import PollVote from '../database/models/PollVote';
-import Media from "../database/models/Media";
+import Media from '../database/models/Media';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
@@ -41,8 +41,8 @@ export class PollController {
       }],
       where, order,
     });
-    res.status(200).json(polls);
-    // res.status(200).json(polls.map((poll) => poll.serialize(req.payload?.user)));
+    // res.status(200).json(polls);
+    res.status(200).json(polls.map((poll) => poll.serialize(req.payload?.user)));
   }
 
   @Post('vote')
@@ -103,15 +103,18 @@ export class PollController {
   @Post('')
   @Middleware(JWT())
   @isAdmin
+  @Middleware(upload.fields([{name: 'image', maxCount: 1}]))
   private async editPoll(req: ISecureRequest, res: Response) {
-    // tslint:disable-next-line:max-line-length
+    if (req.body.json) {
+      req.body = JSON.parse(req.body.json);
+    }
     if (!req.body.title || !req.body.end || !req.body.options) {
       return res.status(401).send('');
     }
     const poll = await Poll.findByPk(req.body.id, {
       include: [{
         association: 'options',
-        include: ['ballots'],
+        include: [{association: 'ballots', include: ['user']}, 'media'],
       }],
     });
     if (!poll) {
@@ -121,16 +124,12 @@ export class PollController {
     poll.end = req.body.end;
     poll.description = req.body.description;
     if (req.body.options) {
-      poll.options = req.body.options
-        .map((s: PollOption, i: number) => {
-          const option = poll.options.find((m) => m.id === s.id);
-          if (option) {
-            option.order = i;
-            return option;
-          } else {
-            return new PollOption(Object.assign({pollId: poll.id, order: i}, s));
-          }
-        });
+      poll.options = req.body.options.map((s: PollOption, i: number) => {
+        const option = poll.options.find((m) => m.id === s.id) ||
+          PollOption.build(Object.assign({pollId: poll.id, mediaId: s.media?.id}, s));
+        option.order = i;
+        return option;
+      });
     }
     await poll.save();
     for (const ballot of await poll.$get('ballots')) {

@@ -8,7 +8,6 @@ import {
   Table,
 } from 'sequelize-typescript';
 import PollOption from './PollOption';
-import {SeriesController} from '../../controllers';
 // @ts-ignore
 import * as Serializer from 'sequelize-to-json/index.js';
 import User from './User';
@@ -46,8 +45,14 @@ export class Poll extends Model<Poll> {
       exclude: ['@fk', '@auto'],
       assoc: {
         options: {
-          include: ['@all'],
+          include: ['@all', 'media'],
           exclude: ['@fk', '@auto'],
+          assoc: {
+            media: {
+              include: ['@all'],
+              exclude: ['@fk', '@auto'],
+            },
+          },
           postSerialize:
             (serialized: { id: number, votes: number[], voted: number }, original: PollOption) => {
               if (user) {
@@ -89,7 +94,7 @@ export class Poll extends Model<Poll> {
 
   @BeforeCreate
   public static async postMessage(poll: Poll) {
-    // await PollDiscord.addPoll(poll);
+    await PollDiscord.addPoll(poll);
   }
 
   @BeforeUpdate
