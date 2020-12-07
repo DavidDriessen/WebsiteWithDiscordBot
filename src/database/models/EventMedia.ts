@@ -3,17 +3,13 @@ import Event from './Event';
 import Media from './Media';
 
 @Table
-export class SeriesEvent extends Model<SeriesEvent> {
+export class EventMedia extends Model<EventMedia> {
 
-  // @ts-ignore
   @ForeignKey(() => Event)
   public event!: Event;
 
-  @Column({primaryKey: true, field: 'event'})
-  public eventId!: number;
-
-  @Column({primaryKey: true})
-  public seriesId!: number;
+  @ForeignKey(() => Media)
+  public media!: Media;
 
   @Column
   public order!: number;
@@ -23,8 +19,6 @@ export class SeriesEvent extends Model<SeriesEvent> {
 
   @Column
   public episodes!: number;
-
-  public details?: Media;
 }
 
-export default SeriesEvent;
+export default EventMedia;

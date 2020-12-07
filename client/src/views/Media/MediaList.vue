@@ -13,19 +13,14 @@
             :key="index"
             :cols="3 / 12"
             :media.sync="media"
-            :width="400"
-            @save="getMedias"
-            @notLoggedin="loginNotice = true"
+            :width="350"
           />
         </v-row>
       </template>
     </v-data-iterator>
-    <media-modal v-if="isAdmin" @save="getMedias" />
-    <v-snackbar v-model="loginNotice" :timeout="3000">
-      <p class="text-center" style="width: 100%">
-        Please login to perform that action.
-      </p>
-    </v-snackbar>
+    <v-btn v-if="isAdmin" fixed fab bottom right color="primary" to="/media/0">
+      <v-icon>fas fa-plus</v-icon>
+    </v-btn>
   </v-container>
 </template>
 
@@ -34,22 +29,20 @@ import { Component, Vue } from "vue-property-decorator";
 import { Media } from "@/types";
 import { mapPreferences } from "vue-preferences";
 import AnimeCache from "@/store/animeCache";
-import axios from "../plugins/axios";
+import axios from "../../plugins/axios";
 import { mapGetters } from "vuex";
-import MediaModal from "@/components/Media/MediaModal.vue";
 import MediaCard from "@/components/Media/MediaCard.vue";
 
 @Component({
-  components: { MediaModal, MediaCard },
+  components: { MediaCard },
   computed: {
     ...mapPreferences({ ampm: { defaultValue: true } }),
     ...mapGetters(["isLoggedIn", "isAdmin"])
   }
 })
-export default class Polls extends Vue {
+export default class MediaList extends Vue {
   medias: Media[] = [];
   loading = false;
-  width = 400;
 
   mounted() {
     this.getMedias();

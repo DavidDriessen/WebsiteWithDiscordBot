@@ -19,7 +19,7 @@ export class AttendanceDiscord {
     const msgs = await (await EventDiscord.getChannel()).messages.fetch();
     const events = await Event.findAll({
       where: {messageID: {[Op.in]: msgs.keyArray()}},
-      include: ['series'],
+      include: ['media'],
     });
     for (const event of events) {
       if (event.messageID) {
@@ -43,7 +43,7 @@ export class AttendanceDiscord {
         end: {[Op.gt]: moment().toDate()},
       },
       order: ['start'],
-      include: ['attendees', {
+      include: ['media', 'attendees', {
         model: User,
         as: 'streamer',
         where: {discordId: message.author.id},
@@ -66,7 +66,7 @@ export class AttendanceDiscord {
     }
     const event = await Event.findOne({
       where: {messageID: messageReaction.message.id},
-      include: ['series'],
+      include: ['media'],
     });
     if (!event) {
       return;

@@ -18,7 +18,7 @@
               @contextmenu.prevent="on.click"
               @click="onClick"
             >
-              <EventCardImage :image="event.image" :series="event.series" />
+              <EventCardImage :image="event.image" :media="event.media" />
               <!--            <v-icon class="info-icon">fas fa-info-circle</v-icon>-->
               <v-card-title
                 class="text-truncate text-no-wrap"
@@ -147,7 +147,10 @@ export default class EventCard extends Vue {
     } else if (
       this.event.start.isBetween(
         this.intervals.now.clone().startOf("day"),
-        this.intervals.now.clone().add(1, "week").startOf("day")
+        this.intervals.now
+          .clone()
+          .add(1, "week")
+          .startOf("day")
       )
     ) {
       if (this.small) {
@@ -162,22 +165,6 @@ export default class EventCard extends Vue {
 
   get small() {
     return this.width < 300;
-  }
-
-  get seriesTitles() {
-    return this.event.series.map(series => {
-      if (!series.details) {
-        return "";
-      }
-      return (
-        series.details.title +
-        " #" +
-        series.episode +
-        (series.episodes > 1
-          ? "-" + (series.episode + series.episodes - 1)
-          : "")
-      );
-    });
   }
 
   deleteEvent() {

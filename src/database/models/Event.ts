@@ -3,17 +3,15 @@ import {
   Column,
   Model,
   Table,
-  HasMany,
   BelongsTo, HasOne, BeforeCreate, BeforeUpdate, BeforeDestroy,
 } from 'sequelize-typescript';
 import User from './User';
+import Media from './Media';
 import Attendee from './Attendee';
-import SeriesEvent from './SeriesEvent';
+import EventMedia from './EventMedia';
 import {EventDiscord} from '../../discord/EventDiscord';
-import {SeriesController} from '../../controllers';
 // @ts-ignore
 import * as Serializer from 'sequelize-to-json/index.js';
-import Media from './Media';
 
 @Table
 export class Event extends Model<Event> {
@@ -38,8 +36,8 @@ export class Event extends Model<Event> {
   public attending!: Attendee;
 
   // @ts-ignore
-  @HasMany(() => SeriesEvent)
-  public series!: SeriesEvent[];
+  @BelongsToMany(() => Media, () => EventMedia)
+  public media!: Media[];
 
   // @ts-ignore
   @BelongsToMany(() => User, () => Attendee)
@@ -57,24 +55,18 @@ export class Event extends Model<Event> {
   @Column
   public messageID?: string;
 
-  public async getSeries() {
-    const series = await SeriesController
-      .getSeriesById(this.series.map((seriesEvent) => seriesEvent.seriesId)) || [];
-    return this.series.map((s) => {
-      s.details = series.find((m: Media) => m.aniId === s.seriesId);
-      return s;
-    }).sort((a, b) => {
-      return a.order - b.order;
-    });
-  }
-
   public serialize(user: User | null) {
     const scheme = {
-      include: ['@pk', 'title', 'description', 'start', 'end', 'image', 'discordImage', 'roomcode', 'series', 'streamer', 'attending', 'attendees'],
+      include: ['@pk', 'title', 'description', 'start', 'end', 'image', 'discordImage', 'roomcode', 'media', 'streamer', 'attending', 'attendees'],
       assoc: {
-        series: {
-          include: ['seriesId', 'episode', 'episodes'],
-          exclude: ['@fk', '@auto'],
+        media: {
+          include: ['id', 'title', 'image', 'description', 'episodes', 'EventMedia'],
+          assoc: {
+            EventMedia: {
+              include: ['episode', 'episodes'],
+              exclude: ['@fk', '@auto'],
+            },
+          },
         },
         streamer: {
           include: ['@pk', 'name', 'avatar'],
@@ -111,25 +103,17 @@ export class Event extends Model<Event> {
 
   @BeforeUpdate
   public static async updateMessage(event: Event) {
-    const dbSeries = await SeriesEvent.findAll({where: {event: event.id}});
-    if (event.series === undefined) {
-      event.series = dbSeries;
-    }
-    const deleted = dbSeries.filter((db) =>
-      event.series.filter((s) =>
-        s.seriesId === db.seriesId).length === 0);
-    const changed = event.series.filter((s) => s.changed());
-    if (deleted.length === 0 && changed.length === 0) {
-      await EventDiscord.update(event);
-    } else {
-      for (const series of deleted) {
-        series.destroy();
+    const force = event.media.length !== event.previous('media').length || event.media.map((m) => {
+      if (m.EventMedia.changed) {
+        const c = m.EventMedia.changed();
+        if (c) {
+          return c.some((p) => p === 'order');
+        }
+        return c;
       }
-      for (const series of changed) {
-        series.save();
-      }
-      await EventDiscord.update(event, true);
-    }
+      return true;
+    }).some((m) => m);
+    await EventDiscord.update(event, force);
   }
 
   @BeforeDestroy

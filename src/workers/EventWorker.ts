@@ -49,7 +49,7 @@ export class EventWorker {
     const nowMinus = now.clone().add(25, 'minutes');
     const events = await Event.findAll({
       where: {start: {[Op.gt]: nowMinus, [Op.lte]: nowPlus}},
-      include: ['series', 'streamer', 'attendees'],
+      include: ['media', 'streamer', 'attendees'],
     });
     for (const event of events) {
       EventWorker.sendNotification(event).then();

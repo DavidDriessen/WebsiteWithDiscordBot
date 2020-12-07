@@ -21,21 +21,21 @@
       </v-card-text>
 
       <v-expansion-panels popout hover>
-        <v-expansion-panel
-          v-for="eventSeries in event.series"
-          :key="eventSeries.seriesId"
-        >
+        <v-expansion-panel v-for="media in event.media" :key="media.seriesId">
           <v-expansion-panel-header>
             <v-row>
               <v-col cols="8" sm="10">
-                {{ eventSeries.details.title }}
+                {{ media.title }}
               </v-col>
               <v-col cols="4" sm="2">
                 <b>
-                  Ep {{ eventSeries.episode
+                  Ep {{ media.EventMedia.episode
                   }}{{
-                    eventSeries.episodes > 1
-                      ? "-" + (eventSeries.episode + eventSeries.episode - 1)
+                    media.EventMedia.episodes > 1
+                      ? "-" +
+                        (media.EventMedia.episode +
+                          media.EventMedia.episode -
+                          1)
                       : ""
                   }}
                 </b>
@@ -45,10 +45,10 @@
           <v-expansion-panel-content>
             <v-row>
               <v-col cols="3">
-                <v-img :src="eventSeries.details.image" />
+                <v-img :src="media.image" />
               </v-col>
               <v-col cols="9">
-                <v-card-subtitle v-html="eventSeries.details.description" />
+                <v-card-subtitle v-html="media.description" />
               </v-col>
             </v-row>
           </v-expansion-panel-content>

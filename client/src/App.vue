@@ -73,6 +73,12 @@
           </v-list-item-content>
         </v-list-item>
         <v-divider v-if="isLoggedIn" />
+        <v-list-item to="/media" v-if="isAdmin">
+          <v-list-item-icon>
+            <v-icon>fas fa-photo-video</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Medias</v-list-item-title>
+        </v-list-item>
         <v-list-item to="/polls">
           <v-list-item-icon>
             <v-icon>fas fa-poll</v-icon>

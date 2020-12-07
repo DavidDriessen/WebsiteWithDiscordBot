@@ -35,7 +35,7 @@ export class PollOption extends Model<PollOption> {
 
   public voted?: boolean;
 
-  public details?: Media;
+  public media?: Media;
 
   // tslint:disable-next-line:variable-name
   public PollVote?: PollVote;

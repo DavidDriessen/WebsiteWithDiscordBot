@@ -1,9 +1,9 @@
 <!--suppress HtmlUnknownTarget -->
 <template>
   <v-container>
-    <autocomplete v-model="series" />
-    <draggable v-model="series" handle=".handle">
-      <v-row v-for="(series, index) in eventseries" :key="index">
+    <autocomplete v-model="media" />
+    <draggable v-model="media" handle=".handle">
+      <v-row v-for="(m, index) in media" :key="index">
         <v-col cols="1">
           <v-icon class="handle">fas fa-bars</v-icon>
         </v-col>
@@ -11,47 +11,50 @@
           <v-row>
             <v-chip>
               <v-avatar left>
-                <img :src="series.details.image" :alt="series.details.title" />
+                <img :src="m.image" :alt="m.title" />
               </v-avatar>
-              {{ series.details.title }}
-              <v-btn @click="eventseries.splice(index, 1)" icon>
+              {{ m.title }}
+              <v-btn @click="value.splice(index, 1)" icon>
                 <v-icon>fas fa-times-circle</v-icon>
               </v-btn>
             </v-chip>
           </v-row>
           <v-row>
             <v-range-slider
-              :value="[series.episode, series.episode + series.episodes]"
-              @input="setEpisodes(series, $event)"
+              :value="[
+                m.EventMedia.episode,
+                m.EventMedia.episode + m.EventMedia.episodes
+              ]"
+              @input="setEpisodes(m, $event)"
               :min="1"
-              :max="series.details.episodes ? series.details.episodes + 1 : 31"
+              :max="m.episodes ? m.episodes + 1 : 31"
             >
               <template v-slot:prepend>
                 <v-text-field
-                  :value="series.episode"
+                  :value="m.EventMedia.episode"
                   class="mt-0 pt-0"
                   hide-details
                   single-line
                   type="number"
                   style="width: 60px"
                   @input="
-                    setEpisodes(series, [
+                    setEpisodes(m, [
                       Number($event),
-                      series.episode + series.episodes
+                      m.EventMedia.episode + m.EventMedia.episodes
                     ])
                   "
                 ></v-text-field>
               </template>
               <template v-slot:append>
                 <v-text-field
-                  :value="series.episode + series.episodes - 1"
+                  :value="m.EventMedia.episode + m.EventMedia.episodes - 1"
                   class="mt-0 pt-0"
                   hide-details
                   single-line
                   type="number"
                   style="width: 60px"
                   @input="
-                    setEpisodes(series, [series.episode, Number($event) + 1])
+                    setEpisodes(m, [m.EventMedia.episode, Number($event) + 1])
                   "
                 ></v-text-field>
               </template>
@@ -65,7 +68,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { EventSeries, Series } from "@/types";
+import { Media } from "@/types";
 import draggable from "vuedraggable";
 import Autocomplete from "@/components/AnimeSelector/Autocomplete.vue";
 
@@ -73,63 +76,40 @@ import Autocomplete from "@/components/AnimeSelector/Autocomplete.vue";
   components: { Autocomplete, draggable }
 })
 export default class AnimeSelectorEvent extends Vue {
-  @Prop() value!: EventSeries[];
+  @Prop() value!: Media[];
 
-  get eventseries() {
+  get media() {
     return this.value;
   }
 
-  set eventseries(series: EventSeries[]) {
-    this.$emit("input", series);
-  }
-
-  get series() {
-    return (this.value as EventSeries[]).map((series: EventSeries) => {
-      if (series.details) {
-        return series.details;
+  set media(media: Media[]) {
+    for (const m of media) {
+      if (!m.EventMedia) {
+        m.EventMedia = { episode: 1, episodes: 1, order: 0 };
       }
-      return {} as Series;
-    });
-  }
-
-  set series(series: Series[]) {
-    // eslint-disable-next-line no-case-declarations
-    const events: EventSeries[] = [];
-    for (const s of series) {
-      let event = this.value.find(v => v.details == s);
-      if (!event) {
-        event = {
-          details: s,
-          episode: 1,
-          episodes: 1
-        } as EventSeries;
-      }
-      events.push(event);
     }
-    this.$emit("input", events);
+    this.$emit("input", media);
   }
 
-  setEpisodes(series: EventSeries, event: number[]) {
-    if (
-      series.details &&
-      series.details.episodes &&
-      event[0] > series.details.episodes
-    ) {
-      event[0] = series.details.episodes;
-    } else if ((!series.details || !series.details.episodes) && event[0] > 30) {
+  setEpisodes(media: Media, event: number[]) {
+    if (media.episodes && event[0] > media.episodes) {
+      event[0] = media.episodes;
+    } else if (!media.episodes && event[0] > 30) {
       event[0] = 30;
     }
-    if (series.episode !== event[0]) {
-      if (series.episodes !== event[1] - series.episode) {
-        series.episodes = event[1] - event[0];
+    if (media.EventMedia.episode !== event[0]) {
+      if (media.EventMedia.episodes !== event[1] - media.EventMedia.episode) {
+        media.EventMedia.episodes = event[1] - event[0];
       }
-      series.episode = event[0];
+      media.EventMedia.episode = event[0];
     } else {
-      series.episodes = event[1] - event[0];
-      if (series.episodes <= 0) {
-        series.episodes = 1;
+      media.EventMedia.episodes = event[1] - event[0];
+      if (media.EventMedia.episodes <= 0) {
+        media.EventMedia.episodes = 1;
       }
     }
+    event[0] = media.EventMedia.episode;
+    event[1] = media.EventMedia.episode + media.EventMedia.episodes;
   }
 }
 </script>

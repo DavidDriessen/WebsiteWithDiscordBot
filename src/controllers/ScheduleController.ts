@@ -6,11 +6,12 @@ import Event from '../database/models/Event';
 import {Response} from 'express';
 import * as moment from 'moment';
 import {Op} from 'sequelize';
-import SeriesEvent from '../database/models/SeriesEvent';
 import User from '../database/models/User';
 import {EventWorker} from '../workers/EventWorker';
 import {JWT} from '../helpers/Website';
 import * as multer from 'multer';
+import Media from '../database/models/Media';
+import {Sequelize} from 'sequelize-typescript';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
@@ -46,23 +47,23 @@ export class ScheduleController {
   @Middleware(JWT(false))
   private async getEvents(req: ISecureRequest, res: Response) {
     let where: WhereOptions = {end: {[Op.gte]: moment().toISOString()}};
-    let order: Order = ['start', ['series', 'order', 'asc']];
+    let order: Order = ['start', [Sequelize.literal('`media->EventMedia`.`order`'), 'asc']];
     if (req.query.history) {
       where = {end: {[Op.lte]: moment().toISOString()}};
-      order = [['start', 'desc'], ['series', 'order', 'asc']];
+      order = [['start', 'desc'], [Sequelize.literal('`media->EventMedia`.`order`'), 'asc']];
     }
     const user = req.payload ? req.payload.user : null;
     const userId = user ? user.id : null;
 
-    const events2: Event[] = await Event.findAll({
-      include: ['series', 'streamer',
+    const events: Event[] = await Event.findAll({
+      include: ['media', 'streamer',
         {association: 'attendees', through: {attributes: ['decision']}},
         {
           association: 'attending', attributes: ['decision'], required: false,
           where: {user: userId},
         }], where, order,
     });
-    res.status(200).json(events2.map((event) => event.serialize(user)));
+    res.status(200).json(events.map((event) => event.serialize(user)));
   }
 
   @Post('attending')
@@ -83,7 +84,7 @@ export class ScheduleController {
   private async setRoomCode(req: ISecureRequest, res: Response) {
     const event = await Event.findOne({
       where: {id: req.body.event, streamerId: req.payload.user.id},
-      include: ['series', 'streamer', 'attendees'],
+      include: ['media', 'streamer', 'attendees'],
     });
     if (event) {
       event.roomcode = req.body.code;
@@ -124,19 +125,17 @@ export class ScheduleController {
       if (files.discordImage && files.discordImage.length > 0) {
         data.discordImage = '/images/' + files.discordImage[0].filename;
       }
-      if (req.body.series) {
-        data.series = req.body.series.map((series: SeriesEvent, index: number) => {
-          return {
-            seriesId: series.details?.aniId,
-            episode: series.episode,
-            episodes: series.episodes,
-            order: index,
-          };
-        });
-      }
       const event = await Event.create(data, {
-        include: ['series', 'streamer', 'attendees'],
+        include: ['media', 'streamer', 'attendees'],
       });
+      if (req.body.media) {
+        await event.$set<Media>('media', req.body.media.map((m: Media, i: number) => {
+          const media = Media.build(m);
+          media.EventMedia = m.EventMedia;
+          media.EventMedia.order = i;
+          return media;
+        }));
+      }
       event.streamer = streamer;
       return res.status(200).json(event.serialize(req.payload.user));
     } catch (e) {
@@ -160,7 +159,7 @@ export class ScheduleController {
     if (!streamer) {
       return res.status(404).json({msg: 'Streamer not found!'});
     }
-    const event = await Event.findByPk(req.body.id, {include: ['series', 'streamer', 'attendees']});
+    const event = await Event.findByPk(req.body.id, {include: ['media', 'streamer', 'attendees']});
     if (!event) {
       return res.status(200).json({message: 'Event not found'});
     }
@@ -171,17 +170,21 @@ export class ScheduleController {
     event.end = req.body.end;
     event.description = req.body.description;
     event.streamer = streamer;
-    if (req.body.series) {
-      event.series = req.body.series
-        .map((s: { details: { aniId: any; }; episode: any; episodes: any; }, i: number) => {
-          const ss = event.series.find(
-            (m) => m.event === event.id && m.seriesId === s.details.aniId) ||
-            new SeriesEvent({event: event.id, seriesId: s.details.aniId});
-          ss.order = i;
-          ss.episode = req.body.series[i].episode;
-          ss.episodes = req.body.series[i].episodes;
-          return ss;
-        });
+    if (req.body.media) {
+      await event.$set<Media>('media',
+        req.body.media.map((m: Media, i: number) => {
+          const media = event.media.find((em) => em.id === m.id) || Media.build(m);
+          if (media) {
+            if (!media.EventMedia) {
+              media.EventMedia = m.EventMedia;
+            } else {
+              media.EventMedia.episode = m.EventMedia.episode;
+              media.EventMedia.episodes = m.EventMedia.episodes;
+            }
+            media.EventMedia.order = i;
+            return media;
+          }
+        }));
     }
     const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
     if (files.image && files.image.length > 0) {
@@ -191,8 +194,7 @@ export class ScheduleController {
       event.discordImage = '/images/' + files.discordImage[0].filename;
     }
     await event.$set('streamer', streamer);
-    return res.status(200)
-      .json((await event.save()).serialize(req.payload.user));
+    return res.status(200).json((await event.save()).serialize(req.payload.user));
   }
 
   @Delete(':id')

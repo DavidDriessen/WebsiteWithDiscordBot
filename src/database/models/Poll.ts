@@ -47,8 +47,8 @@ export class Poll extends Model<Poll> {
     }
     for (const option of this.options) {
       if (option.type === 'Series') {
-        option.details = series
-          .find((m: Media) => m.aniId === Number(option.content));
+        option.media = series
+          .find((m: Media) => m.id === Number(option.content));
       }
     }
     return true;

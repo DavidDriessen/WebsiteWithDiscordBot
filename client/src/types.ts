@@ -34,7 +34,7 @@ export interface Event {
   discordImage?: string;
   start: Moment;
   end: Moment;
-  series: EventSeries[];
+  media: Media[];
   attendees?: User[];
   attending?: number;
   streamer?: User;
@@ -50,15 +50,23 @@ export interface Poll {
   options: PollOption[];
 }
 
-export interface Media {
+export interface MediaReference {
   id: number;
-  aniId: number;
-  malId: number;
+  type: string;
+  apiId: string | null;
+  url: string;
+}
+
+export interface Media {
+  id?: number;
+  type: string;
   title: string;
   description: string;
-  siteUrl: string;
   image: string;
+  trailer: string;
   episodes: number;
+  references: MediaReference[];
+  EventMedia: { episode: number; episodes: number; order: number };
 }
 
 export enum PollOptionType {

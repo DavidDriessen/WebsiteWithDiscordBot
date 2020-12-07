@@ -1,17 +1,10 @@
 import {Controller, Delete, Get, Middleware, Post, Put} from '@overnightjs/core';
 import {ISecureRequest} from '@overnightjs/jwt';
-import {Order, WhereOptions} from 'sequelize/types/lib/model';
-import Attendee from '../database/models/Attendee';
-import Event from '../database/models/Event';
 import {Response} from 'express';
-import * as moment from 'moment';
-import {Op} from 'sequelize';
-import SeriesEvent from '../database/models/SeriesEvent';
-import User from '../database/models/User';
-import {EventWorker} from '../workers/EventWorker';
 import {JWT} from '../helpers/Website';
 import * as multer from 'multer';
 import Media from '../database/models/Media';
+import {Sequelize} from 'sequelize-typescript';
 
 function isAdmin(target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
@@ -45,54 +38,45 @@ export class MediaController {
 
   @Get('')
   @Middleware(JWT(false))
-  private async getMedias(req: ISecureRequest, res: Response) {
+  private async getMedias(_req: ISecureRequest, res: Response) {
     res.status(200).json(await Media.findAll());
+  }
+
+  @Get(':id')
+  @Middleware(JWT(false))
+  private getMedia(req: ISecureRequest, res: Response) {
+    Media.findByPk(req.params.id).then((media) => res.status(200).json(media));
+  }
+
+  @Get('search/:search')
+  @Middleware(JWT(false))
+  private searchMedia(req: ISecureRequest, res: Response) {
+    Media.findAll({
+      where: Sequelize.literal('(lower(`Media`.`title`) LIKE \'%' + req.params.search + '%\' OR lower(`Media`.`description`) LIKE \'%' + req.params.search + '%\');'),
+    }).then((media) => res.status(200).json(media));
   }
 
   @Put('')
   @Middleware(JWT())
   @isAdmin
-  @Middleware(upload.fields([{name: 'image', maxCount: 1}, {name: 'discordImage', maxCount: 1}]))
+  @Middleware(upload.fields([{name: 'image', maxCount: 1}]))
   private async addMedia(req: ISecureRequest, res: Response) {
     if (req.body.json) {
       req.body = JSON.parse(req.body.json);
     }
     try {
-      const streamer = await User.findByPk(req.body.streamer.id);
-      if (!streamer) {
-        return res.status(404).json({msg: 'Streamer not found!'});
-      }
-      const data: Event = {
+      const data: Media = {
         title: req.body.title,
         description: req.body.description,
-        streamerId: streamer.id,
-        start: req.body.start,
-        end: req.body.end,
+        episodes: req.body.episodes,
         image: req.body.image,
-        discordImage: req.body.discordImage,
-      } as Event;
+      } as Media;
       const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
       if (files.image && files.image.length > 0) {
         data.image = '/images/' + files.image[0].filename;
       }
-      if (files.discordImage && files.discordImage.length > 0) {
-        data.discordImage = '/images/' + files.discordImage[0].filename;
-      }
-      if (req.body.series) {
-        data.series = req.body.series.map((series: SeriesEvent, index: number) => {
-          return {
-            seriesId: series.details?.aniId,
-            episode: series.episode,
-            episodes: series.episodes,
-            order: index,
-          };
-        });
-      }
-      const event = await Event.create(data, {
-        include: ['series', 'streamer', 'attendees'],
-      });
-      event.streamer = streamer;
-      return res.status(200).json(event.serialize(req.payload.user));
+      const media = await Media.create(data);
+      return res.status(200).json(media);
     } catch (e) {
       return res.status(500).json({error: 'error', message: 'Please try again later.'});
     }
@@ -101,52 +85,28 @@ export class MediaController {
   @Post('')
   @Middleware(JWT())
   @isAdmin
-  @Middleware(upload.fields([{name: 'image', maxCount: 1}, {name: 'discordImage', maxCount: 1}]))
+  @Middleware(upload.fields([{name: 'image', maxCount: 1}]))
   private async editMedia(req: ISecureRequest, res: Response) {
     if (req.body.json) {
       req.body = JSON.parse(req.body.json);
     }
     // tslint:disable-next-line:max-line-length
-    if (!req.body.title || !req.body.start || !req.body.end) {
+    if (!req.body.title) {
       return res.status(401).send('');
     }
-    const streamer = await User.findByPk(req.body.streamer.id);
-    if (!streamer) {
-      return res.status(404).json({msg: 'Streamer not found!'});
+    const media = await Media.findByPk(req.body.id);
+    if (!media) {
+      return res.status(200).json({message: 'Media not found'});
     }
-    const event = await Event.findByPk(req.body.id, {include: ['series', 'streamer', 'attendees']});
-    if (!event) {
-      return res.status(200).json({message: 'Event not found'});
-    }
-    event.image = req.body.image;
-    event.discordImage = req.body.discordImage;
-    event.title = req.body.title;
-    event.start = req.body.start;
-    event.end = req.body.end;
-    event.description = req.body.description;
-    event.streamer = streamer;
-    if (req.body.series) {
-      event.series = req.body.series
-        .map((s: { details: { aniId: any; }; episode: any; episodes: any; }, i: number) => {
-          const ss = event.series.find(
-            (m) => m.event === event.id && m.seriesId === s.details.aniId) ||
-            new SeriesEvent({event: event.id, seriesId: s.details.aniId});
-          ss.order = i;
-          ss.episode = req.body.series[i].episode;
-          ss.episodes = req.body.series[i].episodes;
-          return ss;
-        });
-    }
+    media.image = req.body.image;
+    media.title = req.body.title;
+    media.description = req.body.description;
+    media.episodes = req.body.episodes;
     const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
     if (files.image && files.image.length > 0) {
-      event.image = '/images/' + files.image[0].filename;
+      media.image = '/images/' + files.image[0].filename;
     }
-    if (files.discordImage && files.discordImage.length > 0) {
-      event.discordImage = '/images/' + files.discordImage[0].filename;
-    }
-    await event.$set('streamer', streamer);
-    return res.status(200)
-      .json((await event.save()).serialize(req.payload.user));
+    return res.status(200).json(await media.save());
   }
 
   @Delete(':id')

@@ -118,10 +118,7 @@
               </v-row>
               <v-row>
                 <v-col>
-                  <EventCardImage
-                    :series="event.series"
-                    :image="imagePreview"
-                  />
+                  <EventCardImage :media="event.media" :image="imagePreview" />
                 </v-col>
                 <v-col>
                   <v-btn @click="resetImage">
@@ -186,7 +183,7 @@
           </v-tab-item>
           <v-tab-item>
             <v-card-text>
-              <anime-selector v-model="event.series" />
+              <anime-selector v-model="event.media" />
             </v-card-text>
           </v-tab-item>
         </v-tabs-items>
@@ -229,7 +226,7 @@ export default class EventModal extends Vue {
   event: Event = {
     id: 0,
     title: "",
-    series: [],
+    media: [],
     start: moment(),
     end: moment()
   } as Event;
@@ -304,22 +301,27 @@ export default class EventModal extends Vue {
       if (this.next) {
         this.event.start.add(1, "week");
         this.event.end.add(1, "week");
-        this.event.series = this.event.series.filter(
-          series =>
+        this.event.media = this.event.media.filter(
+          media =>
             !(
-              series.details &&
-              series.details.episodes &&
-              series.episode + series.episodes > series.details.episodes
+              media.EventMedia &&
+              media.episodes &&
+              media.EventMedia.episode + media.EventMedia.episodes >
+                media.episodes
             )
         );
-        for (const series of this.event.series) {
-          series.episode = series.episode + series.episodes;
-          if (series.details && series.details.episodes) {
-            if (
-              series.episode + series.episodes - 1 >
-              series.details.episodes
-            ) {
-              series.episodes = series.details.episodes - series.episode + 1;
+        for (const media of this.event.media) {
+          if (media.EventMedia) {
+            media.EventMedia.episode =
+              media.EventMedia.episode + media.EventMedia.episodes;
+            if (media.episodes) {
+              if (
+                media.EventMedia.episode + media.EventMedia.episodes - 1 >
+                media.episodes
+              ) {
+                media.EventMedia.episodes =
+                  media.episodes - media.EventMedia.episode + 1;
+              }
             }
           }
         }
@@ -361,7 +363,7 @@ export default class EventModal extends Vue {
       this.clone();
     } else {
       this.form.reset();
-      this.event.series = [];
+      this.event.media = [];
     }
     this.$emit("close");
   }

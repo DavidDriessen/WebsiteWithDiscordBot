@@ -37,13 +37,18 @@ const routes = [
   },
   {
     path: "/polls",
-    name: "polls",
+    name: "Polls",
     component: () => import("../views/Poll.vue")
   },
   {
     path: "/media",
-    name: "polls",
-    component: () => import("../views/Media.vue")
+    name: "MediaList",
+    component: () => import("../views/Media/MediaList.vue")
+  },
+  {
+    path: "/media/:id",
+    name: "MediaItem",
+    component: () => import("../views/Media/MediaItem.vue")
   }
 ];
 

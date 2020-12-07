@@ -118,9 +118,9 @@ export class BallotDiscord {
       for (const [i, option] of poll.options.entries()) {
         switch (option.type) {
           case 'Series':
-            if (option.details) {
-              const title = '**[' + option.details.title + '](' + option.details.siteUrl + ')** ';
-              const genres = '(' + option.details.genres.join(', ') + ')';
+            if (option.media) {
+              const title = '**[' + option.media.title + '](' + '' + option.media.id + ')** ';
+              const genres = '(' + option.media.genres.join(', ') + ')';
               description += '\n' + BallotDiscord.options[i] + ' ' + title
                 + '```CSS\n' + genres
                 + this.getVoteText(ballot.options.find((o) => o.id === option.id)) + '```';
@@ -156,6 +156,7 @@ export class BallotDiscord {
       }
       return embed;
     }
+    return '';
   }
 
   @On('messageReactionAdd')

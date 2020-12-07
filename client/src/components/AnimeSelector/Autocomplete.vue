@@ -31,42 +31,33 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { Series } from "@/types";
-import AnimeCache from "@/store/animeCache";
+import { Media } from "@/types";
 import draggable from "vuedraggable";
+import axios from "../../plugins/axios";
 
 @Component({
   components: { draggable }
 })
 export default class Autocomplete extends Vue {
-  @Prop() value!: Series[];
+  @Prop() value!: Media[];
   loading = false;
   search = "";
-  items: Series[] = [];
+  items: Media[] = [];
   typingTimer: number | null = null;
 
-  mounted() {
-    this.items = AnimeCache.getList();
-  }
-
-  update(series: Series[]) {
-    this.$emit("input", series);
+  update(media: Media[]) {
+    this.$emit("input", media);
   }
 
   @Watch("search")
-  getSeries(search: string, previousSearch: string, isTyping = true) {
-    if (this.typingTimer) {
-      clearTimeout(this.typingTimer);
-    }
-    if (isTyping) {
-      this.typingTimer = setTimeout(() => {
-        this.getSeries(search, previousSearch, false);
-      }, 1000);
-    } else if (search) {
+  getSeries(search: string) {
+    if (search) {
       this.loading = true;
-      AnimeCache.search(search)
-        .then((series: void | Series[]) => {
-          this.items = series as Series[];
+      axios
+        .get("/api/media/search/" + encodeURIComponent(search))
+        .then(r => r.data)
+        .then((media: Media[]) => {
+          this.items = media as Media[];
         })
         .finally(() => {
           this.loading = false;
@@ -74,15 +65,14 @@ export default class Autocomplete extends Vue {
     }
   }
 
-  seriesItemValue(v: Series) {
+  seriesItemValue(v: Media) {
     return v;
   }
 
-  customFilter(series: Series, search: string) {
+  customFilter(media: Media, search: string) {
     return (
-      (series.aniId && series.aniId.toString() === search) ||
-      (series.malId && series.malId.toString() === search) ||
-      series.title.toLowerCase().search(search.toLowerCase()) >= 0
+      media.title.toLowerCase().search(search.toLowerCase()) >= 0 ||
+      media.description.toLowerCase().search(search.toLowerCase()) >= 0
     );
   }
 }

@@ -7,11 +7,12 @@ import * as moment from 'moment';
 import {AttendanceDiscord} from './AttendanceDiscord';
 import {Op} from 'sequelize';
 import Attendee from '../database/models/Attendee';
-import SeriesEvent from '../database/models/SeriesEvent';
 import {Command, Description, Discord, Guard, On} from '@typeit/discord';
 import {CheckRole} from './Guards';
 import {Order} from 'sequelize/types/lib/model';
 import {DiscordHelper} from '../helpers/Discord';
+import Media from '../database/models/Media';
+import {Sequelize} from 'sequelize-typescript';
 
 @Discord('!')
 export class EventDiscord {
@@ -27,13 +28,13 @@ export class EventDiscord {
   public static async updateChannel() {
     const channel = await EventDiscord.getChannel();
     const msgs = await channel.messages.fetch();
-    const order: Order = ['start', ['series', 'order', 'asc']];
+    const order: Order = ['start', [Sequelize.literal('`media->EventMedia`.`order`'), 'asc']];
     let events = await Event.findAll({
       where: {
         start: {[Op.lte]: moment().add(1, 'week').add(12, 'hours').toDate()},
         end: {[Op.gt]: moment().toDate()},
       }, order,
-      include: ['series', 'streamer', 'attendees'],
+      include: ['media', 'streamer', 'attendees'],
     });
     for (const event of events) {
       let msg;
@@ -49,6 +50,7 @@ export class EventDiscord {
         end: {[Op.lt]: moment().toDate()},
         messageID: {[Op.ne]: null, [Op.ne]: ''},
       },
+      include: ['media'],
     });
     for (const event of events) {
       event.save();
@@ -60,7 +62,6 @@ export class EventDiscord {
   }
 
   private static async renderMessage(event: Event) {
-    const series = await event.getSeries();
     let path;
     if (process.env.NODE_ENV === 'production') {
       path = './public';
@@ -68,8 +69,9 @@ export class EventDiscord {
       path = './client/public';
     }
     const image = await DiscordHelper.renderImage(
-      event.discordImage ? [path + event.discordImage] : series.map((media: SeriesEvent) =>
-        media.details ? media.details.image : ''));
+      event.discordImage ? [path + event.discordImage] :
+        event.media.map((media: Media) =>
+          media.image.startsWith('/') ? (discordConfig.callbackHost + media.image) : media.image));
 
     const embed = new MessageEmbed();
     embed.setURL(discordConfig.callbackHost + '/schedule');
@@ -87,16 +89,18 @@ export class EventDiscord {
       embed.setDescription((event.description || ''));
     }
 
-    let limit = Math.floor((6000 - event.title.length - event.description?.length) / series.length);
+    let limit = Math.floor(
+      (6000 - event.title.length - event.description?.length) / event.media.length);
     if (limit > 1024) {
       limit = 1024;
     }
 
-    for (const media of series) {
-      if (media.details) {
-        const title = '**[' + media.details.title + '](' + media.details.siteUrl + '): Ep ' +
-          media.episode + (media.episodes > 1 ? '-' + (media.episode + media.episodes - 1) : '') + '**\n';
-        const description = DiscordHelper.wrapText(media.details.description, limit - title.length);
+    for (const media of event.media) {
+      if (media.EventMedia) {
+        const title = '**[' + media.title + '](' + '' + media.id + '): Ep ' +
+          media.EventMedia.episode + (media.episodes > 1 ? '-' +
+            (media.EventMedia.episode + media.EventMedia.episodes - 1) : '') + '**\n';
+        const description = DiscordHelper.wrapText(media.description, limit - title.length);
         embed.addField('-', title + description);
       }
     }

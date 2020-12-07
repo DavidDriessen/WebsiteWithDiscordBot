@@ -91,11 +91,11 @@ export class PollDiscord {
     for (const [i, option] of poll.options.entries()) {
       switch (option.type) {
         case 'Series':
-          if (option.details) {
-            const title = '**[' + option.details.title + '](' + option.details.siteUrl + ')** ';
+          if (option.media) {
+            const title = '**[' + option.media.title + '](' + '' + option.media.id + ')** ';
             // const description = DiscordHelper.wrapText(option.details.description,
             //   limit - title.length);
-            const genres = '(' + option.details.genres.join(', ') + ')';
+            const genres = '(' + option.media.genres.join(', ') + ')';
             description += '\n' + BallotDiscord.options[i] + ' ' + title + genres;
           }
           break;

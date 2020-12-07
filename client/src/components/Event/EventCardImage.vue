@@ -4,51 +4,25 @@
     <!--suppress HtmlUnknownTarget -->
     <v-img
       v-if="image"
-      :src="image"
+      :src="'https://vrotakus.my-server.nl' + image"
       alt="event"
       class="white--text align-end event-image"
     />
-    <div v-if="!image" :class="'img-wrap img-wrap-' + seriesImages.length">
-      <img
-        v-for="(value, index) in seriesImages"
-        :key="index"
-        :src="value"
-        @click="gotoSeries(index)"
-      />
+    <div v-if="!image" :class="'img-wrap img-wrap-' + media.length">
+      <img v-for="(m, i) in media" :key="i" :src="m.image" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { EventSeries } from "@/types";
+import { Media } from "@/types";
 
 @Component
 export default class EventCardImage extends Vue {
-  @Prop() series!: EventSeries[];
+  @Prop() media!: Media[];
   @Prop() image!: string;
   @Prop() small!: boolean;
-
-  get seriesImages() {
-    return this.series.map(series => {
-      if (!series.details) {
-        return "";
-      }
-      return series.details.image;
-    });
-  }
-
-  gotoSeries(index: number) {
-    if (!this.small) {
-      const url = this.series[index].details?.siteUrl;
-      if (url) {
-        const win = window.open(url, "_blank");
-        if (win) {
-          win.focus();
-        }
-      }
-    }
-  }
 }
 </script>
 

@@ -7,8 +7,9 @@
 import {Request, Response} from 'express';
 import {Controller, Get} from '@overnightjs/core';
 import axios from 'axios';
-import Media, {IAPIMedia} from '../database/models/Media';
+import Media from '../database/models/Media';
 import {Op} from 'sequelize';
+import MediaReference from '../database/models/MediaReference';
 
 @Controller('api/series')
 export class SeriesController {
@@ -23,6 +24,7 @@ export class SeriesController {
                     season
                     duration
                     genres
+                    trailer { site }
                     episodes
                     coverImage { extraLarge large medium }`;
 
@@ -30,7 +32,7 @@ export class SeriesController {
     return new Promise(async (resolve) => {
       let media = await Media.findAll({where: {aniId: {[Op.in]: ids}}});
       // tslint:disable-next-line:triple-equals
-      ids = ids.filter((id) => !media.some((m) => m.aniId == id));
+      // ids = ids.filter((id) => !media.some((m) => m.aniId == id));
       if (ids.length > 0) {
         media = media.concat(await axios
           .post(
@@ -52,7 +54,30 @@ export class SeriesController {
           )
           .then(async (response) => {
             return await Promise.all(response.data.data.Page.media
-              .map((m: IAPIMedia) => Media.parse(m).save()));
+              // tslint:disable-next-line:no-shadowed-variable
+              .map((media: any) => {
+                const m = Media.build({
+                  title: media.title.english || media.title.romaji || media.title.userPreferred,
+                  description: media.description,
+                  image: media.coverImage.extraLarge,
+                  genres: media.genres,
+                  duration: media.duration,
+                  episodes: media.episodes,
+                });
+                m.references = [MediaReference.build({
+                  name: media.title.english || media.title.romaji || media.title.userPreferred,
+                  type: 'anidb',
+                  apiID: media.id,
+                  url: media.siteUrl,
+                }),
+                  MediaReference.build({
+                    name: media.title.english || media.title.romaji || media.title.userPreferred,
+                    type: 'mal',
+                    apiID: media.idMal,
+                    url: '',
+                  })];
+                return m.save();
+              }));
           }));
       }
       resolve(media);
@@ -99,7 +124,29 @@ export class SeriesController {
           },
         });
       res.status(response.status).json(
-        response.data.data.Page.media.map((m: IAPIMedia) => Media.parse(m)));
+        response.data.data.Page.media.map((media: any) => {
+          const m = Media.build({
+            title: media.title.english || media.title.romaji || media.title.userPreferred,
+            description: media.description,
+            image: media.coverImage.extraLarge,
+            genres: media.genres,
+            duration: media.duration,
+            episodes: media.episodes,
+          });
+          m.references = [MediaReference.build({
+            name: media.title.english || media.title.romaji || media.title.userPreferred,
+            type: 'anidb',
+            apiID: media.id,
+            url: media.siteUrl,
+          }),
+            MediaReference.build({
+              name: media.title.english || media.title.romaji || media.title.userPreferred,
+              type: 'mal',
+              apiID: media.idMal,
+              url: '',
+            })];
+          return m;
+        }));
     } catch (e) {
       if (e.response) {
         res.status(e.response.status).json(e.response.data);
