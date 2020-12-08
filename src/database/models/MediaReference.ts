@@ -14,7 +14,7 @@ export class MediaReference extends Model<MediaReference> {
   public type!: string;
 
   @Column
-  public apiID!: string;
+  public apiId!: string;
 
   @Column
   public url!: string;

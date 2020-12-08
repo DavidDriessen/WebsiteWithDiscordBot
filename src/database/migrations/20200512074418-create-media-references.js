@@ -27,7 +27,7 @@ module.exports = {
                 allowNull: false,
                 type: Sequelize.STRING,
             },
-            apiID: {
+            apiId: {
                 allowNull: true,
                 type: Sequelize.STRING,
             },

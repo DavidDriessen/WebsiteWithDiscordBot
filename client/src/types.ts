@@ -51,7 +51,8 @@ export interface Poll {
 }
 
 export interface MediaReference {
-  id: number;
+  id?: number;
+  name: string;
   type: string;
   apiId: string | null;
   url: string;
@@ -62,9 +63,11 @@ export interface Media {
   type: string;
   title: string;
   description: string;
+  genres: string[];
   image: string;
   trailer: string;
   episodes: number;
+  duration: number;
   references: MediaReference[];
   EventMedia?: { episode: number; episodes: number; order: number };
 }

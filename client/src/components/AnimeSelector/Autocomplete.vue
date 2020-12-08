@@ -43,14 +43,13 @@ export default class Autocomplete extends Vue {
   loading = false;
   search = "";
   items: Media[] = [];
-  typingTimer: number | null = null;
 
   update(media: Media[]) {
     this.$emit("input", media);
   }
 
   @Watch("search")
-  getSeries(search: string) {
+  getMedia(search: string) {
     if (search) {
       this.loading = true;
       axios

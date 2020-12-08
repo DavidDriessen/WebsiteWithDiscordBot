@@ -111,6 +111,8 @@ export class ScheduleController {
       event.streamer = streamer;
       return res.status(200).json(event.serialize(req.payload.user));
     } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.error(e);
       return res.status(500).json({error: 'error', message: 'Please try again later.'});
     }
   }
