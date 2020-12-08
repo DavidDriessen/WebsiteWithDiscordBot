@@ -56,7 +56,11 @@ export default class Autocomplete extends Vue {
         .get("/api/media/search/" + encodeURIComponent(search))
         .then(r => r.data)
         .then((media: Media[]) => {
-          this.items = media as Media[];
+          for (const m of media) {
+            if (!this.items.some(i => i.id === m.id)) {
+              this.items.push(m);
+            }
+          }
         })
         .finally(() => {
           this.loading = false;
@@ -70,7 +74,6 @@ export default class Autocomplete extends Vue {
 
   customFilter(media: Media, search: string) {
     return (
-      search ||
       media.title.toLowerCase().search(search.toLowerCase()) >= 0 ||
       media.description.toLowerCase().search(search.toLowerCase()) >= 0
     );

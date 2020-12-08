@@ -24,7 +24,8 @@ export class MediaController {
   @Middleware(JWT(false))
   private searchMedia(req: ISecureRequest, res: Response) {
     Media.findAll({
-      where: Sequelize.literal('(lower(`Media`.`title`) LIKE \'%' + req.params.search + '%\' OR lower(`Media`.`description`) LIKE \'%' + req.params.search + '%\');'),
+      where: Sequelize.literal('(lower(`Media`.`title`) LIKE \'%' + req.params.search + '%\' OR lower(`Media`.`description`) LIKE \'%' + req.params.search + '%\')'),
+      limit: 5,
     }).then((media) => res.status(200).json(media));
   }
 
