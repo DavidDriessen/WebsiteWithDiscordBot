@@ -1,5 +1,4 @@
 import {
-  BeforeCreate,
   BeforeDestroy,
   BeforeUpdate,
   Column,
@@ -91,11 +90,6 @@ export class Poll extends Model<Poll> {
     return (new Serializer(Poll, scheme, options)).serialize(this);
   }
 
-
-  @BeforeCreate
-  public static async postMessage(poll: Poll) {
-    await PollDiscord.addPoll(poll);
-  }
 
   @BeforeUpdate
   public static async updateMessage(poll: Poll) {

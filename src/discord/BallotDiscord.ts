@@ -117,8 +117,8 @@ export class BallotDiscord {
             + this.getVoteText(ballot.options.find((o) => o.id === option.id)) + '```';
         }
         if (!option.media && option.content) {
-          description += option.content + '```CSS\n' +
-            this.getVoteText(ballot.options.find((o) => o.id === option.id)) + '```';
+          const choice = this.getVoteText(ballot.options.find((o) => o.id === option.id));
+          description += option.content + (choice ? '```CSS\n' + choice + '```' : '');
         }
       }
       embed.setDescription(description);

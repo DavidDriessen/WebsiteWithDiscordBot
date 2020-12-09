@@ -97,6 +97,7 @@ export class PollController {
         poll.options[i].$set('media', m.id);
       }
     }
+    await poll.save();
     return res.status(200).json(poll.serialize(req.payload?.user));
   }
 
