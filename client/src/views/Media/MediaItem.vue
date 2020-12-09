@@ -105,7 +105,9 @@ export default class MediaList extends Vue {
     title: "",
     type: "",
     description: "",
-    image: ""
+    image: "",
+    genres: [],
+    duration: 0
   };
   image = null;
   loading = false;
