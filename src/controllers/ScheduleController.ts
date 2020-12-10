@@ -10,7 +10,7 @@ import User from '../database/models/User';
 import {EventWorker} from '../workers/EventWorker';
 import {isAdmin, JWT, upload} from '../helpers/Website';
 import Media from '../database/models/Media';
-import {Sequelize} from 'sequelize-typescript';
+import EventMedia from '../database/models/EventMedia';
 
 @Controller('api/schedule')
 export class ScheduleController {
@@ -19,10 +19,10 @@ export class ScheduleController {
   @Middleware(JWT(false))
   private async getEvents(req: ISecureRequest, res: Response) {
     let where: WhereOptions = {end: {[Op.gte]: moment().toISOString()}};
-    let order: Order = ['start', [Sequelize.literal('`media->EventMedia`.`order`'), 'asc']];
+    let order: Order = ['start', [{model: Media, as: 'media'}, EventMedia, 'order', 'asc']];
     if (req.query.history) {
       where = {end: {[Op.lte]: moment().toISOString()}};
-      order = [['start', 'desc'], [Sequelize.literal('`media->EventMedia`.`order`'), 'asc']];
+      order = [['start', 'desc'], [{model: Media, as: 'media'}, EventMedia, 'order', 'asc']];
     }
     const user = req.payload ? req.payload.user : null;
     const userId = user ? user.id : null;
@@ -34,6 +34,8 @@ export class ScheduleController {
           association: 'attending', attributes: ['decision'], required: false,
           where: {user: userId},
         }], where, order,
+      offset: (parseInt(req.query.page as string, 10) || 0) * 50,
+      limit: 16,
     });
     res.status(200).json(events.map((event) => event.serialize(user)));
   }

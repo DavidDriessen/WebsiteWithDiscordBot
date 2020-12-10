@@ -1,16 +1,18 @@
 <template>
   <v-container v-resize="onResize">
-    <v-overlay :value="loading" absolute>
-      <v-progress-circular indeterminate size="128">
-        <h1>Loading</h1>
-      </v-progress-circular>
-    </v-overlay>
-
     <v-data-iterator
       :items="events"
-      :disable-pagination="events.length < 6"
-      :hide-default-footer="events.length < 6"
+      disable-pagination
+      hide-default-footer
+      :loading="loading"
     >
+      <template v-slot:loading>
+        <v-overlay absolute>
+          <v-progress-circular indeterminate size="128">
+            <h1>Loading</h1>
+          </v-progress-circular>
+        </v-overlay>
+      </template>
       <template v-slot:header>
         <v-toolbar
           flat
@@ -18,21 +20,35 @@
         >
           <v-spacer />
           <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />
-          <v-switch v-model="history" label="History" @change="getSchedule" />
+          <v-switch v-model="history" label="History" @change="getSchedule()" />
         </v-toolbar>
         <v-divider />
       </template>
       <template v-slot:default="{ items }">
         <v-row justify="space-around" style="padding: 20px">
-          <event-card
+          <v-responsive
             v-for="(event, index) of items"
             :key="index"
-            :event.sync="event"
-            :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
-            :history="history"
-            :ampm.sync="ampm"
-            @save="getSchedule"
-          />
+            min-height="150"
+            min-width="150"
+          >
+            <v-lazy>
+              <event-card
+                :event.sync="event"
+                :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
+                :history="history"
+                :ampm.sync="ampm"
+                @save="getSchedule()"
+              />
+            </v-lazy>
+          </v-responsive>
+        </v-row>
+        <v-row class="justify-center">
+          <mugen-scroll :handler="getNext" :should-handle="!loading">
+            <v-progress-circular indeterminate size="128">
+              <h1>Loading</h1>
+            </v-progress-circular>
+          </mugen-scroll>
         </v-row>
       </template>
       <template v-slot:no-data>
@@ -47,8 +63,9 @@
             <v-card-text>
               Check back later.
               <br />
-              Or check the <router-link to="/polls">polls</router-link> page for
-              possible polls for next season.
+              Or check the
+              <router-link to="/polls">polls</router-link>
+              page for possible polls for next season.
             </v-card-text>
             <v-card-subtitle>
               <small>
@@ -59,7 +76,7 @@
         </v-row>
       </template>
     </v-data-iterator>
-    <EventModal v-if="isAdmin" @save="getSchedule" />
+    <EventModal v-if="isAdmin" @save="getSchedule()" />
   </v-container>
 </template>
 
@@ -69,12 +86,15 @@ import { Event } from "@/types";
 import EventModal from "@/components/Event/EventModal.vue";
 import EventCard from "@/components/Event/EventCard.vue";
 import { mapPreferences } from "vue-preferences";
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+import MugenScroll from "vue-mugen-scroll";
 import axios from "../plugins/axios";
 import moment from "moment";
 import { mapGetters } from "vuex";
 
 @Component({
-  components: { EventCard, EventModal },
+  components: { EventCard, EventModal, MugenScroll },
   computed: {
     ...mapPreferences({ ampm: { defaultValue: true } }),
     ...mapGetters(["isLoggedIn", "isAdmin"])
@@ -88,6 +108,7 @@ export default class Schedule extends Vue {
   width = 350;
   history = false;
   intervals: { update: number } = { update: 0 };
+  page = 0;
 
   mounted() {
     this.getSchedule();
@@ -107,17 +128,23 @@ export default class Schedule extends Vue {
     }
   }
 
-  getSchedule() {
+  getNext() {
+    if (this.events.length > 0) {
+      this.page += 1;
+      this.getSchedule(true);
+    }
+  }
+
+  getSchedule(next = false) {
     this.loading = true;
-    this.events = [];
-    axios
+    return axios
       .get("/api/schedule", {
         headers: localStorage.token
           ? {
               Authorization: `Bearer ${localStorage.token}`
             }
           : {},
-        params: { history: this.history ? "true" : undefined }
+        params: { history: this.history ? "true" : undefined, page: this.page }
       })
       .then(async response => {
         const events: Event[] = response.data;
@@ -127,7 +154,11 @@ export default class Schedule extends Vue {
             event.end = moment(event.end);
           }
         }
-        this.events = events;
+        if (next) {
+          this.events = this.events.concat(events);
+        } else {
+          this.events = events;
+        }
         this.loading = false;
       });
   }
