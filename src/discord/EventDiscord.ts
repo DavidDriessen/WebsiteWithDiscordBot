@@ -97,7 +97,8 @@ export class EventDiscord {
 
     for (const media of event.media) {
       if (media.EventMedia) {
-        const title = '**[' + media.title + '](' + '' + media.id + '): Ep ' +
+        const title = '**[' + media.title + '](' +
+          discordConfig.callbackHost + '/media/' + media.id + '): Ep ' +
           media.EventMedia.episode + (media.episodes > 1 ? '-' +
             (media.EventMedia.episode + media.EventMedia.episodes - 1) : '') + '**\n';
         const description = DiscordHelper.wrapText(media.description, limit - title.length);
