@@ -20,7 +20,7 @@
         >
           <v-spacer />
           <v-switch v-model="ampm" label="12hr" style="margin-right: 20px" />
-          <v-switch v-model="history" label="History" @change="getSchedule()" />
+          <v-switch v-model="history" label="History" />
         </v-toolbar>
         <v-divider />
       </template>
@@ -44,8 +44,15 @@
           </v-responsive>
         </v-row>
         <v-row class="justify-center">
-          <mugen-scroll :handler="getNext" :should-handle="!loading">
-            <v-progress-circular indeterminate size="128">
+          <mugen-scroll
+            :handler="getNext"
+            :should-handle="!endPage && !loading"
+          >
+            <v-progress-circular
+              indeterminate
+              size="128"
+              v-show="!endPage && loading"
+            >
               <h1>Loading</h1>
             </v-progress-circular>
           </mugen-scroll>
@@ -81,13 +88,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 import { Event } from "@/types";
 import EventModal from "@/components/Event/EventModal.vue";
 import EventCard from "@/components/Event/EventCard.vue";
 import { mapPreferences } from "vue-preferences";
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
 import MugenScroll from "vue-mugen-scroll";
 import axios from "../plugins/axios";
 import moment from "moment";
@@ -109,6 +114,7 @@ export default class Schedule extends Vue {
   history = false;
   intervals: { update: number } = { update: 0 };
   page = 0;
+  endPage = false;
 
   mounted() {
     this.getSchedule();
@@ -129,14 +135,21 @@ export default class Schedule extends Vue {
   }
 
   getNext() {
-    if (this.events.length > 0) {
+    if (this.events.length > 0 && !this.endPage) {
       this.page += 1;
       this.getSchedule(true);
     }
   }
 
+  @Watch("history")
+  resetPage() {
+    this.page = 0;
+    this.getSchedule();
+  }
+
   getSchedule(next = false) {
     this.loading = true;
+    this.endPage = false;
     return axios
       .get("/api/schedule", {
         headers: localStorage.token
@@ -144,7 +157,11 @@ export default class Schedule extends Vue {
               Authorization: `Bearer ${localStorage.token}`
             }
           : {},
-        params: { history: this.history ? "true" : undefined, page: this.page }
+        params: {
+          history: this.history ? "true" : undefined,
+          full: next ? undefined : "true",
+          page: this.page
+        }
       })
       .then(async response => {
         const events: Event[] = response.data;
@@ -153,6 +170,9 @@ export default class Schedule extends Vue {
             event.start = moment(event.start);
             event.end = moment(event.end);
           }
+        }
+        if (events.length === 0) {
+          this.endPage = true;
         }
         if (next) {
           this.events = this.events.concat(events);

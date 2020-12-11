@@ -34,8 +34,8 @@ export class ScheduleController {
           association: 'attending', attributes: ['decision'], required: false,
           where: {user: userId},
         }], where, order,
-      offset: (parseInt(req.query.page as string, 10) || 0) * 50,
-      limit: 16,
+      offset: req.query.full ? 0 : (parseInt(req.query.page as string, 10) || 0) * 16,
+      limit: req.query.full ? (parseInt(req.query.page as string, 10) + 1 || 1) * 16 : 16,
     });
     res.status(200).json(events.map((event) => event.serialize(user)));
   }
