@@ -41,7 +41,7 @@ export default class AnimeImporter extends Vue {
   search = "";
   items: Media[] = [];
   typingTimer: number | null = null;
-  refs = [];
+  refs: MediaReference[] = [];
 
   update(media: Media) {
     this.loading = true;
@@ -55,12 +55,12 @@ export default class AnimeImporter extends Vue {
       })
       .then(r => r.data)
       .then((media: Media) => {
-        const ref: MediaReference = media.references.find(
-          r => r.type === this.apiName
-        );
-        this.items.splice(
-          this.items.findIndex(m => m.references[0].apiId === ref.apiId)
-        );
+        const ref = media.references.find(r => r.type === this.apiName);
+        if (ref) {
+          this.items.splice(
+            this.items.findIndex(m => m.references[0].apiId === ref.apiId)
+          );
+        }
         this.refs = this.refs.concat(media.references);
         this.$emit("input", media);
         this.loading = false;
@@ -82,6 +82,22 @@ export default class AnimeImporter extends Vue {
 
   @Watch("search")
   getAniBdMedia(search: string, previousSearch: string, isTyping = true) {
+    interface APIMedia {
+      title: {
+        english: string;
+        romaji: string;
+        userPreferred: string;
+      };
+      description: string;
+      coverImage: { extraLarge: string };
+      genres: string[];
+      duration: number;
+      episodes: number;
+      id: number;
+      siteUrl: string;
+      idMal: string;
+    }
+
     if (this.typingTimer) {
       clearTimeout(this.typingTimer);
     }
@@ -112,56 +128,40 @@ export default class AnimeImporter extends Vue {
           }
         )
         .then(r => r.data.data.Page.media)
-        .then((m: Media[]) =>
-          m.filter(m => !this.refs.some(r => r.apiId === m.id?.toString()))
+        .then((m: APIMedia[]) =>
+          m.filter(m => !this.refs.some(r => r.apiId === m.id.toString()))
         )
-        .then(media => {
-          this.items = media.map(
-            (m: {
-              title: {
-                english: string;
-                romaji: string;
-                userPreferred: string;
-              };
-              description: string;
-              coverImage: { extraLarge: string };
-              genres: string;
-              duration: string;
-              episodes: string;
-              id: string;
-              siteUrl: string;
-              idMal: string;
-            }) => ({
-              title: m.title.english || m.title.romaji || m.title.userPreferred,
-              description: m.description,
-              image: m.coverImage.extraLarge,
-              genres: m.genres,
-              duration: m.duration,
-              episodes: m.episodes,
-              references: [
-                {
-                  name:
-                    m.title.english || m.title.romaji || m.title.userPreferred,
-                  type: "anidb",
-                  apiId: m.id.toString(),
-                  url: m.siteUrl
-                },
-                m.idMal
-                  ? {
-                      name:
-                        m.title.english ||
-                        m.title.romaji ||
-                        m.title.userPreferred,
-                      type: "mal",
-                      apiId: m.idMal.toString(),
-                      url: ""
-                    }
-                  : undefined
-              ],
-              trailer: "",
-              type: ""
-            })
-          );
+        .then((media: APIMedia[]) => {
+          this.items = media.map((m: APIMedia) => ({
+            title: m.title.english || m.title.romaji || m.title.userPreferred,
+            description: m.description,
+            image: m.coverImage.extraLarge,
+            genres: m.genres,
+            duration: m.duration,
+            episodes: m.episodes,
+            references: [
+              {
+                name:
+                  m.title.english || m.title.romaji || m.title.userPreferred,
+                type: "anidb",
+                apiId: m.id.toString(),
+                url: m.siteUrl
+              },
+              m.idMal
+                ? {
+                    name:
+                      m.title.english ||
+                      m.title.romaji ||
+                      m.title.userPreferred,
+                    type: "mal",
+                    apiId: m.idMal.toString(),
+                    url: ""
+                  }
+                : ((undefined as unknown) as MediaReference)
+            ],
+            trailer: "",
+            type: ""
+          }));
         })
         .finally(() => {
           this.loading = false;
