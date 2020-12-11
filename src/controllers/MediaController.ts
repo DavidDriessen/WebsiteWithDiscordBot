@@ -4,14 +4,25 @@ import {Response} from 'express';
 import {isAdmin, JWT, upload} from '../helpers/Website';
 import Media from '../database/models/Media';
 import {Sequelize} from 'sequelize-typescript';
+import MediaReference from '../database/models/MediaReference';
 
 @Controller('api/media')
 export class MediaController {
 
   @Get('')
   @Middleware(JWT(false))
-  private async getMedias(_req: ISecureRequest, res: Response) {
-    res.status(200).json(await Media.findAll());
+  private async getMedias(req: ISecureRequest, res: Response) {
+    let where;
+    if (req.query.search) {
+      where = Sequelize.literal('(lower(`Media`.`title`) LIKE \'%' + req.query.search + '%\' OR lower(`Media`.`description`) LIKE \'%' + req.query.search + '%\')');
+    }
+    res.status(200).json(await Media.findAll({
+      where,
+      include: ['references'],
+      order: [['createdAt', 'DESC']],
+      offset: req.query.full ? 0 : (parseInt(req.query.page as string, 10) || 0) * 16,
+      limit: req.query.full ? (parseInt(req.query.page as string, 10) + 1 || 1) * 16 : 16,
+    }));
   }
 
   @Get(':id')
@@ -29,6 +40,13 @@ export class MediaController {
     }).then((media) => res.status(200).json(media));
   }
 
+  @Get('refs/:type')
+  @Middleware(JWT(false))
+  private getRefs(req: ISecureRequest, res: Response) {
+    MediaReference.findAll({where: {type: req.params.type}})
+      .then((refs) => res.status(200).json(refs));
+  }
+
   @Put('')
   @Middleware(JWT())
   @isAdmin
@@ -43,14 +61,17 @@ export class MediaController {
         description: req.body.description,
         episodes: req.body.episodes,
         image: req.body.image,
+        references: req.body.references,
       } as Media;
       const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
-      if (files.image && files.image.length > 0) {
+      if (files && files.image && files.image.length > 0) {
         data.image = '/images/' + files.image[0].filename;
       }
-      const media = await Media.create(data);
+      const media = await Media.create(data, {include: ['references']});
       return res.status(200).json(media);
     } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.error(e);
       return res.status(500).json({error: 'error', message: 'Please try again later.'});
     }
   }

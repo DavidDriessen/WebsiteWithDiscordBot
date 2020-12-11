@@ -1,37 +1,33 @@
 <!--suppress HtmlUnknownTarget -->
 <template>
-  <v-container>
-    <v-autocomplete
-      :value.sync="value"
-      @input="update"
-      :items.sync="items"
-      :loading="loading"
-      :search-input.sync="search"
-      label="Series"
-      :item-value="seriesItemValue"
-      auto-select-first
-      hide-selected
-      hide-details
-      hide-no-data
-      multiple
-      :filter="customFilter"
-    >
-      <template v-slot:selection="{}" />
-      <template v-slot:item="{ item }">
-        <div v-if="item.title">
-          <v-avatar>
-            <img :src="item.image" :alt="item.title" />
-          </v-avatar>
-          <span>{{ item.title }}</span>
-        </div>
-      </template>
-    </v-autocomplete>
-  </v-container>
+  <v-autocomplete
+    :value.sync="value"
+    @input="update"
+    :items.sync="items"
+    :loading="loading"
+    :search-input.sync="search"
+    label="Import from API"
+    :item-value="seriesItemValue"
+    auto-select-first
+    hide-details
+    hide-no-data
+    :filter="customFilter"
+  >
+    <template v-slot:selection="{}" />
+    <template v-slot:item="{ item }">
+      <div v-if="item.title">
+        <v-avatar>
+          <img :src="item.image" :alt="item.title" />
+        </v-avatar>
+        <span>{{ item.title }}</span>
+      </div>
+    </template>
+  </v-autocomplete>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { Media } from "@/types";
+import { Media, MediaReference } from "@/types";
 import draggable from "vuedraggable";
 import axios from "../../plugins/axios";
 
@@ -40,13 +36,48 @@ import axios from "../../plugins/axios";
 })
 export default class AnimeImporter extends Vue {
   @Prop() value!: Media[];
+  @Prop() apiName!: string;
   loading = false;
   search = "";
   items: Media[] = [];
   typingTimer: number | null = null;
+  refs = [];
 
-  update(media: Media[]) {
-    this.$emit("input", media);
+  update(media: Media) {
+    this.loading = true;
+    axios
+      .put("/api/media", media, {
+        headers: localStorage.token
+          ? {
+              Authorization: `Bearer ${localStorage.token}`
+            }
+          : {}
+      })
+      .then(r => r.data)
+      .then((media: Media) => {
+        const ref: MediaReference = media.references.find(
+          r => r.type === this.apiName
+        );
+        this.items.splice(
+          this.items.findIndex(m => m.references[0].apiId === ref.apiId)
+        );
+        this.refs = this.refs.concat(media.references);
+        this.$emit("input", media);
+        this.loading = false;
+      });
+  }
+
+  mounted() {
+    this.getRefs();
+  }
+
+  getRefs() {
+    axios
+      .get("/api/media/refs/" + this.apiName)
+      .then(r => r.data)
+      .then(refs => {
+        this.refs = refs;
+      });
   }
 
   @Watch("search")
@@ -66,7 +97,7 @@ export default class AnimeImporter extends Vue {
           {
             query:
               "query ($search: String) { Page{ media(search: $search, type: ANIME){ " +
-              "id\n                    idMal\n                    title { english romaji  userPreferred }\n                    description\n                    synonyms\n                    siteUrl\n                    status\n                    season\n                    duration\n                    genres\n                    trailer { site }\n                    episodes\n                    coverImage { extraLarge large medium }" +
+              "id\nidMal\ntitle { english romaji  userPreferred }\ndescription\nsynonyms\nsiteUrl\nstatus\nseason\nduration\ngenres\ntrailer { site }\nepisodes\ncoverImage { extraLarge large medium }" +
               " }}}",
             variables: { search: search }
           },
@@ -81,6 +112,9 @@ export default class AnimeImporter extends Vue {
           }
         )
         .then(r => r.data.data.Page.media)
+        .then((m: Media[]) =>
+          m.filter(m => !this.refs.some(r => r.apiId === m.id?.toString()))
+        )
         .then(media => {
           this.items = media.map(
             (m: {
@@ -109,16 +143,20 @@ export default class AnimeImporter extends Vue {
                   name:
                     m.title.english || m.title.romaji || m.title.userPreferred,
                   type: "anidb",
-                  apiId: m.id,
+                  apiId: m.id.toString(),
                   url: m.siteUrl
                 },
-                {
-                  name:
-                    m.title.english || m.title.romaji || m.title.userPreferred,
-                  type: "mal",
-                  apiId: m.idMal,
-                  url: ""
-                }
+                m.idMal
+                  ? {
+                      name:
+                        m.title.english ||
+                        m.title.romaji ||
+                        m.title.userPreferred,
+                      type: "mal",
+                      apiId: m.idMal.toString(),
+                      url: ""
+                    }
+                  : undefined
               ],
               trailer: "",
               type: ""
@@ -135,12 +173,14 @@ export default class AnimeImporter extends Vue {
     return v;
   }
 
-  customFilter(media: Media, search: string) {
-    return (
-      search ||
-      media.title.toLowerCase().search(search.toLowerCase()) >= 0 ||
-      media.description.toLowerCase().search(search.toLowerCase()) >= 0
-    );
+  // customFilter(media: Media, search: string) {
+  customFilter() {
+    return true;
+    // return (
+    //   search ||
+    //   media.title.toLowerCase().search(search.toLowerCase()) >= 0 ||
+    //   media.description.toLowerCase().search(search.toLowerCase()) >= 0
+    // );
   }
 }
 </script>
