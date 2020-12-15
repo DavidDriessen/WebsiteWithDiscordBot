@@ -16,7 +16,7 @@
           </v-col>
           <v-col></v-col>
           <v-col cols="3">
-            <anime-importer api-name="anidb" @input="addMedia" />
+            <anime-importer v-if="isAdmin" api-name="anidb" @input="addMedia" />
           </v-col>
         </v-toolbar>
         <v-divider />
