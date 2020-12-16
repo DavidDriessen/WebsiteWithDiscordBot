@@ -33,7 +33,7 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { Media } from "@/types";
 import draggable from "vuedraggable";
-import axios from "../../plugins/axios";
+import axios from "@/plugins/axios";
 
 @Component({
   components: { draggable }

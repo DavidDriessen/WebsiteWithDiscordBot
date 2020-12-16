@@ -22,6 +22,11 @@
         <span>{{ item.title }}</span>
       </div>
     </template>
+    <template v-slot:no-data>
+      <v-chip v-if="error">
+        Something went wrong.
+      </v-chip>
+    </template>
   </v-autocomplete>
 </template>
 
@@ -29,7 +34,7 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { Media, MediaReference } from "@/types";
 import draggable from "vuedraggable";
-import axios from "../../plugins/axios";
+import axios from "@/plugins/axios";
 
 @Component({
   components: { draggable }
@@ -42,17 +47,12 @@ export default class AnimeImporter extends Vue {
   items: Media[] = [];
   typingTimer: number | null = null;
   refs: MediaReference[] = [];
+  error = false;
 
   update(media: Media) {
     this.loading = true;
     axios
-      .put("/api/media", media, {
-        headers: localStorage.token
-          ? {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          : {}
-      })
+      .put("/api/media", media)
       .then(r => r.data)
       .then((media: Media) => {
         const ref = media.references.find(r => r.type === this.apiName);
@@ -82,6 +82,7 @@ export default class AnimeImporter extends Vue {
 
   @Watch("search")
   getAniBdMedia(search: string, previousSearch: string, isTyping = true) {
+    this.error = false;
     interface APIMedia {
       title: {
         english: string;
@@ -162,6 +163,10 @@ export default class AnimeImporter extends Vue {
             trailer: "",
             type: ""
           }));
+        })
+        .catch(() => {
+          this.error = true;
+          this.items = [];
         })
         .finally(() => {
           this.loading = false;

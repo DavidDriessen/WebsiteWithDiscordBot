@@ -83,7 +83,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { mapPreferences } from "vue-preferences";
-import axios from "../../plugins/axios";
+import axios from "@/plugins/axios";
 import { mapGetters } from "vuex";
 import MediaCard from "@/components/Media/MediaCard.vue";
 import { Media } from "@/types";
@@ -123,20 +123,12 @@ export default class MediaList extends Vue {
   }
 
   getMedia(id: number) {
-    axios
-      .get("/api/media/" + id, {
-        headers: localStorage.token
-          ? {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          : {}
-      })
-      .then(async response => {
-        const r = response.data;
-        console.log(r);
-        this.media = r;
-        this.loading = false;
-      });
+    axios.get("/api/media/" + id).then(async response => {
+      const r = response.data;
+      console.log(r);
+      this.media = r;
+      this.loading = false;
+    });
   }
 
   get form() {
@@ -153,25 +145,13 @@ export default class MediaList extends Vue {
       this.loading = true;
       this.editing = false;
       if (this.media.id) {
-        axios
-          .post("/api/media", serialize(data), {
-            headers: {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          })
-          .then(() => {
-            this.loading = false;
-          });
+        axios.post("/api/media", serialize(data)).then(() => {
+          this.loading = false;
+        });
       } else {
-        axios
-          .put("/api/media", serialize(data), {
-            headers: {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          })
-          .then(() => {
-            this.loading = false;
-          });
+        axios.put("/api/media", serialize(data)).then(() => {
+          this.loading = false;
+        });
       }
     }
   }

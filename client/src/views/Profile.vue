@@ -69,7 +69,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { User } from "@/types";
-import axios from "axios";
+import axios from "@/plugins/axios";
 
 @Component
 export default class Profile extends Vue {
@@ -93,11 +93,7 @@ export default class Profile extends Vue {
     if (this.form.validate()) {
       this.loading = true;
       axios
-        .post("/api/user", this.user, {
-          headers: {
-            Authorization: `Bearer ${localStorage.token}`
-          }
-        })
+        .post("/api/user", this.user)
         .then(() => {
           this.loading = false;
           this.color = "success";

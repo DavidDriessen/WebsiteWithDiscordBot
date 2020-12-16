@@ -70,7 +70,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import axios from "axios";
+import axios from "@/plugins/axios";
 import { Event } from "@/types";
 
 @Component
@@ -126,15 +126,10 @@ export default class EventActions extends Vue {
   save() {
     this.form.validate();
     axios
-      .post(
-        "/api/schedule/streaming",
-        { event: this.event.id, code: this.roomcode },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.token}`
-          }
-        }
-      )
+      .post("/api/schedule/streaming", {
+        event: this.event.id,
+        code: this.roomcode
+      })
       .then(() => {
         this.dialog = false;
       });

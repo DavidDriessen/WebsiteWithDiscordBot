@@ -10,7 +10,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import axios from "axios";
+import axios from "@/plugins/axios";
 
 interface JWT {
   jwt: {};
@@ -28,9 +28,6 @@ export default class Discord extends Vue {
       .then(response => {
         localStorage.token = response.data.jwt;
         this.$store.commit("User", response.data.user);
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${localStorage.token}`;
         this.$store.state.newUser = true;
         this.$router.replace("/");
       })

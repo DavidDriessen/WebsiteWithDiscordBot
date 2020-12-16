@@ -94,7 +94,7 @@ import EventModal from "@/components/Event/EventModal.vue";
 import EventCard from "@/components/Event/EventCard.vue";
 import { mapPreferences } from "vue-preferences";
 import MugenScroll from "vue-mugen-scroll";
-import axios from "../plugins/axios";
+import axios from "@/plugins/axios";
 import moment from "moment";
 import { mapGetters } from "vuex";
 
@@ -152,11 +152,6 @@ export default class Schedule extends Vue {
     this.endPage = false;
     return axios
       .get("/api/schedule", {
-        headers: localStorage.token
-          ? {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          : {},
         params: {
           history: this.history ? "true" : undefined,
           full: next ? undefined : "true",

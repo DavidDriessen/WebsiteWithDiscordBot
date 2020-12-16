@@ -170,11 +170,7 @@ export default class EventCard extends Vue {
   deleteEvent() {
     this.deleteLoading = true;
     axios
-      .delete("/api/schedule/" + this.event.id, {
-        headers: {
-          Authorization: `Bearer ${localStorage.token}`
-        }
-      })
+      .delete("/api/schedule/" + this.event.id)
       .then(() => {
         this.$emit("save");
       })

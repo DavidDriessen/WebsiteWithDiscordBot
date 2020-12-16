@@ -38,11 +38,7 @@ export default class MediaCard extends Vue {
   deleteMedia() {
     this.deleteLoading = true;
     axios
-      .delete("/api/media/" + this.media.id, {
-        headers: {
-          Authorization: `Bearer ${localStorage.token}`
-        }
-      })
+      .delete("/api/media/" + this.media.id)
       .then(() => {
         this.$emit("save");
       })

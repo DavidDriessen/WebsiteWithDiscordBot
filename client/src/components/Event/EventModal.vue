@@ -206,7 +206,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import axios from "../../plugins/axios";
+import axios from "@/plugins/axios";
 import { Event, User } from "@/types";
 import draggable from "vuedraggable";
 import moment from "moment";
@@ -277,14 +277,7 @@ export default class EventModal extends Vue {
 
   getStreamers() {
     axios
-      .get("/api/user/streamers", {
-        headers: {
-          Authorization: `Bearer ${localStorage.token}`
-        },
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        useCache: true
-      })
+      .get("/api/user/streamers")
       .then((response: { data: User[] }) => {
         this.streamers = response.data;
       })
@@ -382,11 +375,7 @@ export default class EventModal extends Vue {
       };
       if (this.eventToEdit) {
         axios
-          .post("/api/schedule", serialize(data), {
-            headers: {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          })
+          .post("/api/schedule", serialize(data))
           .then(() => {
             this.close();
             this.loading = false;
@@ -401,17 +390,11 @@ export default class EventModal extends Vue {
             this.loading = false;
           });
       } else {
-        axios
-          .put("/api/schedule", serialize(data), {
-            headers: {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          })
-          .then(() => {
-            this.close();
-            this.loading = false;
-            this.$emit("save");
-          });
+        axios.put("/api/schedule", serialize(data)).then(() => {
+          this.close();
+          this.loading = false;
+          this.$emit("save");
+        });
       }
     }
   }

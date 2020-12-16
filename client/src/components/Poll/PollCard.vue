@@ -145,11 +145,7 @@ export default class PollCard extends Vue {
   deletePoll() {
     this.deleteLoading = true;
     axios
-      .delete("/api/polls/" + this.poll.id, {
-        headers: {
-          Authorization: `Bearer ${localStorage.token}`
-        }
-      })
+      .delete("/api/polls/" + this.poll.id)
       .then(() => {
         this.$emit("save");
       })
@@ -163,15 +159,7 @@ export default class PollCard extends Vue {
 
   vote(option: PollOption, choice: number) {
     if (this.isLoggedIn) {
-      axios.post(
-        "/api/polls/vote",
-        { option: option.id, choice },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.token}`
-          }
-        }
-      );
+      axios.post("/api/polls/vote", { option: option.id, choice });
       option.voted = choice;
     } else {
       this.$emit("notLoggedin");

@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import axios from "axios";
+import axios from "@/plugins/axios";
 import router from "@/router";
 
 Vue.use(Vuex);
@@ -29,11 +29,7 @@ const store = new Vuex.Store({
     getUser({ commit }) {
       if (localStorage.token) {
         axios
-          .get<User>("/api/user", {
-            headers: {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          })
+          .get<User>("/api/user")
           .then(response => {
             commit("User", response.data);
             axios.interceptors.response.use(
@@ -62,18 +58,10 @@ const store = new Vuex.Store({
       ) {
         payload.event.attending = payload.state;
         // noinspection JSIgnoredPromiseFromCall
-        axios.post(
-          "/api/schedule/attending",
-          {
-            id: payload.event.id,
-            decision: payload.event.attending
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          }
-        );
+        axios.post("/api/schedule/attending", {
+          id: payload.event.id,
+          decision: payload.event.attending
+        });
       }
     },
     Logout({ commit }) {

@@ -60,7 +60,7 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { Media } from "@/types";
 import { mapPreferences } from "vue-preferences";
-import axios from "../../plugins/axios";
+import axios from "@/plugins/axios";
 import { mapGetters } from "vuex";
 import MediaCard from "@/components/Media/MediaCard.vue";
 import AnimeImporter from "@/components/AnimeSelector/AnimeImporter.vue";
@@ -106,11 +106,6 @@ export default class MediaList extends Vue {
     this.endPage = false;
     axios
       .get("/api/media", {
-        headers: localStorage.token
-          ? {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          : {},
         params: {
           search: this.search,
           full: next ? undefined : "true",

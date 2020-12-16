@@ -74,7 +74,7 @@ import { Component, Vue } from "vue-property-decorator";
 import { Poll } from "@/types";
 import PollCard from "@/components/Poll/PollCard.vue";
 import { mapPreferences } from "vue-preferences";
-import axios from "../plugins/axios";
+import axios from "@/plugins/axios";
 import moment from "moment";
 import PollModal from "@/components/Poll/PollModal.vue";
 import { mapGetters } from "vuex";
@@ -119,11 +119,6 @@ export default class Polls extends Vue {
     this.polls = [];
     axios
       .get("/api/polls", {
-        headers: localStorage.token
-          ? {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          : {},
         params: { history: this.history ? "true" : undefined }
       })
       .then(async response => {

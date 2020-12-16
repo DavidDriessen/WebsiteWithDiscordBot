@@ -151,29 +151,17 @@ export default class PollModal extends Vue {
       const poll = { json: JSON.stringify(this.poll) };
       this.loading = true;
       if (this.pollToEdit) {
-        axios
-          .post("/api/polls", serialize(poll), {
-            headers: {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          })
-          .then(() => {
-            this.close();
-            this.loading = false;
-            this.$emit("save");
-          });
+        axios.post("/api/polls", serialize(poll)).then(() => {
+          this.close();
+          this.loading = false;
+          this.$emit("save");
+        });
       } else {
-        axios
-          .put("/api/polls", serialize(poll), {
-            headers: {
-              Authorization: `Bearer ${localStorage.token}`
-            }
-          })
-          .then(() => {
-            this.close();
-            this.loading = false;
-            this.$emit("save");
-          });
+        axios.put("/api/polls", serialize(poll)).then(() => {
+          this.close();
+          this.loading = false;
+          this.$emit("save");
+        });
       }
     }
   }

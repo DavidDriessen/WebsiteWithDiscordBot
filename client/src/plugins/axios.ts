@@ -1,22 +1,17 @@
-import axios, { AxiosInstance } from "axios";
-import { cacheAdapterEnhancer } from "axios-extensions";
+import axios from "axios";
 
-let http: AxiosInstance;
-if (axios.defaults.adapter) {
-  http = axios.create({
-    baseURL: "/",
-    headers: { "Cache-Control": "no-cache" },
-    // cache will be enabled by default
-    adapter: cacheAdapterEnhancer(axios.defaults.adapter, {
-      enabledByDefault: false,
-      cacheFlag: "useCache"
-    })
-  });
-} else {
-  http = axios.create({
-    baseURL: "/",
-    headers: { "Cache-Control": "no-cache" }
-  });
-}
+axios.interceptors.request.use(
+  request => {
+    if (request.headers && request.url && request.url.startsWith("/")) {
+      request.headers.Authorization = localStorage.token
+        ? `Bearer ${localStorage.token}`
+        : undefined;
+    }
+    return request;
+  },
+  error => {
+    return error;
+  }
+);
 
-export default http;
+export default axios;
