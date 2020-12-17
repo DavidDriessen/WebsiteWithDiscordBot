@@ -60,6 +60,7 @@ export class MediaController {
         title: req.body.title,
         description: req.body.description,
         episodes: req.body.episodes,
+        genres: req.body.genres || [],
         image: req.body.image,
         references: req.body.references,
       } as Media;
@@ -84,7 +85,6 @@ export class MediaController {
     if (req.body.json) {
       req.body = JSON.parse(req.body.json);
     }
-    // tslint:disable-next-line:max-line-length
     if (!req.body.title) {
       return res.status(401).send('');
     }
@@ -94,6 +94,7 @@ export class MediaController {
     }
     media.image = req.body.image;
     media.title = req.body.title;
+    media.genres = req.body.genres || [];
     media.description = req.body.description;
     media.episodes = req.body.episodes;
     const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
