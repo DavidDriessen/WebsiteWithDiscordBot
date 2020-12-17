@@ -2,10 +2,8 @@ import axios from "axios";
 
 axios.interceptors.request.use(
   request => {
-    if (request.headers && request.url && request.url.startsWith("/")) {
-      request.headers.Authorization = localStorage.token
-        ? `Bearer ${localStorage.token}`
-        : undefined;
+    if (localStorage.token && request.headers && request.url && request.url.startsWith("/")) {
+      request.headers.Authorization = `Bearer ${localStorage.token}`;
     }
     return request;
   },
