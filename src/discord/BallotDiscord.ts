@@ -46,7 +46,7 @@ export class BallotDiscord {
   }
 
   public static async voteChoice(user: DiscordUser | PartialUser, option: PollOption) {
-    const choices = ['💖', '❤️', '🤷', '🚫'];
+    const choices = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
     let content = '';
     option.media = await option.$get('media') || undefined;
     if (option.media) {

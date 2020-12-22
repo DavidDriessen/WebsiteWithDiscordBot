@@ -40,7 +40,7 @@ export class Poll extends Model<Poll> {
 
   public serialize(user: User | undefined) {
     const scheme = {
-      include: ['title', 'description', 'end', 'options'],
+      include: ['title', 'description', 'end', 'options', 'image'],
       exclude: ['@fk', '@auto'],
       assoc: {
         options: {
