@@ -31,6 +31,8 @@
       <v-form ref="form" lazy-validation @submit="save()">
         <v-tabs v-model="tab">
           <v-tab>Details</v-tab>
+          <v-tab>Image</v-tab>
+          <v-tab>Discord image</v-tab>
           <v-tab>Options</v-tab>
         </v-tabs>
         <v-tabs-items v-model="tab">
@@ -75,6 +77,44 @@
           </v-tab-item>
           <v-tab-item>
             <v-card-text>
+              <v-row>
+                <v-col>
+                  <v-file-input v-model="image" />
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col>
+                  <v-img :src="imagePreview" width="350" />
+                </v-col>
+                <v-col>
+                  <v-btn @click="resetImage">
+                    Reset default
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-tab-item>
+          <v-tab-item>
+            <v-card-text>
+              <v-row>
+                <v-col>
+                  <v-file-input v-model="discordImage" />
+                </v-col>
+              </v-row>
+              <v-row v-if="discordImagePreview">
+                <v-col>
+                  <v-img :src="discordImagePreview" width="350" />
+                </v-col>
+                <v-col>
+                  <v-btn @click="resetdiscordImage">
+                    Reset default
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-tab-item>
+          <v-tab-item>
+            <v-card-text>
               <anime-selector v-model="poll.options" />
             </v-card-text>
           </v-tab-item>
@@ -111,6 +151,32 @@ export default class PollModal extends Vue {
   poll: Poll = { title: "", options: [], end: moment().add(1, "week") } as Poll;
   loading = false;
   tab = "details";
+  image: File | null = null;
+  discordImage: File | null = null;
+  
+  get imagePreview() {
+    if (this.image) {
+      return URL.createObjectURL(this.image);
+    }
+    return this.poll.image;
+  }
+
+  resetImage() {
+    this.image = null;
+    this.poll.image = "";
+  }
+
+  get discordImagePreview() {
+    if (this.discordImage) {
+      return URL.createObjectURL(this.discordImage);
+    }
+    return this.poll.discordImage;
+  }
+
+  resetdiscordImage() {
+    this.discordImage = null;
+    this.poll.discordImage = "";
+  }
 
   mounted() {
     if (this.pollToEdit) {

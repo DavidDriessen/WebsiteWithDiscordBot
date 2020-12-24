@@ -74,7 +74,7 @@ export class PollController {
   @Put('')
   @Middleware(JWT())
   @isAdmin
-  @Middleware(upload.fields([{name: 'image', maxCount: 1}]))
+  @Middleware(upload.fields([{name: 'image', maxCount: 1}, {name: 'discordImage', maxCount: 1}]))
   private async addPoll(req: ISecureRequest, res: Response) {
     if (req.body.json) {
       req.body = JSON.parse(req.body.json);
@@ -87,6 +87,13 @@ export class PollController {
         option.order = index;
         return option;
       });
+    }
+    const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
+    if (files.image && files.image.length > 0) {
+      req.body.image = '/images/' + files.image[0].filename;
+    }
+    if (files.discordImage && files.discordImage.length > 0) {
+      req.body.discordImage = '/images/' + files.discordImage[0].filename;
     }
     const poll = await Poll.create(req.body, {
       include: [{association: 'options', include: ['ballots']}],
@@ -104,7 +111,7 @@ export class PollController {
   @Post('')
   @Middleware(JWT())
   @isAdmin
-  @Middleware(upload.fields([{name: 'image', maxCount: 1}]))
+  @Middleware(upload.fields([{name: 'image', maxCount: 1}, {name: 'discordImage', maxCount: 1}]))
   private async editPoll(req: ISecureRequest, res: Response) {
     if (req.body.json) {
       req.body = JSON.parse(req.body.json);
@@ -123,6 +130,8 @@ export class PollController {
     }
     poll.title = req.body.title;
     poll.end = req.body.end;
+    poll.image = req.body.image;
+    poll.discordImage = req.body.discordImage;
     poll.description = req.body.description;
     if (req.body.options) {
       poll.options = req.body.options.map((s: PollOption, i: number) => {
@@ -131,6 +140,13 @@ export class PollController {
         option.order = i;
         return option;
       });
+    }
+    const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
+    if (files.image && files.image.length > 0) {
+      poll.image = '/images/' + files.image[0].filename;
+    }
+    if (files.discordImage && files.discordImage.length > 0) {
+      poll.discordImage = '/images/' + files.discordImage[0].filename;
     }
     await poll.save();
     for (const ballot of await poll.$get('ballots')) {

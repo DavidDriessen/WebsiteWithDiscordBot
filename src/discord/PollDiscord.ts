@@ -1,5 +1,5 @@
 import {ArgsOf, Command, Description, Discord, Guard, On} from '@typeit/discord';
-import {MessageEmbed, TextChannel} from 'discord.js';
+import {MessageAttachment, MessageEmbed, TextChannel} from 'discord.js';
 import {Op} from 'sequelize';
 import Poll from '../database/models/Poll';
 import * as discordConfig from '../config/discord.json';
@@ -10,6 +10,9 @@ import {BallotDiscord} from './BallotDiscord';
 import {CheckRole} from './Guards';
 import Ballot from '../database/models/Ballot';
 import User from '../database/models/User';
+import {DiscordHelper} from '../helpers/Discord';
+import * as Jimp from 'jimp';
+import PollOption from '../database/models/PollOption';
 
 @Discord('!')
 export class PollDiscord {
@@ -71,11 +74,34 @@ export class PollDiscord {
         }
       }
     }
+    BallotDiscord.receiveVote([messageReaction, user]);
+  }
+
+  public static async appendImage(poll: Poll, embed: MessageEmbed){
+    let image;
+    const path = (process.env.NODE_ENV === 'production') ? './public' : './client/public';
+    if (poll.discordImage) {
+      image = await DiscordHelper.renderImage([path + poll.discordImage]);
+    } else {
+      if (poll.options.some((o) => o.media && o.media.image)) {
+        image = await DiscordHelper.renderImage(
+          poll.options.filter((option: PollOption) =>
+            option.media && option.media.image)
+            .map((option: PollOption) => option.media?.image || '')
+            .map((mImage: string) => mImage.startsWith('/') ?
+              (discordConfig.callbackHost + mImage) : mImage));
+      }
+    }
+    if (image) {
+      embed.attachFiles([
+        new MessageAttachment(await image.getBufferAsync(Jimp.MIME_PNG), 'image.png')]);
+    }
   }
 
   private static async renderMessage(poll: Poll) {
     const pollRole = this.getChannel().guild.roles.cache.find((role) => role.name === 'Polls');
     const embed = new MessageEmbed();
+    await this.appendImage(poll, embed);
     embed.setURL(discordConfig.callbackHost + '/polls');
     embed.setTitle(poll.title);
     let description = '<@&' + pollRole?.id + '> ' + poll.description || '';
@@ -123,7 +149,7 @@ export class PollDiscord {
         .send(await PollDiscord.renderMessage(poll));
       poll.messageID = msg.id;
       await msg.react('📝');
-      // BallotDiscord.addReactions(msg, poll.options.length);
+      BallotDiscord.addReactions(msg, poll.options.length);
     } catch (e) {
       // tslint:disable-next-line:no-console
       console.error('Error adding message for Poll: ' + poll.id + '\n', e);

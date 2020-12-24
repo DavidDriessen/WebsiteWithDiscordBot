@@ -7,6 +7,7 @@ import User from '../database/models/User';
 import Poll from '../database/models/Poll';
 import PollOption from '../database/models/PollOption';
 import PollVote from '../database/models/PollVote';
+import {PollDiscord} from './PollDiscord';
 
 @Discord()
 export class BallotDiscord {
@@ -30,7 +31,7 @@ export class BallotDiscord {
               for (const messageReaction of msg.reactions.cache
                 .filter((r) => !!r.count && r.count > 1).array()) {
                 for (const ruser of (await messageReaction.users.fetch()).array()) {
-                  this.receiveVote([messageReaction, ruser]);
+                  BallotDiscord.receiveVote([messageReaction, ruser]);
                 }
               }
             }
@@ -70,7 +71,10 @@ export class BallotDiscord {
       });
       const reaction = reactions.first();
       if (reaction) {
-        return choices.length - choices.indexOf(reaction.emoji.name) - 1;
+        const choice = choices.indexOf(reaction.emoji.name);
+        if (choice >= 0) {
+          return choice;
+        }
       }
     } catch (e) {
       m.delete().catch(() => {
@@ -79,46 +83,30 @@ export class BallotDiscord {
     }
   }
 
-  private static getVoteText(option: PollOption | undefined) {
-    if (!option || !option.PollVote) {
-      return '';
-    }
-    switch (option.PollVote.choice) {
-      case 3:
-        return '[Must watch]';
-      case 2:
-        return '[Is ok]';
-      case 1:
-        return '[Interested]';
-      case 0:
-        return '[No interest]';
-      default:
-        return '';
-    }
-  }
-
   private static async renderMessage(ballot: Ballot) {
     const poll = await Poll.findByPk(ballot.poll.id, {
-      include: ['options'], order: [['options', 'order', 'asc']],
+      include: [{association: 'options', include: ['media']}], order: [['options', 'order', 'asc']],
     });
     if (poll) {
       const embed = new MessageEmbed();
+      await PollDiscord.appendImage(poll, embed);
       embed.setURL(discordConfig.callbackHost + '/polls');
       embed.setTitle(poll.title);
       let description = poll.description || '';
       for (const [i, option] of poll.options.entries()) {
         description += '\n' + BallotDiscord.options[i] + ' ';
         option.media = await option.$get('media') || undefined;
+        const choice = this.options[
+        ballot.options.find((o) => o.id === option.id)?.PollVote?.choice || 0];
         if (option.media) {
           const title = '**[' + option.media.title + '](' +
             discordConfig.callbackHost + '/media/' + option.media.id + ')** ';
           const genres = '(' + option.media.genres.join(', ') + ')';
-          description += title + (option.content ? '\n' + option.content : '') + '```CSS\n' + genres
-            + this.getVoteText(ballot.options.find((o) => o.id === option.id)) + '```';
+          description += title + (option.content ? '\n' + option.content : '')
+            + genres + ' ' + choice;
         }
         if (!option.media && option.content) {
-          const choice = this.getVoteText(ballot.options.find((o) => o.id === option.id));
-          description += option.content + (choice ? '```CSS\n' + choice + '```' : '');
+          description += option.content + ' ' + choice;
         }
       }
       embed.setDescription(description);
@@ -134,7 +122,7 @@ export class BallotDiscord {
   }
 
   @On('messageReactionAdd')
-  public async receiveVote([messageReaction, user]: ArgsOf<'messageReactionAdd'>) {
+  public static async receiveVote([messageReaction, user]: ArgsOf<'messageReactionAdd'>) {
     if (user.bot) {
       return;
     }

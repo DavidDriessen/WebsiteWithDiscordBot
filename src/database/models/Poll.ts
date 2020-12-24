@@ -24,6 +24,9 @@ export class Poll extends Model<Poll> {
   public image!: string;
 
   @Column
+  public discordImage!: string;
+
+  @Column
   public description!: string;
 
   @Column({allowNull: true})
