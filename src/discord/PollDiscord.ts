@@ -59,8 +59,10 @@ export class PollDiscord {
       const ballot = (await Ballot.findOrCreate({
         where: {userId: dbUser.id, pollId: poll.id},
       }))[0];
-      ballot.user = dbUser;
-      ballot.poll = poll;
+      // @ts-ignore
+      ballot.user = await ballot.$get('user');
+      // @ts-ignore
+      ballot.poll = await ballot.$get('poll', {include: ['options'], order: [['options', 'order', 'asc']]});
       messageReaction.users.remove(user.id).then();
       if (messageReaction.emoji.name === '📝') {
         BallotDiscord.updateBallot(ballot, true);
@@ -74,10 +76,9 @@ export class PollDiscord {
         }
       }
     }
-    BallotDiscord.receiveVote([messageReaction, user]);
   }
 
-  public static async appendImage(poll: Poll, embed: MessageEmbed){
+  public static async appendImage(poll: Poll, embed: MessageEmbed) {
     let image;
     const path = (process.env.NODE_ENV === 'production') ? './public' : './client/public';
     if (poll.discordImage) {

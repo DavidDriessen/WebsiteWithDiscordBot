@@ -59,13 +59,18 @@ export class BallotDiscord {
 
     const dm = user.dmChannel || await user.createDM();
     const m = await dm.send('Voting for option: ' + content);
-    for (const choice of choices) {
-      await m.react(choice);
-    }
-    try {
-      const reactions = await m.awaitReactions((r, u) => {
-        return !u.bot;
-      }, {max: 1, time: 20000, errors: ['time']});
+    new Promise(async () => {
+      for (const choice of choices) {
+        await m.react(choice).catch(() => {
+          return;
+        });
+      }
+    }).catch(() => {
+      return;
+    });
+    return m.awaitReactions((r, u) => {
+      return !u.bot;
+    }, {max: 1, time: 20000, errors: ['time']}).then((reactions) => {
       m.delete().catch(() => {
         return;
       });
@@ -76,11 +81,11 @@ export class BallotDiscord {
           return choice;
         }
       }
-    } catch (e) {
+    }).catch(() => {
       m.delete().catch(() => {
         return;
       });
-    }
+    });
   }
 
   private static async renderMessage(ballot: Ballot) {
@@ -136,6 +141,7 @@ export class BallotDiscord {
         order: [['poll', 'options', 'order', 'asc']],
       });
       if (ballot) {
+        await messageReaction.message.delete();
         await BallotDiscord.changeVote(user, option, ballot);
         BallotDiscord.updateBallot(ballot, true);
       }
