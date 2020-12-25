@@ -45,6 +45,8 @@ export interface Event {
 export interface Poll {
   id?: number;
   title: string;
+  image: string;
+  discordImage: string;
   description?: string;
   end: Moment;
   options: PollOption[];

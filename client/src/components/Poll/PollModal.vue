@@ -148,7 +148,13 @@ import { serialize } from "object-to-formdata";
 export default class PollModal extends Vue {
   @Prop() pollToEdit?: Poll;
   dialog = false;
-  poll: Poll = { title: "", options: [], end: moment().add(1, "week") } as Poll;
+  poll: Poll = {
+    title: "",
+    image: "",
+    discordImage: "",
+    options: [],
+    end: moment().add(1, "week")
+  } as Poll;
   loading = false;
   tab = "details";
   image: File | null = null;
