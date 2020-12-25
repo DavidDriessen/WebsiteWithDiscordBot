@@ -120,7 +120,7 @@ export class PollDiscord {
       }
     }
     embed.setDescription(description);
-    embed.addField('Voters', (await poll.$get('ballots')).length);
+    embed.addField('Voters', (await poll.$get('ballots')).length.toString() + '\n\nFinish your vote in dm.');
     return embed;
   }
 

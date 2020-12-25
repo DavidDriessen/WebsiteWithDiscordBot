@@ -153,7 +153,7 @@ export default class PollModal extends Vue {
   tab = "details";
   image: File | null = null;
   discordImage: File | null = null;
-  
+
   get imagePreview() {
     if (this.image) {
       return URL.createObjectURL(this.image);

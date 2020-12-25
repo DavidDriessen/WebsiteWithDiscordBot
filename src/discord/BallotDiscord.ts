@@ -1,5 +1,5 @@
 import {ArgsOf, Discord, On} from '@typeit/discord';
-import {User as DiscordUser, Message, MessageEmbed, PartialUser} from 'discord.js';
+import {User as DiscordUser, Message, MessageEmbed, PartialUser, MessageAttachment} from 'discord.js';
 import * as discordConfig from '../config/discord.json';
 import {client} from '../start';
 import Ballot from '../database/models/Ballot';
@@ -8,6 +8,8 @@ import Poll from '../database/models/Poll';
 import PollOption from '../database/models/PollOption';
 import PollVote from '../database/models/PollVote';
 import {PollDiscord} from './PollDiscord';
+import {DiscordHelper} from '../helpers/Discord';
+import * as Jimp from 'jimp';
 
 @Discord()
 export class BallotDiscord {
@@ -48,17 +50,30 @@ export class BallotDiscord {
 
   public static async voteChoice(user: DiscordUser | PartialUser, option: PollOption) {
     const choices = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
+    const embed = new MessageEmbed();
     let content = '';
     option.media = await option.$get('media') || undefined;
     if (option.media) {
-      content += option.media.title;
+      if (option.media.image) {
+        let mImage = option.media.image;
+        if (mImage.startsWith('/')) {
+          mImage = discordConfig.callbackHost + mImage;
+        }
+        const image = await DiscordHelper.renderImage([mImage]);
+        embed.attachFiles([
+          new MessageAttachment(await image.getBufferAsync(Jimp.MIME_PNG), 'image.png')]);
+      }
+      embed.setTitle(option.media.title);
+      embed.setURL(discordConfig.callbackHost + '/media/' + option.media.id);
+      content += option.media.description;
     }
     if (option.content) {
-      content += (option.media ? '\n' : '') + option.content;
+      content += (option.media ? '\n\n' : '') + option.content;
     }
+    embed.setDescription(content);
 
     const dm = user.dmChannel || await user.createDM();
-    const m = await dm.send('Voting for option: ' + content);
+    const m = await dm.send(embed);
     new Promise(async () => {
       for (const choice of choices) {
         await m.react(choice).catch(() => {
