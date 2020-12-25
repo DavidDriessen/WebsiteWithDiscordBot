@@ -23,13 +23,12 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import EventActions from "@/components/Event/EventActions.vue";
 import { mapGetters } from "vuex";
 import { Poll } from "@/types";
 import Chart from "@/components/AnimeSelector/Chart.vue";
 
 @Component({
-  components: { Chart, EventActions },
+  components: { Chart },
   computed: { ...mapGetters(["isLoggedIn", "isAdmin"]) }
 })
 export default class PollResults extends Vue {
@@ -37,11 +36,9 @@ export default class PollResults extends Vue {
   dialog = false;
   mode = 0;
   modes = [
-    { value: 0, text: "default" },
-    { value: 1, text: "1" },
-    { value: 2, text: "2" },
-    { value: 3, text: "3" },
-    { value: 4, text: "4" }
+    { value: 0, text: "Vote choice counted" },
+    { value: 1, text: "Number votes" },
+    { value: 2, text: "User votes" }
   ];
 
   get labels() {
@@ -58,12 +55,7 @@ export default class PollResults extends Vue {
 
   get values() {
     if (this.poll) {
-      return [
-        this.poll.options.map(option => option.votes[0]),
-        this.poll.options.map(option => option.votes[1]),
-        this.poll.options.map(option => option.votes[2]),
-        this.poll.options.map(option => option.votes[3])
-      ];
+      return this.poll.options;
     }
     return [];
   }

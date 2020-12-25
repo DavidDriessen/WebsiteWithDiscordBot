@@ -56,16 +56,22 @@ export class Poll extends Model<Poll> {
             },
           },
           postSerialize:
-            (serialized: { id: number, votes: number[], voted: number }, original: PollOption) => {
+            (serialized: {
+               id: number,
+               votes: Array<{ userId: number, user: string, choice: number }>, voted: number,
+             },
+             original: PollOption) => {
               if (user) {
                 if (user.role === 'Admin') {
                   serialized.id = original.id;
                   if (original.ballots) {
-                    serialized.votes = [
-                      original.ballots.filter((b) => b.PollVote && b.PollVote.choice === 0).length,
-                      original.ballots.filter((b) => b.PollVote && b.PollVote.choice === 1).length,
-                      original.ballots.filter((b) => b.PollVote && b.PollVote.choice === 2).length,
-                      original.ballots.filter((b) => b.PollVote && b.PollVote.choice === 3).length];
+                    serialized.votes = original.ballots.map((b: Ballot) => {
+                      return {
+                        userId: b.user.id,
+                        user: b.user.name,
+                        choice: b.PollVote ? b.PollVote.choice : 0,
+                      };
+                    });
                   }
                 }
                 if (original.ballots) {

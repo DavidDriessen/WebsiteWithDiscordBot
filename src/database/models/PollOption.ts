@@ -2,8 +2,7 @@ import {
   AllowNull,
   BelongsTo,
   BelongsToMany,
-  Column, ForeignKey,
-  Model,
+  Column, Model,
   Table,
 } from 'sequelize-typescript';
 import Poll from './Poll';
@@ -42,7 +41,7 @@ export class PollOption extends Model<PollOption> {
   @BelongsToMany(() => Ballot, () => PollVote)
   public ballots!: Ballot[];
 
-  public voted?: boolean;
+  public voted?: number;
 
   // tslint:disable-next-line:variable-name
   public PollVote?: PollVote;

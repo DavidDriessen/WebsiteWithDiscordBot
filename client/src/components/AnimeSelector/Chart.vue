@@ -28,87 +28,72 @@ export default {
   methods: {
     render() {
       let datasets;
+      let labels;
       let stacked = false;
+      let legend = false;
+      function generateRandomColor() {
+        const letters = "0123456789ABCDEF";
+        let color = "#";
+        for (let i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+      }
       switch (this.mode) {
-        case 4:
-          stacked = true;
-        // eslint-disable-next-line no-fallthrough
-        case 3:
-          datasets = [
-            {
-              label: "OK",
-              backgroundColor: "#f8d879",
-              data: this.data[2]
-            },
-            {
-              label: "Must",
-              backgroundColor: "#65f532",
-              data: this.data[3]
-            }
-          ];
-          break;
         case 2:
-          datasets = [
-            {
-              label: "Yes",
-              backgroundColor: "#29ff25",
-              data: this.data[0].map((v, k) => v + this.data[1][k])
-            }
+          legend = true;
+          labels = [
+            ...new Set(
+              this.data.reduce(
+                (total, o) => total.concat(o.votes.map(v => v.user)),
+                []
+              )
+            )
           ];
+          datasets = this.data.map(o => ({
+            label: o.media ? o.media.title : o.content,
+            backgroundColor: generateRandomColor(),
+            data: o.votes.map(v => ({
+              votes: o.votes,
+              x: v.user,
+              y: v.choice
+            }))
+          }));
           break;
         case 1:
+          labels = this.data.map(o => (o.media ? o.media.title : o.content));
           datasets = [
             {
-              label: "Nope",
-              backgroundColor: "#f87979",
-              data: this.data[0]
-            },
-            {
-              label: "Has to be",
               backgroundColor: "#fd722b",
-              data: this.data[1]
-            },
-            {
-              label: "OK",
-              backgroundColor: "#f8d879",
-              data: this.data[2]
-            },
-            {
-              label: "Must",
-              backgroundColor: "#65f532",
-              data: this.data[3]
+              data: this.data.map(o => ({
+                votes: o.votes,
+                x: o.media ? o.media.title : o.content,
+                y: o.votes.reduce(
+                  (total, v) => total + (v.choice > 0 ? 1 : 0),
+                  0
+                )
+              }))
             }
           ];
           break;
         default:
           stacked = true;
+          labels = this.data.map(o => (o.media ? o.media.title : o.content));
           datasets = [
             {
-              label: "Nope",
-              backgroundColor: "#f87979",
-              data: this.data[0].map(v => -v)
-            },
-            {
-              label: "Has to be",
               backgroundColor: "#fd722b",
-              data: this.data[1].map(v => v / 2)
-            },
-            {
-              label: "OK",
-              backgroundColor: "#f8d879",
-              data: this.data[2]
-            },
-            {
-              label: "Must",
-              backgroundColor: "#65f532",
-              data: this.data[3].map(v => v * 2)
+              data: this.data.map(o => ({
+                votes: o.votes,
+                x: o.media ? o.media.title : o.content,
+                y: o.votes.reduce((total, v) => total + v.choice, 0)
+              }))
             }
           ];
       }
 
       this.renderChart(
         {
-          labels: this.labels,
+          labels,
           datasets
         },
         {
@@ -137,18 +122,18 @@ export default {
             ]
           },
           legend: {
-            display: true
+            display: legend
           },
           tooltips: {
             enabled: true,
             mode: "single",
             callbacks: {
-              label: function(tooltipItems) {
-                return (
-                  tooltipItems.yLabel +
-                  " member" +
-                  (tooltipItems.yLabel > 1 ? "s" : "")
-                );
+              label: function(tooltipItems, data) {
+                const members =
+                  data.datasets[tooltipItems.datasetIndex].data[
+                    tooltipItems.index
+                  ].votes;
+                return members.map(m => m.user + ": " + m.choice).join("\n");
               }
             }
           },
