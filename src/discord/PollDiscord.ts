@@ -1,5 +1,5 @@
 import {ArgsOf, Command, Description, Discord, Guard, On} from '@typeit/discord';
-import {MessageAttachment, MessageEmbed, TextChannel} from 'discord.js';
+import {MessageAttachment, MessageEmbed, MessageReaction, TextChannel} from 'discord.js';
 import {Op} from 'sequelize';
 import Poll from '../database/models/Poll';
 import * as discordConfig from '../config/discord.json';
@@ -30,7 +30,7 @@ export class PollDiscord {
 
   @On('ready')
   public static async updateChannel() {
-    await PollDiscord.getChannel().messages.fetch();
+    const msgs = await PollDiscord.getChannel().messages.fetch();
     const order: Order = ['end', ['options', 'order', 'asc']];
     for (const poll of await Poll.findAll({
       where: {end: {[Op.gte]: moment()}},
@@ -43,10 +43,24 @@ export class PollDiscord {
     })) {
       PollDiscord.removePoll(poll);
     }
+    for (const poll of await Poll.findAll({
+      where: {messageID: {[Op.ne]: null, [Op.ne]: ''}, end: {[Op.gte]: moment()}},
+    })) {
+      if (poll.messageID) {
+        const msg = msgs.get(poll.messageID);
+        if (msg) {
+          for (const messageReaction of msg.reactions.cache.array()) {
+            for (const user of (await messageReaction.users.fetch()).array()) {
+              PollDiscord.getBallot([messageReaction, user]);
+            }
+          }
+        }
+      }
+    }
   }
 
   @On('messageReactionAdd')
-  public async getBallot([messageReaction, user]: ArgsOf<'messageReactionAdd'>) {
+  public static async getBallot([messageReaction, user]: ArgsOf<'messageReactionAdd'>) {
     if (user.bot) {
       return;
     }
@@ -64,9 +78,9 @@ export class PollDiscord {
       // @ts-ignore
       ballot.poll = await ballot.$get('poll', {include: ['options'], order: [['options', 'order', 'asc']]});
       messageReaction.users.remove(user.id).then();
+      PollDiscord.updatePoll(poll);
       if (messageReaction.emoji.name === '📝') {
         BallotDiscord.updateBallot(ballot, true);
-        PollDiscord.updatePoll(poll);
       } else {
         const option = BallotDiscord.options.indexOf(messageReaction.emoji.name);
         if (option > -1) {
