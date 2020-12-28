@@ -62,8 +62,8 @@ export class Poll extends Model<Poll> {
              },
              original: PollOption) => {
               if (user) {
+                serialized.id = original.id;
                 if (user.role === 'Admin') {
-                  serialized.id = original.id;
                   if (original.ballots) {
                     serialized.votes = original.ballots.map((b: Ballot) => {
                       return {
