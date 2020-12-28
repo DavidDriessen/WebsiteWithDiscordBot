@@ -53,20 +53,23 @@ export class PollController {
       const ballot = (await Ballot.findOrCreate({
         where: {userId: req.payload.user.id, pollId: option.poll.id},
       }))[0];
-      if (ballot) {
-        const vote = await PollVote.findOrCreate({
-          where: {ballot: ballot.id, option: option.id},
-          defaults: {choice: req.body.choice},
-        });
-        if (!vote[1]) {
-          vote[0].choice = req.body.choice;
-          vote[0].save();
-        }
-        if (ballot.discordMessageID) {
-          BallotDiscord.updateBallot(ballot);
-        }
-        return res.status(200).json({message: 'ok'});
+      const vote = await PollVote.findOrCreate({
+        where: {ballot: ballot.id, option: option.id},
+        defaults: {choice: req.body.choice},
+      });
+      if (!vote[1]) {
+        vote[0].choice = req.body.choice;
+        await vote[0].save();
       }
+      if (ballot.discordMessageID) {
+        ballot.$get('user').then((user) => {
+          if (user) {
+            ballot.user = user;
+            BallotDiscord.updateBallot(ballot);
+          }
+        });
+      }
+      return res.status(200).json({message: 'ok'});
     }
     return res.status(404).json({message: 'Option of user not found.'});
   }
