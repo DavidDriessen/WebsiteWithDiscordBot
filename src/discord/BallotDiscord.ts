@@ -104,7 +104,7 @@ export class BallotDiscord {
   }
 
   private static async renderMessage(ballot: Ballot) {
-    const poll = await Poll.findByPk(ballot.poll.id, {
+    const poll = await ballot.$get('poll', {
       include: [{association: 'options', include: ['media']}], order: [['options', 'order', 'asc']],
     });
     if (poll) {
