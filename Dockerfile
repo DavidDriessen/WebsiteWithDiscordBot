@@ -2,6 +2,7 @@ FROM node:12.14 AS web-interface
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
+RUN npx browserslist@latest --update-db
 COPY client/ ./
 RUN npm run build
 
