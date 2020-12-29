@@ -283,6 +283,7 @@ export default class EventModal extends Vue {
       })
       .catch((error: object) => {
         console.log(error);
+        this.error = "Unable to retrieve streamers.";
       });
   }
 
@@ -390,11 +391,21 @@ export default class EventModal extends Vue {
             this.loading = false;
           });
       } else {
-        axios.put("/api/schedule", serialize(data)).then(() => {
-          this.close();
-          this.loading = false;
-          this.$emit("save");
-        });
+        axios
+          .put("/api/schedule", serialize(data))
+          .then(() => {
+            this.close();
+            this.loading = false;
+            this.$emit("save");
+          })
+          .catch(e => {
+            if (e.response && e.response.data && e.response.data.message) {
+              this.error = e.response.data.message;
+            } else {
+              this.error = "Something went wrong. Please try again later.";
+            }
+            this.loading = false;
+          });
       }
     }
   }
