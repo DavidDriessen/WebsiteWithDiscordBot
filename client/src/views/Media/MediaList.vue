@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container v-resize="onResize">
     <v-overlay :value="loading" absolute>
       <v-progress-circular indeterminate size="128">
         <h1>Loading</h1>
@@ -23,16 +23,12 @@
       </template>
       <template v-slot:default="{ items }">
         <v-row justify="space-around" style="padding: 20px">
-          <v-responsive
-            v-for="(media, index) of items"
-            :key="index"
-            min-height="150"
-            min-width="150"
-          >
-            <v-lazy>
-              <media-card :cols="3 / 12" :media.sync="media" :width="350" />
-            </v-lazy>
-          </v-responsive>
+          <media-card
+              v-for="(media, index) of items"
+              :key="index" :media.sync="media"
+              :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
+              :height.sync="Math.floor(width / 400) > 1 ? 450 : 200"
+          />
         </v-row>
         <v-row class="justify-center">
           <mugen-scroll
@@ -79,9 +75,15 @@ export default class MediaList extends Vue {
   endPage = false;
   page = 0;
   search = "";
+  width = 350;
 
   mounted() {
     this.getMedias();
+    this.onResize();
+  }
+
+  onResize() {
+    this.width = document.documentElement.clientWidth;
   }
 
   addMedia(media: Media) {

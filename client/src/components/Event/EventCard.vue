@@ -13,6 +13,7 @@
           <template v-slot:activator="{ onClick }">
             <v-card
               :width.sync="width"
+              :min-height.sync="height"
               style="margin-bottom: 40px"
               hover
               @contextmenu.prevent="on.click"
@@ -104,6 +105,7 @@ import axios from "@/plugins/axios";
 export default class EventCard extends Vue {
   @Prop() event!: Event;
   @Prop() width!: number;
+  @Prop() height!: number;
   @Prop() history!: boolean;
   @Prop() ampm!: boolean;
   dialog = false;

@@ -1,16 +1,19 @@
 <!--suppress ALL -->
 <template>
-  <v-card
-    :width.sync="width"
-    style="margin-bottom: 40px"
-    hover
-    :to="'/media/' + media.id"
-  >
-    <v-img :src="media.image" height="400" />
-    <v-card-title class="text-truncate text-no-wrap">
-      {{ media.title }}
-    </v-card-title>
-  </v-card>
+  <v-lazy>
+    <v-card
+      :width.sync="width"
+      :min-height.sync="height"
+      style="margin-bottom: 40px"
+      hover
+      :to="'/media/' + media.id"
+    >
+      <v-img class="media-image" :src="media.image" />
+      <v-card-title class="media-title">
+        {{ media.title }}
+      </v-card-title>
+    </v-card>
+  </v-lazy>
 </template>
 
 <script lang="ts">
@@ -25,6 +28,7 @@ import axios from "@/plugins/axios";
 export default class MediaCard extends Vue {
   @Prop() media!: Media;
   @Prop() width!: number;
+  @Prop() height!: number;
   dialog = false;
   menu = false;
   deleteDialog = false;
@@ -52,4 +56,18 @@ export default class MediaCard extends Vue {
 }
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.media-image {
+  max-width: 350px;
+  max-height: 350px * 1.125;
+}
+@media (max-width: 816px) {
+  .media-title {
+    font-size: 14px!important;
+  }
+  .media-image {
+    max-width: 150px;
+    max-height: 150px * 1.125;
+  }
+}
+</style>

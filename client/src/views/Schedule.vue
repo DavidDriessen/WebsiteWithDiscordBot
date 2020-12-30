@@ -26,22 +26,16 @@
       </template>
       <template v-slot:default="{ items }">
         <v-row justify="space-around" style="padding: 20px">
-          <v-responsive
-            v-for="(event, index) of items"
-            :key="index"
-            min-height="150"
-            min-width="150"
-          >
-            <v-lazy>
-              <event-card
-                :event.sync="event"
-                :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
-                :history="history"
-                :ampm.sync="ampm"
-                @save="getSchedule()"
-              />
-            </v-lazy>
-          </v-responsive>
+          <event-card
+              v-for="(event, index) of items"
+              :key="index"
+              :event.sync="event"
+              :width.sync="Math.floor(width / 400) > 1 ? 350 : 150"
+              :height.sync="Math.floor(width / 400) > 1 ? 500 : 300"
+              :history="history"
+              :ampm.sync="ampm"
+              @save="getSchedule()"
+            />
         </v-row>
         <v-row class="justify-center">
           <mugen-scroll
@@ -109,7 +103,6 @@ export default class Schedule extends Vue {
   ampm!: boolean;
   events: Event[] = [];
   loading = false;
-  chunkSize = 3;
   width = 350;
   history = false;
   intervals: { update: number } = { update: 0 };
@@ -128,10 +121,6 @@ export default class Schedule extends Vue {
 
   onResize() {
     this.width = document.documentElement.clientWidth;
-    this.chunkSize = Math.floor(this.width / 420);
-    if (this.chunkSize == 1) {
-      this.chunkSize = Math.floor(this.width / 160);
-    }
   }
 
   getNext() {
@@ -176,11 +165,6 @@ export default class Schedule extends Vue {
         }
         this.loading = false;
       });
-  }
-
-  get chunkedEvents() {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require("chunk")(this.events, this.chunkSize);
   }
 }
 </script>
