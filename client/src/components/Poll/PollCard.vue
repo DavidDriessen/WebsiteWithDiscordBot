@@ -40,6 +40,7 @@
                 { text: 'Choice', value: 'voted', width: 50 }
               ]"
               hide-default-footer
+              disable-pagination
             >
               <template v-slot:item.content="{ item }">
                 {{ item.media ? item.media.title : item.content }}

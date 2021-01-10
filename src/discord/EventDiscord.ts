@@ -50,7 +50,7 @@ export class EventDiscord {
         end: {[Op.lt]: moment().toDate()},
         messageID: {[Op.ne]: null, [Op.ne]: ''},
       },
-      include: ['media'],
+      include: ['media', 'streamer', 'attendees'],
     });
     for (const event of events) {
       event.save();
