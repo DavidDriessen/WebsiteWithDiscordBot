@@ -153,11 +153,13 @@ export class ScheduleController {
           if (media) {
             if (!media.EventMedia) {
               media.EventMedia = m.EventMedia;
+              media.EventMedia.order = i;
             } else {
               media.EventMedia.episode = m.EventMedia.episode;
               media.EventMedia.episodes = m.EventMedia.episodes;
+              media.EventMedia.order = i;
+              media.EventMedia.save();
             }
-            media.EventMedia.order = i;
             return media;
           }
         }));
