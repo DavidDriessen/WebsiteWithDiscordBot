@@ -166,6 +166,7 @@ export class ScheduleController {
             return media;
           }
         }));
+      event.media.sort((a, b) => a.EventMedia.order - b.EventMedia.order);
     }
     const files = req.files as unknown as { [fieldName: string]: Express.Multer.File[] };
     if (files.image && files.image.length > 0) {
