@@ -12,7 +12,7 @@ import {CheckRole} from './Guards';
 import {Order} from 'sequelize/types/lib/model';
 import {DiscordHelper} from '../helpers/Discord';
 import Media from '../database/models/Media';
-import {Sequelize} from 'sequelize-typescript';
+import EventMedia from '../database/models/EventMedia';
 
 @Discord('!')
 export class EventDiscord {
@@ -28,7 +28,7 @@ export class EventDiscord {
   public static async updateChannel() {
     const channel = await EventDiscord.getChannel();
     const msgs = await channel.messages.fetch();
-    const order: Order = ['start', [Sequelize.literal('`media->EventMedia`.`order`'), 'asc']];
+    const order: Order = ['start', [{model: Media, as: 'media'}, EventMedia, 'order', 'asc']];
     let events = await Event.findAll({
       where: {
         start: {[Op.lte]: moment().add(1, 'week').add(12, 'hours').toDate()},
@@ -99,7 +99,7 @@ export class EventDiscord {
       if (media.EventMedia) {
         const title = '**[' + media.title + '](' +
           discordConfig.callbackHost + '/media/' + media.id + '): Ep ' +
-          media.EventMedia.episode + (media.episodes > 1 ? '-' +
+          media.EventMedia.episode + (media.EventMedia.episodes > 1 ? '-' +
             (media.EventMedia.episode + media.EventMedia.episodes - 1) : '') + '**\n';
         const description = DiscordHelper.wrapText(media.description, limit - title.length);
         embed.addField('-', title + description);

@@ -135,7 +135,10 @@ export class ScheduleController {
     if (!streamer) {
       return res.status(404).json({msg: 'Streamer not found!'});
     }
-    const event = await Event.findByPk(req.body.id, {include: ['media', 'streamer', 'attendees']});
+    const event = await Event.findByPk(req.body.id, {
+      include: ['media', 'streamer', 'attendees'],
+      order: ['start', [{model: Media, as: 'media'}, EventMedia, 'order', 'asc']],
+    });
     if (!event) {
       return res.status(200).json({message: 'Event not found'});
     }
