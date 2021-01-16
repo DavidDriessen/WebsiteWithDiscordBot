@@ -8,6 +8,8 @@ import {Op} from 'sequelize';
 import {CheckRole} from './Guards';
 import {EventWorker} from '../workers/EventWorker';
 import * as moment from 'moment';
+import Media from '../database/models/Media';
+import EventMedia from '../database/models/EventMedia';
 
 @Discord('!')
 export class AttendanceDiscord {
@@ -66,6 +68,7 @@ export class AttendanceDiscord {
     }
     const event = await Event.findOne({
       where: {messageID: messageReaction.message.id},
+      order: ['start', [{model: Media, as: 'media'}, EventMedia, 'order', 'asc']],
       include: ['media'],
     });
     if (!event) {
