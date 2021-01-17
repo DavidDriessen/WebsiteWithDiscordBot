@@ -1,4 +1,4 @@
-FROM node:12.14 AS web-interface
+FROM node:14.15 AS web-interface
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
@@ -6,7 +6,7 @@ RUN npx browserslist@latest --update-db
 COPY client/ ./
 RUN npm run build
 
-FROM node:12.14 AS server
+FROM node:14.15 AS server
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -20,7 +20,7 @@ COPY src/database/migrate.js ./build/database/migrate.js
 COPY src/database/migrations ./build/database/migrations
 RUN rm ./build/config/*
 
-FROM node:12.14
+FROM node:14.15
 RUN mkdir -p /app
 WORKDIR /app
 COPY --from=server /app/package*.json ./
