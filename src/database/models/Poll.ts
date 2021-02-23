@@ -8,7 +8,7 @@ import {
 } from 'sequelize-typescript';
 import PollOption from './PollOption';
 // @ts-ignore
-import * as Serializer from 'sequelize-to-json/index.js';
+import Serializer from 'sequelize-to-json/index.js';
 import User from './User';
 import {PollDiscord} from '../../discord/PollDiscord';
 import {Order} from 'sequelize/types/lib/model';

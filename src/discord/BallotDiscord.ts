@@ -1,6 +1,6 @@
 import {ArgsOf, Discord, On} from '@typeit/discord';
 import {User as DiscordUser, Message, MessageEmbed, PartialUser, MessageAttachment} from 'discord.js';
-import * as discordConfig from '../config/discord.json';
+import discordConfig from '../config/discord.json';
 import {client} from '../start';
 import Ballot from '../database/models/Ballot';
 import User from '../database/models/User';
@@ -9,7 +9,7 @@ import PollOption from '../database/models/PollOption';
 import PollVote from '../database/models/PollVote';
 import {PollDiscord} from './PollDiscord';
 import {DiscordHelper} from '../helpers/Discord';
-import * as Jimp from 'jimp';
+import Jimp from 'jimp';
 
 @Discord()
 export class BallotDiscord {

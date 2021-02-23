@@ -1,5 +1,5 @@
-import * as Jimp from 'jimp';
-import * as TurndownService from 'turndown';
+import Jimp from 'jimp';
+import TurndownService from 'turndown';
 
 export class DiscordHelper {
   public static renderImage(urls: string[]) {

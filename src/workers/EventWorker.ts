@@ -4,7 +4,7 @@ import moment = require('moment');
 import Event from '../database/models/Event';
 import {Op} from 'sequelize';
 import {client} from '../start';
-import * as discordConfig from '../config/discord.json';
+import discordConfig from '../config/discord.json';
 import User from '../database/models/User';
 import {EventDiscord} from '../discord/EventDiscord';
 

@@ -1,9 +1,9 @@
 import {MessageAttachment, Message, MessageEmbed, TextChannel} from 'discord.js';
 import Event from '../database/models/Event';
 import {client} from '../start';
-import * as discordConfig from '../config/discord.json';
-import * as Jimp from 'jimp';
-import * as moment from 'moment';
+import discordConfig from '../config/discord.json';
+import Jimp from 'jimp';
+import moment from 'moment';
 import {AttendanceDiscord} from './AttendanceDiscord';
 import {Op} from 'sequelize';
 import Attendee from '../database/models/Attendee';

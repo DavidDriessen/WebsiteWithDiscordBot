@@ -7,7 +7,7 @@ import {EventDiscord} from './EventDiscord';
 import {Op} from 'sequelize';
 import {CheckRole} from './Guards';
 import {EventWorker} from '../workers/EventWorker';
-import * as moment from 'moment';
+import moment from 'moment';
 import Media from '../database/models/Media';
 import EventMedia from '../database/models/EventMedia';
 

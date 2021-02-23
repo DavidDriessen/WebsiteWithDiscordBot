@@ -5,13 +5,13 @@
  */
 
 // @ts-ignore
-import * as DiscordOauth2 from 'discord-oauth2';
+import DiscordOauth2 from 'discord-oauth2';
 import {Controller, Get, Post} from '@overnightjs/core';
 import {JwtManager} from '@overnightjs/jwt';
 import {Request, Response} from 'express';
 import User from '../database/models/User';
-import * as discordConfig from '../config/discord.json';
-import * as url from 'url';
+import discordConfig from '../config/discord.json';
+import url from 'url';
 
 @Controller('api/auth')
 export class AuthController {

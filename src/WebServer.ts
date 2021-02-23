@@ -4,12 +4,12 @@
  * created by Sean Maxwell April 14, 2019
  */
 
-import * as bodyParser from 'body-parser';
+import bodyParser from 'body-parser';
 import * as controllers from './controllers';
 
 import {Server} from '@overnightjs/core';
 import {Logger} from '@overnightjs/logger';
-import * as express from 'express';
+import express from 'express';
 
 
 class WebServer extends Server {

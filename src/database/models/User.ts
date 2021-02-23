@@ -19,8 +19,13 @@ export interface IUser {
   premium_type?: number;
 }
 
+export abstract class GuardUser<T = any> extends Model<T> {
+  public assignRole?(role: string): Promise<T>;
+}
+
 @Table
-export class User extends Model<User> {
+// tslint:disable-next-line:max-classes-per-file
+export class User extends GuardUser<User> {
 
   @Column
   public name!: string;

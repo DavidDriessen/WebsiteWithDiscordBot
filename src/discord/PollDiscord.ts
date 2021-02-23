@@ -1,9 +1,9 @@
 import {ArgsOf, Command, Description, Discord, Guard, On} from '@typeit/discord';
-import {MessageAttachment, MessageEmbed, MessageReaction, TextChannel} from 'discord.js';
+import {MessageAttachment, MessageEmbed, TextChannel} from 'discord.js';
 import {Op} from 'sequelize';
 import Poll from '../database/models/Poll';
-import * as discordConfig from '../config/discord.json';
-import * as moment from 'moment';
+import discordConfig from '../config/discord.json';
+import moment from 'moment';
 import {client} from '../start';
 import {Order} from 'sequelize/types/lib/model';
 import {BallotDiscord} from './BallotDiscord';
@@ -11,7 +11,7 @@ import {CheckRole} from './Guards';
 import Ballot from '../database/models/Ballot';
 import User from '../database/models/User';
 import {DiscordHelper} from '../helpers/Discord';
-import * as Jimp from 'jimp';
+import Jimp from 'jimp';
 import PollOption from '../database/models/PollOption';
 
 @Discord('!')

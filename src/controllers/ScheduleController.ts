@@ -4,7 +4,7 @@ import {Order, WhereOptions} from 'sequelize/types/lib/model';
 import Attendee from '../database/models/Attendee';
 import Event from '../database/models/Event';
 import {Response} from 'express';
-import * as moment from 'moment';
+import moment from 'moment';
 import {Op} from 'sequelize';
 import User from '../database/models/User';
 import {EventWorker} from '../workers/EventWorker';

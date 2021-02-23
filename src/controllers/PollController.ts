@@ -2,7 +2,7 @@ import {Controller, Delete, Get, Middleware, Post, Put} from '@overnightjs/core'
 import {ISecureRequest} from '@overnightjs/jwt';
 import {Order, WhereOptions} from 'sequelize/types/lib/model';
 import {Response} from 'express';
-import * as moment from 'moment';
+import moment from 'moment';
 import {Op} from 'sequelize';
 import Poll from '../database/models/Poll';
 import PollOption from '../database/models/PollOption';

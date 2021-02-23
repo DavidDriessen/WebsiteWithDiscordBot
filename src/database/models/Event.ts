@@ -11,7 +11,7 @@ import Attendee from './Attendee';
 import EventMedia from './EventMedia';
 import {EventDiscord} from '../../discord/EventDiscord';
 // @ts-ignore
-import * as Serializer from 'sequelize-to-json/index.js';
+import Serializer from 'sequelize-to-json/index.js';
 
 @Table
 export class Event extends Model<Event> {

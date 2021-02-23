@@ -1,7 +1,7 @@
-import * as expressJwt from 'express-jwt';
+import expressJwt from 'express-jwt';
 import {ISecureRequest, JwtManager} from '@overnightjs/jwt';
 import {Response} from 'express';
-import * as multer from 'multer';
+import multer from 'multer';
 
 
 export function JWT(credentialsRequired = true) {
