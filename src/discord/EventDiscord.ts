@@ -90,7 +90,7 @@ export class EventDiscord {
     }
 
     let limit = Math.floor(
-      (6000 - event.title.length - event.description?.length) / event.media.length);
+      (6000 - event.title.length - (event.description?.length || 0)) / event.media.length);
     if (limit > 1024) {
       limit = 1024;
     }

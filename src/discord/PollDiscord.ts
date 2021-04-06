@@ -1,5 +1,5 @@
 import {ArgsOf, Command, Description, Discord, Guard, On} from '@typeit/discord';
-import {MessageAttachment, MessageEmbed, MessageReaction, TextChannel} from 'discord.js';
+import {MessageAttachment, MessageEmbed, TextChannel} from 'discord.js';
 import {Op} from 'sequelize';
 import Poll from '../database/models/Poll';
 import * as discordConfig from '../config/discord.json';
