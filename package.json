@@ -32,7 +32,7 @@
     "cron-decorators": "^0.1.5",
     "discord-oauth2": "2.0.2",
     "discord.js": "^12.5.1",
-    "express": "^4.16.4",
+    "express": "^4.17.3",
     "forever": "^3.0.4",
     "jimp": "^0.10.3",
     "mariadb": "^2.5.2",
